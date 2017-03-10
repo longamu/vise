@@ -1,0 +1,39 @@
+/**
+ * James Philbin <philbinj@gmail.com>, Relja Arandjelovic <relja@robots.ox.ac.uk>
+ * Engineering Department
+ * University of Oxford
+ * Copyright (C) 2014. All rights reserved.
+ * 
+ * Use and modify all you like, but do NOT redistribute. No warranty is 
+ * expressed or implied. No liability or responsibility is assumed.
+ */
+
+=================================================
+  jp_draw: Drawing utilities v0.15.1
+       James Philbin <philbinj@gmail.com>
+       Relja Arandjelovic <relja@robots.ox.ac.uk>
+=================================================
+A python module used for drawing onto images. Mainly useful for drawing
+ellipses as it doesn't seem that any standard library can do this.
+The original code was made by James Philbin and was a part of a much larger
+project, Relja Arandjelovic isolated the drawing part.
+
+
+Requirements
+============
+1. Python
+2. Numpy
+3. Cython
+4. C++ compiler
+5. Cairo
+6. libjpeg
+
+On Ubuntu:
+sudo apt-get install build-essential python python-numpy cython libcairo2-dev libjpeg62
+
+
+Installation
+============
+1. Check all requirements.
+2. Run 'python setup.py install'.
+3. Assuming there are no errors, you're done!
