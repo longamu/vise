@@ -4,6 +4,9 @@ build/*
 # training images and model data
 data/
 
+# macos
+.DS_Store
+
 # Prerequisites
 *.d
 
@@ -36,4 +39,3 @@ data/
 *.exe
 *.out
 *.app
-

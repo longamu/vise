@@ -76,15 +76,15 @@ include_directories( ${fastann_INCLUDE_DIRS} )
 ############################## Magick++
 
 if (cREQUIRE_MAGICK)
-    
+
     message("=========================== Magick++: Required")
-    
+
     find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
-    
+
 else (cREQUIRE_MAGICK)
-    
+
     find_package( ImageMagick COMPONENTS Magick++ )
-    
+
 endif (cREQUIRE_MAGICK)
 
 if (ImageMagick_FOUND)
@@ -108,18 +108,18 @@ include_directories( ${PROTOBUF_INCLUDE_DIR} )
 ############################## Titan settings
 
 if ( ISTITAN )
-    
+
     ## Boost
     set(BOOST_ROOT "/opt/gridware/pkg/libs/boost/1.51.0/gcc-4.4.6+openmpi-1.6.3/")
     set(Boost_NO_SYSTEM_PATHS "TRUE")
-    
+
     if (cMPI)
         include_directories("/opt/gridware/pkg/mpi/openmpi/1.6.3/gcc-4.4.6/include/")
     endif (cMPI)
-    
+
     ## should fix this HACK
     ADD_DEFINITIONS(-DISTITAN)
-    
+
 endif ( ISTITAN )
 
 ############################## Zeus settings
@@ -184,6 +184,7 @@ message("Boost_INCLUDE_DIRS: " ${Boost_INCLUDE_DIRS})
 message("ImageMagick_LIBRARIES: " ${ImageMagick_LIBRARIES} )
 message("ImageMagick_INCLUDE_DIRS: " ${ImageMagick_INCLUDE_DIRS} )
 message("PROTOBUF_INCLUDE_DIR: " ${PROTOBUF_INCLUDE_DIR} )
+message("PROTOBUF_LIBRARIES: " ${PROTOBUF_LIBRARIES} )
 message("fastann_INCLUDE_DIRS: " ${fastann_INCLUDE_DIRS})
 message("fastann_LIBRARIES: " ${fastann_LIBRARIES} )
 
