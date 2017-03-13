@@ -1,0 +1,14 @@
+BUILD_DIR=$(pwd)"/../build/"
+VISE_ROOTDIR=$(pwd)"/../"
+
+if [ -d "$BUILD_DIR" ]; then
+    rm -fr $BUILD_DIR
+fi
+
+mkdir $BUILD_DIR
+
+FASTANN_LIBDIR=$VISE_ROOTDIR"dep/lib/fastann/"
+VISE_CMAKE_PREFIX_PATH=$FASTANN_LIBDIR
+
+cd $BUILD_DIR
+cmake -DCMAKE_PREFIX_PATH=$VISE_CMAKE_PREFIX_PATH $VISE_ROOTDIR"src/"
