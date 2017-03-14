@@ -1,12 +1,13 @@
 #include <sstream>
 #include "cornerDescriptor.h"
 
-extern float scale_mult;
-
+//extern float scale_mult;
+// added by @Abhishek to support compilation in Mac
+float scale_mult = 3.0;
 
 /**********************************************/
 void CornerDescriptor::copy(CornerDescriptor* ds){
-  x=ds->getX(); 
+  x=ds->getX();
   y=ds->getY();
   type=ds->getType();
   cornerness=ds->getCornerness();
@@ -35,8 +36,8 @@ void CornerDescriptor::initd(void){
   vec=NULL;
   d_scale=0;
   order=4;
-  size=0; 
-} 
+  size=0;
+}
 
 /**********************************************/
 void CornerDescriptor::allocVec(int size_in){
@@ -47,7 +48,7 @@ void CornerDescriptor::allocVec(int size_in){
 	for(int i=0;i<size;i++)vec[i]=0;
     }
 }
-  
+
 
 /**********************************************/
 void CornerDescriptor::read_database( ifstream &input){
@@ -55,8 +56,8 @@ void CornerDescriptor::read_database( ifstream &input){
     //input.read(write_vec,(int)((size+10)*sizeof(float)));
     model=(long unsigned int)write_vec[0];
     x=write_vec[1];
-    y=write_vec[2]; 
-    cornerness=write_vec[3]; 
+    y=write_vec[2];
+    cornerness=write_vec[3];
     c_scale=d_scale=write_vec[4];
     angle=write_vec[5];
     mi11=write_vec[6];
@@ -66,7 +67,7 @@ void CornerDescriptor::read_database( ifstream &input){
     for(int i=0;i<size;i++)
 	vec[i]=write_vec[i+10];
     delete [] write_vec;
-    
+
 }
 /**********************************************/
 void CornerDescriptor::write_database( ofstream &output, long unsigned int model_in){
@@ -74,8 +75,8 @@ void CornerDescriptor::write_database( ofstream &output, long unsigned int model
     float *write_vec = new float[size+10];
     write_vec[0]=(float)model;
     write_vec[1]=x;
-    write_vec[2]=y; 
-    write_vec[3]=cornerness; 
+    write_vec[2]=y;
+    write_vec[3]=cornerness;
     write_vec[4]=c_scale;
     write_vec[5]=angle;
     write_vec[6]=mi11;
@@ -86,14 +87,14 @@ void CornerDescriptor::write_database( ofstream &output, long unsigned int model
 	write_vec[i+10]=vec[i];
     //output.write(write_vec,(size+10)*sizeof(float));
     delete [] write_vec;
-   
+
 }
- 
+
 /**********************************************/
 void CornerDescriptor::read( ifstream &input, int size_in){
   input >> x;
-  input >> y; 
-  input >> cornerness; 
+  input >> y;
+  input >> cornerness;
   input >> c_scale;
   input >> angle;
   input >> type;
@@ -111,8 +112,8 @@ void CornerDescriptor::read( ifstream &input, int size_in){
     for(int j=0;j<size;j++){
       input >> vec[j];
     }
-  } 
-} 
+  }
+}
 /**********************************************/
 void CornerDescriptor::readFred( ifstream &input, int size_in){
   input >> y;
@@ -125,8 +126,8 @@ void CornerDescriptor::readFred( ifstream &input, int size_in){
     for(int j=0;j<size;j++){
       input >> vec[j];
     }
-  } 
-} 
+  }
+}
 /**********************************************/
 void CornerDescriptor::readCommon( ifstream &input, int size_in){
   double a,b,c;
@@ -165,14 +166,14 @@ void CornerDescriptor::readCommon( ifstream &input, int size_in){
   mi12=U(1,2);
   mi21=U(2,1);
   mi22=U(2,2);
-  
+
   if(size_in>0){
     allocVec(size_in);
     for(int j=0;j<size;j++){
       iss >> vec[j];
     }
-  } 
-} 
+  }
+}
 
 
 
@@ -188,7 +189,7 @@ void CornerDescriptor::write(ofstream &output){
     }
   }
   output << endl;
-} 
+}
 /**********************************************/
 void CornerDescriptor::writeCommon(ofstream &output){
 
@@ -203,7 +204,7 @@ void CornerDescriptor::writeCommon(ofstream &output){
     D(1,1)=1.0/(D(1,1)*D(1,1));
     D(2,2)=1.0/(D(2,2)*D(2,2));
     U=V*D*V.transpose();
-    
+
     output << x << " " << y << " " << U(1,1)<< " "<< U(1,2)<< " "<< U(2,2);
     if(size>0){
       for(int j=0; j<size;j++){
@@ -211,13 +212,13 @@ void CornerDescriptor::writeCommon(ofstream &output){
       }
     }
     output << endl;
-} 
+}
 
 bool
 is_ellipse_soln(float a, float b, float c, float y)
 {
   float val = y*y*(b*b - a*c) + a;
-  if (val < 0) 
+  if (val < 0)
     return false;
   else
     return true;
@@ -266,7 +267,7 @@ CornerDescriptor::writeCommonWA(ofstream &output)
     D(1,1)=1.0/(D(1,1)*D(1,1));
     D(2,2)=1.0/(D(2,2)*D(2,2));
     U=V*D*V.transpose();
-    
+
     output << x << " " << y << " " << angle << " " << U(1,1)<< " "<< U(1,2)<< " "<< U(2,2);
     if(size>0){
       for(int j=0; j<size;j++){
@@ -276,7 +277,7 @@ CornerDescriptor::writeCommonWA(ofstream &output)
     output << endl;
 
 }
-  
+
 /**********************************************/
 void CornerDescriptor::changeBase(Matrix *base){
   float val;
@@ -287,7 +288,7 @@ void CornerDescriptor::changeBase(Matrix *base){
       val+=base->tabMat[row][col]*vec[col-1];
     }
     vect[row-1]=val;
-    
+
   }
   for(int col=0;col< base->nbCols();col++)
       vec[col]=vect[col];
@@ -297,7 +298,7 @@ void CornerDescriptor::changeBase(Matrix *base){
 /**********************************************/
 void CornerDescriptor::changeBase(float *mat){
   for(int v=0;v<size;v++){
-    vec[v] = vec[v]*mat[v];   
+    vec[v] = vec[v]*mat[v];
   }
 }
 /**********************************************/
@@ -313,7 +314,7 @@ void CornerDescriptor::pca(int dim, float *avg, float *base){
   uint cnt=0;
   for(int i=0;i<dim;i++){
     for(int v=0;v<size;v++,cnt++){
-      outvec[i] += vec[v]*base[cnt];   
+      outvec[i] += vec[v]*base[cnt];
     }
   }
   allocVec(dim);
@@ -333,7 +334,7 @@ void CornerDescriptor::changeBase(int dim,float *mat){
       val+=mat[row*dim+col]*vec[col];
     }
     vect[row]=val;
-    
+
   }
   for(int col=0;col< dim;col++)
       vec[col]=vect[col];
@@ -341,10 +342,10 @@ void CornerDescriptor::changeBase(int dim,float *mat){
 }
 
 /**********************************************/
-void changeBase(vector<CornerDescriptor *> &desc, Matrix *base){  
+void changeBase(vector<CornerDescriptor *> &desc, Matrix *base){
   for(unsigned int c=0;c<desc.size();c++){
     desc[c]->changeBase(base);
-  } 
+  }
 }
 
 /**********************************************/
@@ -352,18 +353,18 @@ void loadFredCorners( const char* points1, vector<CornerDescriptor*> &cor1){
     CornerDescriptor* cor;
     ifstream input1(points1);
     if(!input1)return;
-    int cor_nb1=0,size=0; 
+    int cor_nb1=0,size=0;
     input1 >> cor_nb1;
     if(cor_nb1==0)return;
-    input1 >> size;   
+    input1 >> size;
     do{
       cor = new CornerDescriptor();
       cor->readFred(input1,size);
-      cor1.push_back(cor);      
+      cor1.push_back(cor);
     }while(!input1.eof());
     cor1.erase((std::vector<CornerDescriptor*>::iterator) &cor1[(int)cor1.size()-1]);
     if(cor_nb1!=(int)cor1.size()){
-      cout << "warning:"<< endl<<"in header: "<<cor_nb1 << ", in file: "<< cor1.size()<< endl; 
+      cout << "warning:"<< endl<<"in header: "<<cor_nb1 << ", in file: "<< cor1.size()<< endl;
     }
 
 }
@@ -372,15 +373,15 @@ void loadCorners( const char* points1, vector<CornerDescriptor*> &cor1, int form
     CornerDescriptor* cor;
     ifstream input1(points1);
     if(!input1)return;
-    int cor_nb1,size; 
+    int cor_nb1,size;
     float tmp;
-    
+
     string line;
     getline(input1, line);
     tmp = atof(line.c_str());
     getline(input1, line);
     cor_nb1 = atoi(line.c_str());
-    
+
     //input1 >> tmp;
     //input1 >> cor_nb1;   //cout << cor_nb1 << endl;
     if(tmp<=1.0)size=0;
@@ -392,12 +393,12 @@ void loadCorners( const char* points1, vector<CornerDescriptor*> &cor1, int form
 	cor->read(input1,size);
       else
 	cor->readCommon(input1,size);
-      cor1.push_back(cor); //cout << "read " <<cor1.size()<<endl;     
+      cor1.push_back(cor); //cout << "read " <<cor1.size()<<endl;
     }
     delete cor1[(int)cor1.size()-1];
     cor1.erase((std::vector<CornerDescriptor*>::iterator) &cor1[(int)cor1.size()-1]);
     if(cor_nb1!=(int)cor1.size()){
-      cout << "warning:"<< endl<<"in header: "<<cor_nb1 << ", in file: "<< cor1.size()<< endl; 
+      cout << "warning:"<< endl<<"in header: "<<cor_nb1 << ", in file: "<< cor1.size()<< endl;
     }
 
 }
@@ -406,7 +407,7 @@ void loadCorners( const char* points1, vector<CornerDescriptor*> &cor1, int form
 void writeCorners(vector<CornerDescriptor*> cor, const char* points_out, int format){
   if (cor.size()==0){
       // cout << " descriptors nb " << cor.size() << endl;
-      return; 
+      return;
   }
     ofstream output(points_out);
     if(!output)cout << "error opening " << points_out<< endl;
@@ -417,7 +418,6 @@ void writeCorners(vector<CornerDescriptor*> cor, const char* points_out, int for
 	cor[i]->write(output);
       else if (format == 1) cor[i]->writeCommon(output);
       else if (format == 2) cor[i]->writeCommonWA(output);
-    }  
-    output.close();  
-} 
-
+    }
+    output.close();
+}

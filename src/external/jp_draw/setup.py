@@ -39,7 +39,7 @@ inc_dirs.extend(get_numpy_include_dirs())
 
 extensions = [
   Extension('jp_draw.jp_draw',
-            include_dirs=inc_dirs+['/usr/include/cairo'],
+            include_dirs=inc_dirs+['/usr/local/include/cairo'],
             sources=['jp_draw/jp_draw.pyx', 'jp_draw/_jp_draw.cpp'],
             depends=['jp_draw/jp_draw.hpp', 'jp_draw/jp_jpeg.hpp'],
             language="c++",

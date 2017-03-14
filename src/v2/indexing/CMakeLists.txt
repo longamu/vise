@@ -57,7 +57,7 @@ target_link_libraries( proto_db_file proto_db_header.pb ${Boost_LIBRARIES} )
 
 PROTOBUF_GENERATE_CPP(proto_db_header.pb.cpp proto_db_header.pb.h proto_db_header.proto)
 add_library( proto_db_header.pb ${proto_db_header.pb.cpp} )
-target_link_libraries( index_entry.pb ${PROTOBUF_LIBRARIES} )
+target_link_libraries( proto_db_header.pb ${PROTOBUF_LIBRARIES} ) # added by @Abhishek to support compilation in Mac
 
 add_library( proto_index proto_index.cpp )
 target_link_libraries( proto_index
@@ -80,4 +80,4 @@ target_link_libraries( proto_index_limit
     protobuf_util )
 
 add_library( uniq_entries uniq_entries.cpp )
-target_link_libraries( uniq_entries index_entry.pb )
+target_link_libraries( uniq_entries index_entry.pb ${Boost_LIBRARIES} ) # added by @Abhishek to support compilation in Mac

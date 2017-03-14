@@ -9,12 +9,16 @@ target_link_libraries( train_assign
     image_util
     par_queue
     same_random
+    clst_centres # added by @Abhishek to support compilation in Mac
+    ${fastann_LIBRARIES} # added by @Abhishek to support compilation in Mac
     ${Boost_LIBRARIES} )
 
 add_library( train_descs train_descs.cpp )
 target_link_libraries( train_descs
     clst_centres
     par_queue
+    same_random # added by @Abhishek to support compilation in Mac
+    image_util # added by @Abhishek to support compilation in Mac
     ${fastann_LIBRARIES}
     ${Boost_LIBRARIES} )
 
@@ -26,4 +30,5 @@ target_link_libraries( train_hamming
     par_queue
     protobuf_util
     same_random
+    hamming_data.pb # added by @Abhishek to support compilation in Mac
     ${Boost_LIBRARIES} )

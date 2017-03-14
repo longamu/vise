@@ -19,7 +19,7 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <boost/filesystem.hpp>
 
-#include <fastann/fastann.hpp>
+#include <fastann.hpp>
 
 #include "clst_centres.h"
 #include "flat_desc_file.h"

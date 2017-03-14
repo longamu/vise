@@ -52,7 +52,7 @@ $ ./bootstrap.sh --prefix=/Volumes/Data2/adutta/rr_dependencies/boost_1_63_0 --w
 // update project-config.jam file to have the following
 //using gcc : 6.3.0 : g++-6 ;
 
-$ ./b2 variant=release threading=multi install
+$ ./b2 variant=release threading=multi toolset=gcc install
 ```
 
   * Compile google protobuf 2.6.1 (NOT NEEDED - `brew install boost` works well)
@@ -60,6 +60,7 @@ $ ./b2 variant=release threading=multi install
 $ CC=gcc-6 CXX=g++-6 ./configure --prefix=/Volumes/Data2/adutta/rr_dependencies/protobuf-2.6.1
 $ make && make install
 ```
+./b2 --with-filesystem --with-system --with-thread --with-date_time --with-chrono --with-atomic variant=release threading=multi toolset=gcc install
 
   * Update src/util/macros.h
 ```
@@ -176,6 +177,22 @@ target_link_libraries( train_assign
 target_link_libraries( train_hamming
     hamming_data.pb # added by @Abhishek to support compilation in Mac
     ${Boost_LIBRARIES} )
+```
+
+  * Update to include “fastann.hpp”
+```
+// src/compression/product_quant.h
+// src/nn/coarse_residual.h
+// src/v2/retrieval/retriever_v2.h
+// src/v2/retrieval/tfidf_v2.h
+// src/v2/api/api_v2.cpp
+// src/v2/evaluation/tests/compute_SF_query_feats.cpp
+// src/v2/evaluation/tests/compute_Pitts_query_feats.cpp
+// src/v2/evaluation/tests/compute_oxGQ.cpp
+// src/v2/indexing/build_index.cpp
+// src/v2/indexing/train/train_assign.cpp
+#include <fastann.hpp>
+
 ```
 
   * "Segmentation fault: 11"

@@ -32,7 +32,7 @@ No usage or redistribution is allowed without explicit permission.
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
-#include <fastann/fastann.hpp>
+#include <fastann.hpp>
 
 #include "clst_centres.h"
 #include "dataset_v2.h"

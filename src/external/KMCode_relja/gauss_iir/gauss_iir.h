@@ -1,4 +1,4 @@
- 
+
 #ifndef _gauss_
 #define _gauss_
 #ifdef WIN32
@@ -8,8 +8,8 @@
 #endif
 #endif
 #ifndef WIN32
-#define DllExport  
-#define DllImport  
+#define DllExport
+#define DllImport
 #endif
 
 #ifndef M_2PI
@@ -20,13 +20,13 @@ typedef unsigned int uint;
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
+//#include <malloc.h>
 #include "../ImageContent/imageContent.h"
 
 /************************************************************************
-   structure used to store the coefficients nii+, nii-, dii+, dii- 
+   structure used to store the coefficients nii+, nii-, dii+, dii-
    and the normalisation factor 'scale'
-   see [1] p. 9 - 11; p. 13, 14 
+   see [1] p. 9 - 11; p. 13, 14
 *************************************************************************/
 
 #define  GAUSS_CUTOFF 3
@@ -69,8 +69,8 @@ DllExport void dXX (DARY* image_in, DARY* out_image, float scale);
 DllExport void dXY (DARY* image_in, DARY* out_image, float scale);
 DllExport void dYY (DARY* image_in, DARY* out_image, float scale);
 DllExport void dXX_YY (DARY* image_in, DARY* out_image, float scale);
-DllExport void dX (DARY* image_in,  DARY* image_out, float scalex, float scaley);	
-DllExport void dY (DARY* image_in,  DARY* image_out, float scalex, float scaley);	
+DllExport void dX (DARY* image_in,  DARY* image_out, float scalex, float scaley);
+DllExport void dY (DARY* image_in,  DARY* image_out, float scalex, float scaley);
 DllExport float smooth(int x, int y, DARY* image_in, float scalex, float scaley);
 DllExport void  smooth(DARY* image_in, DARY* smooth_image, float scalex, float scaley);
 
@@ -96,7 +96,3 @@ void drawGauss(DARY* image_in,int x, int y, float scale);
 
 
 #endif
-
-
-
-

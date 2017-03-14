@@ -1,6 +1,6 @@
 #ifndef _corner_h_
 #define _corner_h_
- 
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,8 +12,8 @@ using namespace std;
 #include<vector>
 
 
-#include "../ImageContent/imageContent.h"
 #include "../gauss_iir/gauss_iir.h"
+#include "../ImageContent/imageContent.h"
 
 
 #define ALPHA 0.05
@@ -44,7 +44,7 @@ public:
     variable_ += rhs;
     return *this;
   }
-  
+
   watchpoint<T>&
   operator/=(float rhs)
   {
@@ -52,7 +52,7 @@ public:
     variable_ /= rhs;
     return *this;
   }
-  
+
   watchpoint<T>&
   operator*=(float rhs)
   {
@@ -60,7 +60,7 @@ public:
     variable_ *= rhs;
     return *this;
   }
-  
+
   watchpoint<T>&
   operator-=(float rhs)
   {
@@ -89,10 +89,10 @@ extern float PATCH_SUM;
 void initPatchMask(int size);
 //float PATCH_SUM;
 class DllExport Corner{
-    
+
  protected:
   int type;
-  float x,y,l1,l2,lap,sdx2,sdy2,sdxdy, mi11,mi12,mi21,mi22; 
+  float x,y,l1,l2,lap,sdx2,sdy2,sdxdy, mi11,mi12,mi21,mi22;
   float cornerness;
   float c_scale, int_sig, der_sig;
   int int_lev, der_lev;
@@ -100,7 +100,7 @@ class DllExport Corner{
   //watchpoint<float> angle;
   int state;
   int extr;
-    
+
  public:
     /****CONSTRUCTORS***/
     Corner(void);
@@ -120,13 +120,13 @@ class DllExport Corner{
     inline float   const  getCornerness(void) const { return cornerness;}
     inline void setCornerness(float cornerness_in) {cornerness=cornerness_in;}
     inline void setMi(float m11,float m12,float m21,float m22) {mi11=m11;mi12=m12;mi21=m21;mi22=m22;}
-    inline void setMi(float m11,float m12,float m21,float m22,float e1,float e2) 
+    inline void setMi(float m11,float m12,float m21,float m22,float e1,float e2)
 	{mi11=m11;mi12=m12;mi21=m21;mi22=m22;l1=e1;l2=e2;}
     inline float   const  getMi11() const { return mi11;}
     inline float   const  getMi12() const { return mi12;}
     inline float   const  getMi21() const { return mi21;}
     inline float   const  getMi22() const { return mi22;}
-    
+
     /****LOCALISATION***/
     inline float   const  getX() const { return x;}
     inline float   const  getY() const { return y;}
@@ -150,7 +150,7 @@ class DllExport Corner{
     inline void setMax() {extr=1;}
     inline void setMin() {extr=-1;}
     inline int   const  isExtr() const { return extr;}
-    
+
 
     /****ANGLE*****/
     inline float   const  getAngle() const { return angle;}
@@ -172,19 +172,19 @@ class DllExport Corner{
     inline void     setDerSig(const float sig_in){der_sig=sig_in;}
     inline float   const  getDerSig() const { return der_sig;}
 
- 
+
     inline void     setType(int type_in)  {type=type_in;}
     int isOK(const int minim, const int max_x, const int max_y);
     inline int const isOK() const {return state;}
 
-    ~Corner();     
-    
+    ~Corner();
+
 };
 
 void GradOriImages_s1(DARY *im, DARY *grad, DARY *ori);
-void GradOriImages(DARY *im, DARY *grad, DARY *ori);  
-void LapOriImages(DARY *im, DARY *grad, DARY *ori);  
-void interpolate(DARY *im_in, float m_x, float m_y, 
+void GradOriImages(DARY *im, DARY *grad, DARY *ori);
+void LapOriImages(DARY *im, DARY *grad, DARY *ori);
+void interpolate(DARY *im_in, float m_x, float m_y,
 		 DARY *img, float vec0x,float vec0y,float vec1x,float vec1y);
 void normalize(DARY * img,int x, int y, float radius);
 #endif

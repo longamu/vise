@@ -17,7 +17,7 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <boost/format.hpp>
 
-#include <fastann/fastann.hpp>
+#include <fastann.hpp>
 
 #include "feat_standard.h"
 #include "hamming.h"

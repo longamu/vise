@@ -15,7 +15,7 @@ No usage or redistribution is allowed without explicit permission.
 #ifndef _RETRIEVER_V2_H_
 #define _RETRIEVER_V2_H_
 
-#include <fastann/fastann.hpp>
+#include <fastann.hpp>
 
 #include "clst_centres.h"
 #include "embedder.h"

@@ -1,10 +1,11 @@
 add_library( colour_sift colour_sift.cpp )
 target_link_libraries( colour_sift
     image_util
+    feat_getter    # added by @Abhishek to support compilation in Mac
     ${Boost_LIBRARIES} )
 
 add_library( feat_getter feat_getter.cpp )
-target_link_libraries( feat_getter ellipse ${ImageMagick_LIBRARIES} )
+target_link_libraries( feat_getter ellipse ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES})
 
 add_library( feat_standard feat_standard.cpp )
 target_link_libraries( feat_standard
@@ -19,4 +20,5 @@ target_link_libraries( feat_standard
 add_library( holidays_public holidays_public.cpp )
 target_link_libraries( holidays_public
     image_util
+    feat_getter    # added by @Abhishek to support compilation in Mac
     ${Boost_LIBRARIES} )

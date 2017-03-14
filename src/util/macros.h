@@ -19,7 +19,7 @@ No usage or redistribution is allowed without explicit permission.
 #include <cstdlib>
 
 // assert which works in Release mode too
-#define ASSERT(expression) if (!(expression)) { std::cerr << "ASSERT failed: " #expression " in "  << __FUNCTION__ << " ("__FILE__ ":" << __LINE__ << ")\n"; exit(1); }
+#define ASSERT(expression) if (!(expression)) { std::cerr << "ASSERT failed: " #expression " in "  << __FUNCTION__ << " (" __FILE__ ":" << __LINE__ << ")\n"; exit(1); }
 
 // apply assert and evaluate expression only for debugging
 #if 0
@@ -37,5 +37,16 @@ No usage or redistribution is allowed without explicit permission.
 
 // to avoid the warning about not using a variable (useful when doing pread64 as there is a warning if output is not checked)
 #define REMOVE_UNUSED_WARNING(temp_) if (false && temp_) {}
+
+// to support compilation in Mac
+#ifdef __APPLE__
+    #define off64_t off_t
+    #define fopen64 fopen
+    #define ftello64 ftello
+    #define fseeko64 fseeko
+    #define pread64 pread
+
+    typedef unsigned int uint;
+#endif
 
 #endif

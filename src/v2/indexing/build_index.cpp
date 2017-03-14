@@ -28,7 +28,7 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <boost/thread.hpp>
 
-#include <fastann/fastann.hpp>
+#include <fastann.hpp>
 
 #include "build_index_status.pb.h"
 #include "clst_centres.h"

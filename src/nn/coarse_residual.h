@@ -17,7 +17,7 @@ No usage or redistribution is allowed without explicit permission.
 
 
 
-#include <fastann/fastann.hpp>
+#include <fastann.hpp>
 
 
 

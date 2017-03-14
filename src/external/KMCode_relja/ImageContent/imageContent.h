@@ -24,21 +24,27 @@ using namespace std;
 const int PNG_BYTES_TO_CHECK = 4;
 const int ERROR = -1;
 
+// added by @Abhishek to support compilation in Mac
+#define png_voidp_NULL    (png_voidp)NULL
+#define png_infopp_NULL   (png_infopp)NULL
+#define png_set_gray_1_2_4_to_8(arg) png_set_expand_gray_1_2_4_to_8(arg)
+typedef unsigned int uint;
+
 class ImageContent;
 typedef ImageContent DARY;
 class ImageContent {
-   
+
   private :
     uint x_size,y_size;
     uint tsize;
     void writePGM(const char *nom,unsigned char *buff, const char* comments);
     void write(const char *nom, const char* comments);
-    void initFloat(uint ,uint);	   
-    void initUChar(uint ,uint);	   
-    void init3Float(uint ,uint);	   
-    void init3UChar(uint ,uint);	   
+    void initFloat(uint ,uint);
+    void initUChar(uint ,uint);
+    void init3Float(uint ,uint);
+    void init3UChar(uint ,uint);
     int buftype;
-  
+
   public :
     float **fel;
     float **felr;
@@ -48,14 +54,14 @@ class ImageContent {
     unsigned char **belr;
     unsigned char **belg;
     unsigned char **belb;
-    ImageContent(void){};   
-    ImageContent(const char *);	   
-	  ImageContent(ImageContent *im);	   
-	  ImageContent(uint y_size_in,uint x_size_in){initFloat( y_size_in, x_size_in);};	   
-	  ImageContent(int y_size_in ,int x_size_in){initFloat((uint)y_size_in,(uint)x_size_in);};	   
-	  ImageContent(uint ,uint, const char *);	   
-	  ImageContent(uint ,uint, const char *, float);	   
-	  ImageContent(uint y_size_in, uint x_size_in, float val){initFloat( y_size_in, x_size_in);set(val);};	   
+    ImageContent(void){};
+    ImageContent(const char *);
+	  ImageContent(ImageContent *im);
+	  ImageContent(uint y_size_in,uint x_size_in){initFloat( y_size_in, x_size_in);};
+	  ImageContent(int y_size_in ,int x_size_in){initFloat((uint)y_size_in,(uint)x_size_in);};
+	  ImageContent(uint ,uint, const char *);
+	  ImageContent(uint ,uint, const char *, float);
+	  ImageContent(uint y_size_in, uint x_size_in, float val){initFloat( y_size_in, x_size_in);set(val);};
 
 	 ~ImageContent();
 
@@ -81,13 +87,13 @@ class ImageContent {
 	  void normalize(float min_in, float max_in);
 	  void scale(DARY *im_in, float scalex, float scaley);
 	  float getValue(float x, float y);
-	  bool interpolate(DARY *sface, float m_x, float m_y, 
+	  bool interpolate(DARY *sface, float m_x, float m_y,
 			   float scalex, float scaley, float angle);
 	  bool interpolate(DARY *im_in, float m_x, float m_y, float vec0x, float vec0y,
 			   float vec1x, float vec1y);
 };
-       
 
 
- 
+
+
 #endif

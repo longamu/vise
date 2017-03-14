@@ -20,7 +20,7 @@ tmpDir=    os.path.join( scriptroot, 'tmp/' );
 
 import cherrypy;
 
-import Image;
+from PIL import Image;
 try:
     import PngImagePlugin, JpegImagePlugin, TiffImagePlugin, GifImagePlugin, BmpImagePlugin, PpmImagePlugin; # all this stuff for cx_freeze
 except:
