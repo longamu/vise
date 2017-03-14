@@ -210,6 +210,7 @@ cd /Volumes/Data2/adutta/relja_arandjelovic/relja_code/relja_retrieval
 mkdir build_mac && cd build_mac
 rm -fr * && CC=gcc-6 CXX=g++-6 cmake ../src
 make -j8 api_v2
+export DYLD_FALLBACK_LIBRARY_PATH=/Users/tlm/dev/vise/dep/lib/fastann/lib/:/Users/tlm/dev/vise/dep/lib/protobuf-2.6.1/lib/:/Users/tlm/dev/vise/dep/lib/boost_1_63_0/lib/
 v2/api/api_v2 35280 ox5k
 ```
 

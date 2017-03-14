@@ -28,7 +28,7 @@ else
     export PREFIX=$FASTANN_LIBDIR
     cmake ../
     make
-    sudo make install
+    make install
     #cd $DEP_BASEDIR
     #rm -fr ./fastann
 fi

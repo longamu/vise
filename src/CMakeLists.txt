@@ -4,11 +4,6 @@ project( relja_retrieval )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/../forbuild/")
 
-list(APPEND CMAKE_PREFIX_PATH "/Users/tlm/dev/vise/dep/lib/fastann" "/Users/tlm/dev/vise/dep/lib/protobuf-2.6.1/")
-set(BOOST_ROOT "/Users/tlm/dev/vise/dep/lib/boost_1_63_0")
-set(Boost_NO_SYSTEM_PATHS "TRUE")
-set(ENV{PKG_CONFIG_PATH} "/Users/tlm/dev/vise/dep/lib/ImageMagick-6.9.7-9/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
-
 
 MACRO(MY_EVAL_CONDITION name)
    IF(${ARGN})
