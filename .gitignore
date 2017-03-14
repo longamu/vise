@@ -7,6 +7,9 @@ data/
 # macos
 .DS_Store
 
+# Python compiled files
+*.pyc
+
 # Prerequisites
 *.d
 
