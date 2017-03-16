@@ -24,6 +24,7 @@ read demo_id
 BACKEND_PORT=35280
 FRONTEND_PORT=8080
 VISE_DATASET_NAME=""
+PLATFORM=`uname`
 
 case "$demo_id" in
     "1")
@@ -40,8 +41,18 @@ esac
 echo ""
 echo "Running VISE on dataset "$VISE_DATASET_NAME
 
-cd $VISE_BUILDDIR
-DYLD_FALLBACK_LIBRARY_PATH=/Users/tlm/dev/vise/install_scripts/../dep/lib/fastann/lib/:/Users/tlm/dev/vise/install_scripts/../dep/lib/protobuf/lib/:/Users/tlm/dev/vise/install_scripts/../dep/lib/boost/lib/ v2/api/api_v2 $BACKEND_PORT $VISE_DATASET_NAME &
+cd $VISE_ROOTDIR'build/'
+
+if [[ "$PLATFORM" == 'Linux' ]]; then
+    v2/api/api_v2 $BACKEND_PORT $VISE_DATASET_NAME &
+elif [[ "$PLATFORM" == 'Darwin' ]]; then
+    # macos
+    DYLD_FALLBACK_LIBRARY_PATH=/Users/tlm/dev/vise/install_scripts/../dep/lib/fastann/lib/:/Users/tlm/dev/vise/install_scripts/../dep/lib/protobuf/lib/:/Users/tlm/dev/vise/install_scripts/../dep/lib/boost/lib/ v2/api/api_v2 $BACKEND_PORT $VISE_DATASET_NAME &
+else
+    echo "Platform not supported!"
+    exit
+fi
+
 BACKEND_PID=$!
 
 echo "Waiting for backend to start ..."
@@ -52,7 +63,14 @@ python $VISE_ROOTDIR"src/ui/web/webserver.py" $FRONTEND_PORT $VISE_DATASET_NAME 
 FRONTEND_PID=$!
 
 sleep 2
-open http://localhost:8080
+if [[ "$PLATFORM" == 'Linux' ]]; then
+    x-www-browser http://localhost:8080
+elif [[ "$PLATFORM" == 'Darwin' ]]; then
+    # macos
+    open http://localhost:8080
+fi
+
+
 
 printf "Press any key to stop everything! "
 read any_key
