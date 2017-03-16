@@ -83,7 +83,15 @@ class searchPage:
         </script>
         """ % querySpec;
         
-        body= "";
+        body= "";                
+        imw_limit= 800; imh_limit= 800;
+        
+        if uploadID==None:
+            imw, imh= self.docMap[dsetname].getWidthHeight(docID);
+        else:
+            imw, imh= Image.open( st['localFilename_jpg'] ).size;
+        scale= min( float(imw_limit)/imh, float(imh_limit)/imw );
+               
         if uploadID==None:
             filename= self.pathManager_obj[dsetname].hide(self.docMap[dsetname].getFn(docID));
         else:
@@ -91,18 +99,12 @@ class searchPage:
             filename= st['originalFullFilename'];
         body+='name: %s<br><br>\n' % filename;
         body+='<a href="getImageFull?%s&dsetname=%s">Full size image</a><br><br>' % (querySpec, dsetname);
-        
-        imw_limit= 800; imh_limit= 800;
+
         body+= '<center><img id="cropbox" src="getImage?%s&dsetname=%s&width=%d&height=%d"></center><br>\n' % (querySpec, dsetname, imw_limit, imh_limit);
-        if uploadID==None:
-            imw, imh= self.docMap[dsetname].getWidthHeight(docID);
-        else:
-            imw, imh= Image.open( st['localFilename_jpg'] ).size;
-        scale= min( float(imw_limit)/imh, float(imh_limit)/imw );
-        
+
         body+= '''
         <center>
-        <input type="button" value="Search" onclick='javascript:selSearch(event, %.4f)' style="width: 400px; height:100px; font-size:30">
+        <input type="button" value="Search" onclick="javascript:selSearch(event, %.4f)" style="width: 400px; height:100px; font-size:30">
         <br><br>
         Note: Click on the image and drag to select a query region.
         </center>
