@@ -56,7 +56,7 @@ fi
 BACKEND_PID=$!
 
 echo "Waiting for backend to start ..."
-sleep 3
+sleep 5
 
 echo "Starting frontend ..."
 python $VISE_ROOTDIR"src/ui/web/webserver.py" $FRONTEND_PORT $VISE_DATASET_NAME $BACKEND_PORT &
@@ -68,6 +68,9 @@ if [[ "$PLATFORM" == 'Linux' ]]; then
 elif [[ "$PLATFORM" == 'Darwin' ]]; then
     # macos
     open http://localhost:8080
+else
+    echo "Platform not supported!"
+    exit
 fi
 
 
