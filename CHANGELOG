@@ -1,0 +1,7 @@
+## [0.0.2] - March 16, 2017
+ * updated source code and cmake files to allow compilation in Mac OS
+ * mostly used by @Giles Bergel (Seebibyte project ambassador) to demonstrate potential users
+
+## [0.0.1] - September 25, 2017
+ * the original relja_retrival codebase
+ * developed by Relja Arandjelovic during his DPhil / Postdoc at the Visual Geometry Group, Department of Engineering Science, University of Oxford.
