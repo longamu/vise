@@ -1004,7 +1004,7 @@ build(
     
     MPI_GLOBAL_ALL
     bool useThreads= detectUseThreads();
-    uint32_t numWorkerThreads= 4;
+    uint32_t numWorkerThreads= 8;
     
     ASSERT(tmpDir[tmpDir.length()-1]=='/');
     std::string indexingStatusFn= tmpDir+"indexingstatus.bin";

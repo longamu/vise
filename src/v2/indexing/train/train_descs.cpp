@@ -211,7 +211,7 @@ computeTrainDescs(
     }
     
     bool useThreads= detectUseThreads();
-    uint32_t numWorkerThreads= 4;
+    uint32_t numWorkerThreads= 8;
     
     // read the list of training images and shuffle it
     
