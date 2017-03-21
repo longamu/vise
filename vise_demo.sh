@@ -73,8 +73,6 @@ else
     exit
 fi
 
-
-
 printf "Press any key to stop everything! "
 read any_key
 kill $FRONTEND_PID
