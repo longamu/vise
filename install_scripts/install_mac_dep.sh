@@ -10,6 +10,23 @@ LIBDIR=$DEP_BASEDIR"lib/"
 mkdir $LIBDIR
 mkdir $TMP_BASEDIR
 
+
+#
+# Install homebrew package manager
+#
+which -s brew
+if [[ $? != 0 ]] ; then
+    # Install Homebrew
+    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+else
+    brew update
+fi
+
+brew install wget
+brew install cmake
+brew install libjpg
+brew install python
+
 #
 # Compile and install fast ann
 #
@@ -33,16 +50,6 @@ else
     #rm -fr ./fastann
 fi
 
-#
-# Install homebrew package manager
-#
-which -s brew
-if [[ $? != 0 ]] ; then
-    # Install Homebrew
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-else
-    brew update
-fi
 
 #
 # Install gcc-5
