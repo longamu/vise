@@ -15,7 +15,8 @@ reads it back into memory
    * instead of this, directly convert 
 `src/external/KMCode_relja/descriptor/CornerDescriptor` to `std::vector<ellipse> &regions`
 and pass the data via memory
-   * see `src/external/KMCode_relja/exec/detect_points` line 411
+   * See `src/external/KMCode_relja/exec/detect_points` line 411
+   * See [this issue](https://gitlab.com/vgg/vise/issues/3) for more details.
 
 ## Replace fastann dependency
  * cannot be compiled for Microsoft Windows platform
@@ -24,6 +25,7 @@ and pass the data via memory
 ## Multi-threaded clustering
  * At present, `../src/v2/indexing/compute_clusters.py` uses only a single thread
  * This can be improved if it can utilize multiple threads available in computer
+ * See [this issue](https://gitlab.com/vgg/vise/issues/4) for more details.
 
 ## Documentation of Multi-threaded execution model employed by VISE
 ```
