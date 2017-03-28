@@ -21,7 +21,10 @@ and pass the data via memory
  * cannot be compiled for Microsoft Windows platform
  * replace with [flann](http://www.cs.ubc.ca/research/flann/)
 
- 
+## Multi-threaded clustering
+ * At present, `../src/v2/indexing/compute_clusters.py` uses only a single thread
+ * This can be improved if it can utilize multiple threads available in computer
+
 ## Documentation of Multi-threaded execution model employed by VISE
 ```
 /home/tlm/dev/vise/src/util/par_queue.h
