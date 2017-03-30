@@ -15,6 +15,7 @@
 #include <math.h>
 #include "matrix.h"
 
+/*
 static double maxarg1, maxarg2;
 #define FMAX(a, b) (maxarg1 = (a), maxarg2 = (b),(maxarg1) > (maxarg2) ?\
         (maxarg1) : (maxarg2))
@@ -27,7 +28,12 @@ static int iminarg1, iminarg2;
 
 static double sqrarg;
 #define SQR(a) ((sqrarg = (a)) == 0.0 ? 0.0 : sqrarg * sqrarg)
+*/
 
+#define FMAX(a, b) fmax(a, b)
+#define IMIN(a, b) ( a > b ? b : a )
+#define SIGN(a, b) ( b >= 0.0 ? fabs(a) : -fabs(a) )
+#define SQR(a) ( a == 0.0 ? 0.0 : a*a )
 
 static double pythag(double a, double b)
 {
