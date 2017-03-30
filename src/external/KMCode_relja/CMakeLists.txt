@@ -50,7 +50,7 @@ SET_TARGET_PROPERTIES(kmbase PROPERTIES COMPILE_FLAGS ${KM_COMPILE_FLAGS} LINK_F
 # SET_TARGET_PROPERTIES(detect_points.ln PROPERTIES COMPILE_FLAGS ${KM_COMPILE_FLAGS} LINK_FLAGS ${KM_LINKER_FLAGS})
 
 add_library( detect_points exec/detect_points/detect_points.cpp )
-target_link_libraries( detect_points kmbase "png" "jpeg" )
+target_link_libraries( detect_points ellipse kmbase "png" "jpeg" )
 SET_TARGET_PROPERTIES(detect_points PROPERTIES COMPILE_FLAGS ${KM_COMPILE_FLAGS} LINK_FLAGS ${KM_LINKER_FLAGS})
 
 # add_executable( compute_descriptors.ln exec/compute_descriptors/compute_descriptors.cpp )

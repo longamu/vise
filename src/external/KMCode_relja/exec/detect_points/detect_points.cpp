@@ -123,7 +123,7 @@ get_ellipse_params(CornerDescriptor* cor, double& x, double& y, double& a, doubl
   D(1,1)=D(1,1)*cor->getCornerScale();
   D(2,2)=D(2,2)*cor->getCornerScale();
   D(1,1)=1.0/(D(1,1)*D(1,1));
-  D(2,2)=1.0/(D(2,2)*D(2,2));      
+  D(2,2)=1.0/(D(2,2)*D(2,2));
   U=V*D*V.transpose();
 
   a = U(1,1);
@@ -147,7 +147,7 @@ int lib_main(int argc, char **argv){
 
   //int c='C';
   //cout << c<< endl;
-  if(argc<2){ 
+  if(argc<2){
     cout << "Interest point detectors developed by Krystian.Mikolajczyk@inrialpes.fr\n";
     cout << "at INRIA Rhone-Alpes.[ref. Mikolajczyk and Schmid,IJCV'2004, http://www.robots.ox.ac.uk/~vgg/research/affine]" <<endl;
     cout << "     -i image.pgm  - input image pgm, ppm, png or jpg" << endl;
@@ -171,12 +171,12 @@ int lib_main(int argc, char **argv){
     cout << "     -aff - estimation of affine neighborhood  with -har, -hes, -mhar or -mhes" << endl;
     */
     cout << "Other optional arguments:"<< endl;
-    cout << "     -thres - cornerness threshold " << endl; 
-    //cout << "     -s - detection scale (-har, -hes)" << endl; 
-    cout << "     -o out.har - saves points in out.har" << endl; 
-    cout << "     -DR - draws points in out.har.pgm" << endl; 
+    cout << "     -thres - cornerness threshold " << endl;
+    //cout << "     -s - detection scale (-har, -hes)" << endl;
+    cout << "     -o out.har - saves points in out.har" << endl;
+    cout << "     -DR - draws points in out.har.pgm" << endl;
     cout << "     -remove-overlapping - JP: Removes regions with very high overlap" << endl;
-    //cout << "     -c 255 -  grayvalue for drawing [0,...,255]" << endl; 
+    //cout << "     -c 255 -  grayvalue for drawing [0,...,255]" << endl;
     cout <<"example:\n\t"<< argv[0]<< " -haraff  -i image.pgm -o out.har -thres 500 -DR" <<endl<< endl;
     //cout <<"\t" << argv[0]<<" -mhar -i image.ppm -lap -aff -DR > report"<< endl<< endl;
     //    cout <<"nb_of_points"<< endl;
@@ -197,15 +197,15 @@ int lib_main(int argc, char **argv){
   char draw[512];
   int detector=0,aff=0,in=0,out=0,dr=0,color=255, lap=0,faff=0, remove_overlapping=0;
   float scale=1.2;
-  for(int i=1;i<argc;i++){ 
+  for(int i=1;i<argc;i++){
     if(!strcmp(argv[i],"-i")){
       in = 1;sprintf(input,argv[i+1]);
     }
   }
   float threshold = 100;
 
-  for(int i=1;i<argc;i++){ 
-    if(!strcmp(argv[i],"-har")){   
+  for(int i=1;i<argc;i++){
+    if(!strcmp(argv[i],"-har")){
       detector = 7;sprintf(output,"%s.har",input);
       }else if(!strcmp(argv[i],"-hes")){
 	detector = 6;sprintf(output,"%s.hes",input);
@@ -250,7 +250,7 @@ int lib_main(int argc, char **argv){
     return -1;
   }
 
-  for(int i=1;i<argc;i++){ 
+  for(int i=1;i<argc;i++){
     if(!strcmp(argv[i],"-o1") || !strcmp(argv[i],"-o")){
       out=1;sprintf(output,argv[i+1]);
       i++;
@@ -265,12 +265,12 @@ int lib_main(int argc, char **argv){
 
   //return -1;
 
-  vector<CornerDescriptor *> cor1;  
+  vector<CornerDescriptor *> cor1;
 
   DARY *image = new DARY(input);
-  image->toGRAY(); 
-  image->char2float();     
-  long ti;  
+  image->toGRAY();
+  image->char2float();
+  long ti;
   init_time(&ti);
   if(detector==1){
     cout<< "fast multi-scale harris detector..."<< endl;
@@ -281,7 +281,7 @@ int lib_main(int argc, char **argv){
   }else if(detector==3){
     cout<< "fast multi-scale harris+hessian+dog detector..."<< endl;
     multi_harris_hessian_fast(image, cor1, threshold, threshold);
-    dog(image,cor1);   
+    dog(image,cor1);
   }else if(detector==41){
     cout<< "multi-scale harris detector..."<< endl;
     multi_harris(image, cor1,threshold, 1,30,1.4);
@@ -302,32 +302,32 @@ int lib_main(int argc, char **argv){
     edgeFeatureDetector(image, cor1);
   }else if(detector==8){
     cout<< "dog detector..."<< endl;
-    dog(image,cor1);  
+    dog(image,cor1);
     for(uint i=0;i<cor1.size();i++){
       cor1[i]->setAngle(1000);
     }
   }else if(detector==10){
     cout<< "multi-scale  NI harris detector..."<< endl;
-    multi_scale_har(image, cor1,threshold,1.2,0);     
+    multi_scale_har(image, cor1,threshold,1.2,0);
   }else if(detector==11){
     cout<< "multi-scale NI affine hessian detector..."<< endl;
-    multi_scale_hes(image, cor1,threshold,1.1,0);     
+    multi_scale_hes(image, cor1,threshold,1.1,0);
   }else if(detector==12){
     #ifndef QUIET
     cout<< "harris affine  detector..."<< endl;
     #endif
-    multi_scale_har(image, cor1,threshold,1.1,16);      
+    multi_scale_har(image, cor1,threshold,1.1,16);
   }else if(detector==13){
     #ifndef QUIET
     cout<< "hessian affine  detector..."<< endl;
     #endif
-    multi_scale_hes(image, cor1,threshold,1.2,16);     
+    multi_scale_hes(image, cor1,threshold,1.2,16);
   }else if(detector==4){
     cout<< "harris laplace  detector..."<< endl;
-    multi_scale_har(image, cor1,threshold,1.1,0);      
+    multi_scale_har(image, cor1,threshold,1.1,0);
   }else if(detector==5){
     cout<< "hessian laplace  detector..."<< endl;
-    multi_scale_hes(image, cor1,threshold,1.2,0);     
+    multi_scale_hes(image, cor1,threshold,1.2,0);
   }else {
     cout << "wrong detector" << endl; return 0;
   }
@@ -351,7 +351,7 @@ int lib_main(int argc, char **argv){
     //cout << "affine detection time " << tell_time(ti)<< endl;
     //removeSimilarPoints(cor1);
     cout <<endl << "number of affine points : " << cor1.size()<< endl;
-  } 
+  }
 
 
   if(faff){
@@ -393,8 +393,8 @@ int lib_main(int argc, char **argv){
      return -1;
    }
    Matrix U(2,2),Vi,V,D;
-   outfile << "1.0"<< endl;  
-   outfile << cor1.size()<< endl;  
+   outfile << "1.0"<< endl;
+   outfile << cor1.size()<< endl;
    for(uint i=0;i<cor1.size();i++){
      U(1,1)=cor1[i]->getMi11();
      U(1,2)=cor1[i]->getMi12();
@@ -404,36 +404,75 @@ int lib_main(int argc, char **argv){
      D(1,1)=D(1,1)*cor1[i]->getCornerScale();
      D(2,2)=D(2,2)*cor1[i]->getCornerScale();
      D(1,1)=1.0/(D(1,1)*D(1,1));
-     D(2,2)=1.0/(D(2,2)*D(2,2));      
+     D(2,2)=1.0/(D(2,2)*D(2,2));
      U=V*D*V.transpose();
      //coutfile << cor1[i]->getX()<< " " << cor1[i]->getX()<< " " << U(1,1)<< " " << U(1,2)<< " " << U(2,1)<< " " << U(2,2)<< endl;
      outfile << cor1[i]->getX()<< " " << cor1[i]->getY()<< " " << U(1,1)<< " " << U(2,1)<< " " << U(2,2)<< endl;
-   }                   
-   outfile.close();    
+   }
+   outfile.close();
   }
   //  writeCorners(cor1, output);
   /*
    */
-  
-  
-  
+
+
+
   if(dr){
-    sprintf(draw,"%s.png",output);  
+    sprintf(draw,"%s.png",output);
     cout << "drawing points in: " << draw<< endl;
     drawAffineCorners(image, cor1, draw,color);
   }
-  delete image;  
+  delete image;
   for(size_t i= 0; i<cor1.size(); ++i)
       delete cor1[i];
   cor1.clear();
-  
-  return 0; 
-}
-  
+
+  return 0;
 }
 
 
+/**/
+// avoid read/wrie to disk and share detected points in-memory
+// updated by @Abhishek Dutta (29 Mar. 2017)
+//
+// precondition  : jpg_filename must exist and be accessible
+// postcondition : regions contain the regions of interest
+void detect_points_hesaff(std::string jpg_filename,
+                          std::vector<ellipse> &regions) {
+  float threshold = 100;
+  vector< CornerDescriptor* > corner_descriptors;
 
+  DARY *image = new DARY(jpg_filename.c_str());
+  image->toGRAY();
+  image->char2float();
+  long ti;
+  init_time(&ti);
+
+  multi_scale_hes(image, corner_descriptors, threshold, 1.2, 16);
+  regions.resize(corner_descriptors.size());
+
+  Matrix Vi, V, D;
+  Matrix U(2, 2);
+  for ( unsigned int i=0; i < corner_descriptors.size(); i++ ) {
+    U(1,1) = corner_descriptors[i]->getMi11();
+    U(1,2) = corner_descriptors[i]->getMi12();
+    U(2,1) = corner_descriptors[i]->getMi21();
+    U(2,2) = corner_descriptors[i]->getMi22();
+    U.svd(Vi,D,V);
+
+    D(1,1) = D(1,1) * corner_descriptors[i]->getCornerScale();
+    D(2,2) = D(2,2) * corner_descriptors[i]->getCornerScale();
+    D(1,1) = 1.0 / ( D(1,1)*D(1,1) );
+    D(2,2) = 1.0 / ( D(2,2)*D(2,2) );
+    U=V*D*V.transpose();
+
+    regions[i].set(corner_descriptors[i]->getX(),
+                   corner_descriptors[i]->getY(),
+                   U(1,1), U(2,1), U(2,2));
+  }
+}
+
+} // end of namespace: KM_detect_points
 /*
 int main(int argc, char **argv){
     int ret= KM_detect_points::lib_main(argc,argv);

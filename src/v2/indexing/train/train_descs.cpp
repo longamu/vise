@@ -42,7 +42,7 @@ typedef std::pair<uint32_t, std::string> trainDescsResult;
 
 class trainDescsManager : public queueManager<trainDescsResult> {
     public:
-        
+
         trainDescsManager(uint32_t numDocs,
                           uint32_t numDims,
                           uint8_t dtypeCode,
@@ -54,18 +54,18 @@ class trainDescsManager : public queueManager<trainDescsResult> {
                 progressPrint_(
                     trainNumDescs<0 ? numDocs : trainNumDescs,
                     std::string("trainDescsManager") + (trainNumDescs<0 ? "(images)" : "(descs)") ) {
-                  
+
                   f_= fopen(trainDescsFn.c_str(), "wb");
                   ASSERT(f_!=NULL);
                   fwrite( &numDims, sizeof(numDims), 1, f_ );
                   fwrite( &dtypeCode, sizeof(dtypeCode), 1, f_ );
               }
-        
+
         ~trainDescsManager(){ fclose(f_); }
-        
+
         void
             operator()( uint32_t jobID, trainDescsResult &result );
-    
+
     private:
         bool const allDescs_;
         int64_t remainNumDescs_;
@@ -73,7 +73,7 @@ class trainDescsManager : public queueManager<trainDescsResult> {
         std::map<uint32_t, trainDescsResult> results_;
         FILE *f_;
         timing::progressPrint progressPrint_;
-        
+
         DISALLOW_COPY_AND_ASSIGN(trainDescsManager)
 };
 
@@ -88,16 +88,16 @@ trainDescsManager::operator()( uint32_t jobID, trainDescsResult &result ){
     // make sure results are saved sorted by job/docID!
     results_[jobID]= result;
     if (jobID==nextID_){
-        
+
         // save the buffered results and remove them from the map
         for (std::map<uint32_t, trainDescsResult>::iterator it= results_.begin();
              (allDescs_ || remainNumDescs_!=0) && it!=results_.end() && it->first==nextID_;
              ++nextID_){
-            
+
             trainDescsResult const &res= it->second;
             if (allDescs_)
                 progressPrint_.inc();
-            
+
             if (res.first>0) {
                 uint32_t numToCopy= (allDescs_ || res.first < remainNumDescs_) ?
                     res.first :
@@ -122,21 +122,21 @@ trainDescsManager::operator()( uint32_t jobID, trainDescsResult &result ){
 
 class trainDescsWorker : public queueWorker<trainDescsResult> {
     public:
-        
+
         trainDescsWorker(std::vector<std::string> const &imageFns,
                          std::string const trainDatabasePath,
                          featGetter const &featGetter_obj);
-        
+
         void
             operator() ( uint32_t jobID, trainDescsResult &result ) const;
-        
+
     private:
-        
+
         std::vector<std::string> const *imageFns_;
         std::string const databasePath_;
-        
+
         featGetter const *featGetter_;
-        
+
         DISALLOW_COPY_AND_ASSIGN(trainDescsWorker)
 };
 
@@ -155,13 +155,13 @@ trainDescsWorker::trainDescsWorker(
 
 void
 trainDescsWorker::operator() ( uint32_t jobID, trainDescsResult &result ) const {
-    
+
     uint32_t docID= jobID;
     result= std::make_pair(0, "");
-    
+
     // get filename
     std::string imageFn= databasePath_ + imageFns_->at(docID);
-    
+
     // make sure the image exists and is readable
     std::pair<uint32_t, uint32_t> wh= std::make_pair(0,0);
     if (boost::filesystem::exists(imageFn) && boost::filesystem::is_regular_file(imageFn)){
@@ -174,11 +174,11 @@ trainDescsWorker::operator() ( uint32_t jobID, trainDescsResult &result ) const 
         std::cerr<<"buildWorkerSemiSorted::operator(): "<<imageFn<<" is corrupt or 0x0\n";
         return;
     }
-    
+
     uint32_t numFeats;
     std::vector<ellipse> regions;
     float *descs;
-    
+
     // extract features
     featGetter_->getFeats(imageFn.c_str(), numFeats, regions, descs);
     result.first= numFeats;
@@ -186,10 +186,10 @@ trainDescsWorker::operator() ( uint32_t jobID, trainDescsResult &result ) const 
         delete []descs;
         return;
     }
-    
+
     result.second= featGetter_->getRawDescs(descs, numFeats);
     delete []descs;
-    
+
 }
 
 
@@ -201,48 +201,49 @@ computeTrainDescs(
         std::string const trainDescsFn,
         int32_t const trainNumDescs,
         featGetter const &featGetter_obj){
-    
+
     MPI_GLOBAL_RANK;
-    
+
     if (boost::filesystem::exists(trainDescsFn)){
         if (rank==0)
             std::cout<<"buildIndex::computeTrainDescs: trainDescs already exist ("<<trainDescsFn<<")\n";
         return;
     }
-    
+
     bool useThreads= detectUseThreads();
     uint32_t numWorkerThreads= 8;
-    
+    std::cout << "numWorkerThreads = " << numWorkerThreads << std::endl << std::flush;
+
     // read the list of training images and shuffle it
-    
+
     std::vector<std::string> imageFns;
-    
+
     if (rank==0){
         std::ifstream fImagelist(trainImagelistFn.c_str());
         ASSERT(fImagelist.is_open());
-        
+
         imageFns.reserve(100000);
         std::string imageFn;
         while( std::getline(fImagelist, imageFn) )
             imageFns.push_back(imageFn);
-        
+
         sameRandomUint32 sr(100000, 43);
         sr.shuffle<std::string>(imageFns.begin(), imageFns.end());
-        
+
     }
-    
+
     #ifdef RR_MPI
     if (!useThreads)
         boost::mpi::broadcast(comm, imageFns, 0);
     #endif
     uint32_t nJobs= imageFns.size();
-    
+
     // compute training descriptors
-    
+
     #ifdef RR_MPI
     if (!useThreads) comm.barrier();
     #endif
-    
+
     trainDescsManager *manager= (rank==0) ?
         new trainDescsManager(nJobs,
                               featGetter_obj.numDims(),
@@ -250,16 +251,16 @@ computeTrainDescs(
                               trainNumDescs,
                               trainDescsFn) :
         NULL;
-    
+
     trainDescsWorker worker(imageFns, trainDatabasePath, featGetter_obj);
-    
+
     if (useThreads)
         threadQueue<trainDescsResult>::start( nJobs, worker, *manager, numWorkerThreads );
     else
         mpiQueue<trainDescsResult>::start( nJobs, worker, manager );
-    
+
     if (rank==0) delete manager;
-    
+
 }
 
 };
