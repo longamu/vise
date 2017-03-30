@@ -17,6 +17,12 @@ reads it back into memory
 and pass the data via memory
    * See `src/external/KMCode_relja/exec/detect_points` line 411
    * See [this issue](https://gitlab.com/vgg/vise/issues/3) for more details.
+ * Possibly redundant computations:
+   * `src/external/KMCode_relja/exec/detect_points/detect_points.cpp` computes 
+corner and transforms it to ellipse(x,y,a,b,c) and writes to a file
+   * `src/external/KMCode_relja/exec/compute_descriptors/compute_descriptors.cpp` 
+reads from this file and again converts back to CornerDescriptor.
+   * Why not directly handover the CornerDescriptor to `compute_descriptors.cpp` ?
 
 ## Replace fastann dependency
  * cannot be compiled for Microsoft Windows platform
