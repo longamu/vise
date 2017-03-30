@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+set -u 
 # Script to run the VISE demo
 #
 #
@@ -21,6 +23,7 @@ echo ""
 printf "Enter your choice (1 - 3) : "
 read demo_id
 
+VISE_ROOTDIR=`pwd`"/"
 BACKEND_PORT=35280
 FRONTEND_PORT=8080
 VISE_DATASET_NAME=""
