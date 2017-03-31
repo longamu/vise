@@ -213,6 +213,8 @@ endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+add_executable( vise vise.cc )
+target_link_libraries( vise ViseServer )
 
 include_directories( api )
 include_directories( compression )
@@ -239,6 +241,7 @@ include_directories( v2/evaluation )
 include_directories( v2/indexing )
 include_directories( v2/indexing/train )
 include_directories( v2/retrieval )
+include_directories( server )
 
 # for protobufs
 include_directories( ${PROJECT_BINARY_DIR}/util )
@@ -262,3 +265,4 @@ add_subdirectory( retrieval )
 add_subdirectory( tests )
 add_subdirectory( util )
 add_subdirectory( v2 )
+add_subdirectory( server )
