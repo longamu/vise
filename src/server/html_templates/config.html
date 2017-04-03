@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>VISE Configuration</title>
+    <meta name="author" content="Abhishek Dutta">
+    <meta name="description" content="Set configuration of the VGG Image Search Engine (VISE)">
+  </head>
+  <body>
+  <h1>VISE Configuration</h1>
+  <table id="vise_config">
+    <tr>
+      <td>projectTitle</td>
+      <td><input class="vise_config_param" type="text" name="projectTitle" value="Oxford Buildings Search" onchange="update_projectName()"></td>
+    </tr>
+    <tr>
+      <td>imagePath</td>
+      <td><input class="vise_config_param" type="text" name="imagePath" value="~/data/datasets/vise/data/image/ox5k/oxc1/"></td>
+    </tr>
+    <tr>
+      <td>projectName</td>
+      <td><input class="vise_config_param" type="text" name="projectName" value="ox5k"></td>
+    </tr>
+    <tr>
+      <td>RootSIFT</td>
+      <td><input class="vise_config_param" type="checkbox" name="RootSIFT" checked></td>
+    </tr>
+    <tr>
+      <td>SIFTscale3</td>
+      <td><input class="vise_config_param" type="checkbox" name="SIFTscale3" checked></td>
+    </tr>
+    <tr>
+      <td>hammEmbBits</td>
+      <td><input class="vise_config_param" type="text" name="hammEmbBits" value="64"></td>
+    </tr>
+    <tr>
+      <td>trainNumDescs</td>
+      <td><input class="vise_config_param" type="text" name="trainNumDescs" value="800000"></td>
+    </tr>
+    <tr>
+      <td>vocSize</td>
+      <td><input class="vise_config_param" type="text" name="vocSize" value="10000"></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td><input type="button" name="Submit" value="Submit" onclick="save_config()"></td>
+    </tr>
+  </table>
+
+
+  <script type="text/javascript">
+  var gh = new XMLHttpRequest();
+
+  function save_config() {
+    var formdata = {};
+    var vise_config = document.getElementById("vise_config");
+    var config_params = vise_config.getElementsByClassName("vise_config_param");
+
+    for ( var i = 0; i < config_params.length; i++) {
+      var param_name  = config_params[i].name;
+      var param_value = config_params[i].value;
+      formdata[param_name] = param_value;
+    }
+
+    gh.open("POST", "http://localhost:8080");
+    gh.send( JSON.stringify(formdata) );
+  }
+
+  function update_projectName() {
+    var title = document.getElementById("");
+    var name = document.getElementById("projectName");
+    // @todo
+  }
+  </script>
+  </body>
+</html>
+

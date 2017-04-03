@@ -18,28 +18,35 @@
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 
+#include "SearchEngine.h"
+
 using boost::asio::ip::tcp;
 
 class ViseServer {
  public:
-  ViseServer();
+  ViseServer( std::string vise_datadir );
 
   void Start(unsigned int port);
   bool Stop();
   bool Restart();
 
-  void HandleNewConnection();
+ private:
+  unsigned int port_;
+  std::string  hostname_;
+  boost::filesystem::path  vise_datadir_;
+  boost::filesystem::path  vise_enginedir_;
+  boost::filesystem::path  vise_htmldir_;
+  SearchEngine search_engine_;
+
+  boost::system::error_code error_;
+
+  void HandleConnection(boost::asio::ip::tcp::socket socket);
+  void SplitString(std::string s, char sep, std::vector<std::string> &tokens);
   void Read();
   void Evaluate();
   void Print();
   void CloseConnection();
-
- private:
-  unsigned int port_;
-  std::string  hostname_;
-  std::string  data_basedir_;
-
-  boost::system::error_code error_;
+  void MoveToNextState();
 };
 
 #endif /* _VISE_SERVER_H */

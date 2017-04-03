@@ -17,7 +17,8 @@ int main(int argc, char** argv) {
   unsigned int port = 8080;
   std::cout << "\nStarting server in port " << port << " ...";
 
-  ViseServer vise_server;
+  std::string visedata_dir = "/home/tlm/vise/";
+  ViseServer vise_server = ViseServer( visedata_dir );
   vise_server.Start(port);
 
   std::string user_input;
