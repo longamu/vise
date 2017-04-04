@@ -62,7 +62,7 @@
       formdata[param_name] = param_value;
     }
 
-    gh.open("POST", "http://localhost:8080");
+    gh.open("POST", "http://localhost:8080/set_search_engine_config");
     gh.send( JSON.stringify(formdata) );
   }
 

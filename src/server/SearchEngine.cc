@@ -51,13 +51,39 @@ bool SearchEngine::EngineExists( std::string name ) {
   }
 }
 
-void SearchEngine::MoveToNextState() {
+void SearchEngine::MoveToNextState(std::string &result) {
   switch ( state_ ) {
   case SearchEngine::INIT :
     // Move to configuration state
     // serve config.html
+    if ( config_html_.length() == 0 ) {
+      // @todo
+      LoadFile("/home/tlm/dev/vise/src/server/html_templates/config.html",
+               config_html_);
+      result = config_html_;
+    }
     break;
   default:
     std::cerr << "Do not know how to move to next state!" << std::flush;
   }
+}
+
+void SearchEngine::ConfigureEngine(std::string config_json) {
+
+}
+
+void SearchEngine::JsonToMap( std::string json, std::map<std::string, std::string> ) {
+
+}
+
+void SearchEngine::LoadFile(std::string filename, std::string &file_contents) {
+  std::ifstream f;
+  f.open(filename.c_str());
+  f.seekg(0, std::ios::end);
+  file_contents.reserve( f.tellg() );
+  f.seekg(0, std::ios::beg);
+
+  file_contents.assign( std::istreambuf_iterator<char>(f),
+                        std::istreambuf_iterator<char>() );
+  f.close();
 }

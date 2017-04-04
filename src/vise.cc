@@ -15,7 +15,6 @@ int main(int argc, char** argv) {
   std::cout << "\n";
 
   unsigned int port = 8080;
-  std::cout << "\nStarting server in port " << port << " ...";
 
   std::string visedata_dir = "/home/tlm/vise/";
   ViseServer vise_server = ViseServer( visedata_dir );

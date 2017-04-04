@@ -41,12 +41,13 @@ class ViseServer {
   boost::system::error_code error_;
 
   void HandleConnection(boost::asio::ip::tcp::socket socket);
-  void SplitString(std::string s, char sep, std::vector<std::string> &tokens);
   void Read();
   void Evaluate();
   void Print();
   void CloseConnection();
   void MoveToNextState();
+
+  void SplitString(std::string s, char sep, std::vector<std::string> &tokens);
 };
 
 #endif /* _VISE_SERVER_H */

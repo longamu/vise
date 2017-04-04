@@ -36,48 +36,72 @@ void ViseServer::Start(unsigned int port) {
     }
 
     std::string request;
-    std::vector< std::string > request_key;
-    std::vector< std::string > request_value;
-    int line = 0;
-    while ( ! httpstream.error() ) {
-      //httpstream >> request;
-      std::getline( httpstream, request );
-      std::cout << "\n[ httprequest " << line << " ] : " << request << std::flush;
+    std::vector<std::string> http_content;
 
-      if ( request.substr(0,3) == "GET" ) {
-        unsigned int second_spc_idx = request.find( ' ', 4 );
-        if ( second_spc_idx > 4 ) {
-          std::string resource = request.substr(4, (second_spc_idx-4));
+    bool content_incoming = false;
 
-          std::vector< std::string > resource_tokens;
-          SplitString(resource, '/', resource_tokens);
+    // extract the httpd method and resource name
+    std::getline( httpstream, request );
+    std::string http_method = request.substr(0, 4);
+    std::vector<std::string> tokens;
+    SplitString(request, ' ', tokens);
+    if ( tokens.size() != 3 ) {
+      std::cerr << "\nHTTP request contains unknown resource: " << request << std::flush;
+      continue;
+    }
+    std::string http_method_uri = tokens.at(1);
 
-          std::string name = resource_tokens.at(1);
-          resource_tokens.erase( resource_tokens.begin() );
-          std::vector<std::string> param(resource_tokens);
+    if ( http_method == "GET " ) {
+      std::cout << "\nGET : Resource = " << http_method_uri << std::flush;
 
-          /*
-          for (unsigned int j=0; j<resource_tokens.size(); ++j) {
-            std::cout << "\nresource_tokens = " << resource_tokens.at(j);
-          }
-          */
+      std::vector<std::string> tokens;
+      SplitString( http_method_uri, '/', tokens );
+      std::string search_engine_name = tokens.at(1);
+      search_engine_.Init(search_engine_name, vise_enginedir_);
 
-          search_engine_.Init(name, vise_enginedir_);
-          search_engine_.MoveToNextState();
+      std::string result;
+      search_engine_.MoveToNextState( result );
+      httpstream << "HTTP/1.0 200 OK\r\n";
+      httpstream << "Content-type: text/html\r\n";
+      httpstream << "Content-Length: " << result.length() << "\r\n";
+      httpstream << "\r\n";
+      httpstream << result;
+
+      /*
+        for (unsigned int j=0; j<tokens.size(); ++j) {
+        std::cout << "\ntokens = " << tokens.at(j);
         }
+      */
+    } else if ( http_method == "POST" ) {
+      std::cout << "\nPOST : Resource = " << http_method_uri << std::flush;
+      httpstream << "Access-Control-Allow-Origin: *\r\n";
+      httpstream << "Processing ... ";
+    }
+
+    int line = 1;
+    while ( ! httpstream.error() ) {
+      std::getline( httpstream, request );
+      std::cout << "\n[ httprequest " << line << " ] : " << request.length() << " : " << request << std::flush;
+
+      if ( request.length() == 1 ) {
+        char const *c = request.c_str();
+        std::cout << "\nval = " << int(*c) << std::flush;
       }
 
-      if ( request.substr(0,4) == "POST" ) {
-        std::cout << "\nReceived POST request" << std::flush;
+      if ( content_incoming ) {
+        http_content.push_back( request );
+      }
+
+
+      if ( request == "\r" ) {
+        content_incoming = true;
+        std::cout << "\nIncoming data ... " << std::flush;
       }
 
       line = line + 1;
-      error_ = httpstream.error();
-      std::cout << "\nerror = " << error_.message() << std::flush;
-
-    }
-
-    //HandleConnection( socket );
+      //error_ = httpstream.error();
+      //std::cout << "\nerror = " << error_.message() << std::flush;
+    } // end of while ( !error)
   }
 }
 
