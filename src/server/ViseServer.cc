@@ -38,8 +38,6 @@ void ViseServer::Start(unsigned int port) {
     std::string request;
     std::vector<std::string> http_content;
 
-    bool content_incoming = false;
-
     // extract the httpd method and resource name
     std::getline( httpstream, request );
     std::string http_method = request.substr(0, 4);
@@ -56,53 +54,64 @@ void ViseServer::Start(unsigned int port) {
 
       std::vector<std::string> tokens;
       SplitString( http_method_uri, '/', tokens );
+
+      /*
+      for (unsigned int j=0; j<tokens.size(); ++j) {
+        std::cout << "\ntokens = " << tokens.at(j);
+      }
+      */
+
       std::string search_engine_name = tokens.at(1);
       search_engine_.Init(search_engine_name, vise_enginedir_);
-
+      std::cout << "\nsearch_engine_name = " << search_engine_name;
       std::string result;
       search_engine_.MoveToNextState( result );
       httpstream << "HTTP/1.0 200 OK\r\n";
+      std::time_t t = std::time(NULL);
+      char date_str[100];
+      std::strftime(date_str, sizeof(date_str), "%a, %d %b %Y %H:%M:%S %Z", std::gmtime(&t));
+      httpstream << "Date: " << date_str << "\r\n";
       httpstream << "Content-type: text/html\r\n";
       httpstream << "Content-Length: " << result.length() << "\r\n";
       httpstream << "\r\n";
       httpstream << result;
-
-      /*
-        for (unsigned int j=0; j<tokens.size(); ++j) {
-        std::cout << "\ntokens = " << tokens.at(j);
-        }
-      */
+      httpstream.close();
     } else if ( http_method == "POST" ) {
       std::cout << "\nPOST : Resource = " << http_method_uri << std::flush;
-      httpstream << "Access-Control-Allow-Origin: *\r\n";
-      httpstream << "Processing ... ";
+
+      // skip past all the other headers
+      unsigned int post_content_length = 0;
+      while ( request != "\r" ) {
+        std::getline( httpstream, request );
+        std::cout << "\nPost header = " << request << std::flush;
+        if (request.substr(0, 14) == "Content-Length") {
+          std::istringstream ss( request.substr(15) );
+          ss >> post_content_length;
+        }
+      }
+
+      std::string result = "CONFIGURATION_OK";
+      httpstream << "HTTP/1.0 200 OK\r\n";
+      std::time_t t = std::time(NULL);
+      char date_str[100];
+      std::strftime(date_str, sizeof(date_str), "%a, %d %b %Y %H:%M:%S %Z", std::gmtime(&t));
+      httpstream << "Date: " << date_str << "\r\n";
+      httpstream << "Content-type: text/html\r\n";
+      httpstream << "Content-Length: " << result.length() << "\r\n";
+      httpstream << "\r\n";
+      httpstream << result;
+      httpstream.flush();
+
+      // get the POST data
+      std::string http_post_data;
+      std::cout << "http_post_data = \"" << std::flush;
+      while ( !httpstream.eof() ) {
+        httpstream >> http_post_data;
+        std::cout << http_post_data << " " << std::flush;
+      }
+      std::cout << "\"" << std::flush;
     }
-
-    int line = 1;
-    while ( ! httpstream.error() ) {
-      std::getline( httpstream, request );
-      std::cout << "\n[ httprequest " << line << " ] : " << request.length() << " : " << request << std::flush;
-
-      if ( request.length() == 1 ) {
-        char const *c = request.c_str();
-        std::cout << "\nval = " << int(*c) << std::flush;
-      }
-
-      if ( content_incoming ) {
-        http_content.push_back( request );
-      }
-
-
-      if ( request == "\r" ) {
-        content_incoming = true;
-        std::cout << "\nIncoming data ... " << std::flush;
-      }
-
-      line = line + 1;
-      //error_ = httpstream.error();
-      //std::cout << "\nerror = " << error_.message() << std::flush;
-    } // end of while ( !error)
-  }
+  } // end of while (1) { ... }
 }
 
 void ViseServer::HandleConnection(boost::asio::ip::tcp::socket socket) {

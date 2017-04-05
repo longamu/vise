@@ -14,6 +14,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <ctime>
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>

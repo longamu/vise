@@ -14,6 +14,9 @@ void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
       CreateEngine( name );
     }
   }
+  else if ( state_ == SearchEngine::INIT ) {
+    std::cout << "\nSearch engine already initialized" << std::flush;
+  }
 }
 
 void SearchEngine::CreateEngine( std::string name ) {
@@ -60,9 +63,10 @@ void SearchEngine::MoveToNextState(std::string &result) {
       // @todo
       LoadFile("/home/tlm/dev/vise/src/server/html_templates/config.html",
                config_html_);
-      result = config_html_;
     }
+    result = config_html_;
     break;
+
   default:
     std::cerr << "Do not know how to move to next state!" << std::flush;
   }

@@ -43,15 +43,19 @@
     </tr>
     <tr>
       <td></td>
-      <td><input type="button" name="Submit" value="Submit" onclick="save_config()"></td>
+      <td><input type="submit" name="Submit" value="Submit" onclick="send_config_data()"></td>
     </tr>
   </table>
 
-
   <script type="text/javascript">
-  var gh = new XMLHttpRequest();
+  var vise_server = new XMLHttpRequest();
+  vise_server.addEventListener('load', response_listener);
 
-  function save_config() {
+  function response_listener() {
+    console.log("Response = " + this.responseText);
+  }
+
+  function send_config_data() {
     var formdata = {};
     var vise_config = document.getElementById("vise_config");
     var config_params = vise_config.getElementsByClassName("vise_config_param");
@@ -62,8 +66,8 @@
       formdata[param_name] = param_value;
     }
 
-    gh.open("POST", "http://localhost:8080/set_search_engine_config");
-    gh.send( JSON.stringify(formdata) );
+    vise_server.open("POST", "http://localhost:8080/set_search_engine_config");
+    vise_server.send( JSON.stringify(formdata) );
   }
 
   function update_projectName() {
