@@ -19,7 +19,7 @@
     </tr>
     <tr>
       <td>projectName</td>
-      <td><input class="vise_config_param" type="text" name="projectName" value="ox5k"></td>
+      <td><input id="projectName" class="vise_config_param" type="text" name="projectName" value="ox5k"></td>
     </tr>
     <tr>
       <td>RootSIFT</td>
@@ -56,18 +56,21 @@
   }
 
   function send_config_data() {
-    var formdata = {};
+    var postdata = [];
     var vise_config = document.getElementById("vise_config");
     var config_params = vise_config.getElementsByClassName("vise_config_param");
 
+    var config_head = "[" + document.getElementById("projectName").value + "]";
+    postdata.push( config_head );
     for ( var i = 0; i < config_params.length; i++) {
       var param_name  = config_params[i].name;
       var param_value = config_params[i].value;
-      formdata[param_name] = param_value;
+      postdata.push( param_name + "=" + param_value );
     }
+    var postdata_str = postdata.join('\n') + '\r\n';
 
-    vise_server.open("POST", "http://localhost:8080/set_search_engine_config");
-    vise_server.send( JSON.stringify(formdata) );
+    vise_server.open("PUT", "__VISE_SEARCH_ENGINE_SETTINGS_PUT_URL__");
+    vise_server.send( postdata_str );
   }
 
   function update_projectName() {

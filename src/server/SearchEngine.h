@@ -12,7 +12,6 @@
 #define _VISE_SEARCH_ENGINE_H
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <streambuf>
 #include <map>
@@ -25,33 +24,36 @@ public:
     UNKNOWN = 0,
     INIT,
     CONFIG,
-    TRAIN_DESCS,
-    TRAIN_CLUSTER,
-    TRAIN_ASSIGN,
-    TRAIN_HAMM,
-    TRAIN_INDEX,
+    TRAIN,
     QUERY,
     ERROR
   };
 
   SearchEngine();
   void Init(std::string name, boost::filesystem::path basedir);
-  void MoveToNextState(std::string &result);
+  std::string MoveToNextState();
+
+  std::string Name() {
+    return engine_name_;
+  }
+
+  boost::filesystem::path GetEngineConfigPath() {
+    return engine_config_fn_;
+  }
+  std::string GetResourceUri(std::string resource_name);
+
 private:
   boost::filesystem::path basedir_;
   boost::filesystem::path enginedir_;
-  std::string name_;
+  boost::filesystem::path engine_config_fn_;
+  std::string engine_name_;
+  std::string engine_config;
   STATE state_;
-  std::string config_html_;
 
   void CreateEngine( std::string name );
   void LoadEngine( std::string name );
   bool EngineExists( std::string name );
-  void ConfigureEngine(std::string config_json);
-  void LoadFile(std::string filename, std::string &file_contents);
-
-  // helper function
-  void JsonToMap( std::string json, std::map<std::string, std::string> );
+  bool EngineConfigExists();
 };
 
 #endif /* _VISE_SEARCH_ENGINE_H */

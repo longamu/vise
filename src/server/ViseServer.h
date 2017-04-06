@@ -12,6 +12,7 @@
 #define _VISE_SERVER_H
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <sstream>
 #include <ctime>
@@ -33,11 +34,17 @@ class ViseServer {
 
  private:
   unsigned int port_;
-  std::string  hostname_;
+  std::string hostname_;
+  std::string url_prefix_;
+
   boost::filesystem::path  vise_datadir_;
   boost::filesystem::path  vise_enginedir_;
   boost::filesystem::path  vise_htmldir_;
   SearchEngine search_engine_;
+
+  // html templates
+  std::string html_engine_settings_;
+  std::string html_engine_training_;
 
   boost::system::error_code error_;
 
@@ -48,7 +55,17 @@ class ViseServer {
   void CloseConnection();
   void MoveToNextState();
 
+  void HttpRedirect( std::string redirect_url, boost::asio::ip::tcp::iostream &httpstream);
+  void HandleRequest(std::string resource, boost::asio::ip::tcp::iostream &httpstream);
+  void SendHtml(std::string html, boost::asio::ip::tcp::iostream &httpstream);
+  void HttpError(std::string error_code, boost::asio::ip::tcp::iostream &httpstream);
+
+  void LoadFile(std::string filename, std::string &file_contents);
+  void WriteFile(std::string filename, std::string &file_contents);
+
+
   void SplitString(std::string s, char sep, std::vector<std::string> &tokens);
+  bool ReplaceString(std::string &s, std::string old_str, std::string new_str);
 };
 
 #endif /* _VISE_SERVER_H */
