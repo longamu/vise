@@ -38,6 +38,11 @@ class ViseServer {
   bool Stop();
   bool Restart();
 
+  void CreateFileList(boost::filesystem::path dir,
+                      std::set<std::string> acceptable_types,
+                      std::ostringstream &filelist);
+
+
  private:
   unsigned int port_;
   std::string hostname_;
@@ -73,9 +78,6 @@ class ViseServer {
 
   void LoadFile(std::string filename, std::string &file_contents);
   void WriteFile(std::string filename, std::string &file_contents);
-  void CreateFileList(boost::filesystem::path dir,
-                      std::set<std::string> acceptable_types,
-                      std::ostringstream &filelist);
 
   void SplitString(std::string s, char sep, std::vector<std::string> &tokens);
   bool ReplaceString(std::string &s, std::string old_str, std::string new_str);

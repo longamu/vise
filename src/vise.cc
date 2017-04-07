@@ -18,6 +18,7 @@ int main(int argc, char** argv) {
 
   std::string visedata_dir = "/home/tlm/vise/";
   ViseServer vise_server = ViseServer( visedata_dir );
+
   vise_server.Start(port);
 
   std::string user_input;

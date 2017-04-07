@@ -85,19 +85,6 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
   SplitString( http_method_uri, '/', tokens );
 
   if ( http_method == "GET " ) {
-    /*
-    // (1) http://localhost:8080/some_name
-    // (2) http://localhost:8080/some_name/
-    bool init_search_engine = false;
-    if ( tokens.at(0) == "" ) {
-    if ( tokens.size() == 2 ) {
-    init_search_engine = true;
-    } else if ( tokens.size() == 3 && tokens.at(2) == "" ) {
-    init_search_engine = true;
-    }
-    }
-    */
-
     if ( search_engine_.GetEngineState() == SearchEngine::UNKNOWN ) {
       if ( tokens.at(0) == "" && tokens.at(1).length() != 0 ) {
         // http://localhost:8080/search_engine_name
@@ -120,7 +107,11 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
     // evaluate
     if ( tokens.at(2) == "settings" ) {
       search_engine_.SetEngineConfig(http_post_data);
-      search_engine_.PrintEngineConfig();
+      std::string img_path = search_engine_.GetEngineConfigParam("imagePath");
+      boost::filesystem::path image_dir(img_path);
+      std::set<std::string> t;
+      std::ostringstream s;
+      CreateFileList(image_dir, t, s);
 
       std::string engine_config_path = search_engine_.GetEngineConfigPath().string();
       WriteFile( engine_config_path, http_post_data );
@@ -300,6 +291,24 @@ void ViseServer::CreateFileList(boost::filesystem::path dir,
                                 std::set<std::string> acceptable_types,
                                 std::ostringstream &filelist) {
 
+  std::cout << "\nShowing directory contents of : " << dir.string() << std::endl;
+  boost::filesystem::recursive_directory_iterator dir_it( dir ), end_it;
+
+  std::string basedir = dir.string();
+  while ( dir_it != end_it ) {
+    boost::filesystem::path p = dir_it->path();
+    std::string fn_dir = p.parent_path().string();
+    std::string rel_path = fn_dir.replace(0, basedir.length(), "./");
+    boost::filesystem::path rel_fn = boost::filesystem::path(rel_path) / p.filename();
+    if ( boost::filesystem::is_regular_file(p) ) {
+      std::string fn_ext = p.extension().string();
+      if ( acceptable_types.count(fn_ext) == 1 ) {
+        std::cout << rel_fn << std::endl;
+        filelist << rel_fn.string() << std::endl;
+      }
+    }
+    ++dir_it;
+  }
 }
 
 void ViseServer::LoadFile(std::string filename, std::string &file_contents) {

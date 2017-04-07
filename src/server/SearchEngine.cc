@@ -108,6 +108,44 @@ std::string SearchEngine::GetResourceUri(std::string resource_name) {
   return resource_uri;
 }
 
+void SearchEngine::RunTrainingCommand(std::string cmd, std::vector< std::string > cmd_params) {
+  if ( cmd == "create_img_list" ) {
+  std::string img_path = GetEngineConfigParam("imagePath");
+      boost::filesystem::path image_dir(img_path);
+      std::set<std::string> acceptable_types;
+      acceptable_types.insert(".jpg");
+      acceptable_types.insert(".png");
+      std::ostringstream filelist;
+      CreateFileList(image_dir, acceptable_types, filelist);
+  } else {
+    std::cerr << "\nSearchEngine::RunTrainingCommand() : unknown command : " << cmd << std::flush;
+  }
+}
+
+void SearchEngine::CreateFileList(boost::filesystem::path dir,
+                                std::set<std::string> acceptable_types,
+                                std::ostringstream &filelist) {
+
+  std::cout << "\nShowing directory contents of : " << dir.string() << std::endl;
+  boost::filesystem::recursive_directory_iterator dir_it( dir ), end_it;
+
+  std::string basedir = dir.string();
+  while ( dir_it != end_it ) {
+    boost::filesystem::path p = dir_it->path();
+    std::string fn_dir = p.parent_path().string();
+    std::string rel_path = fn_dir.replace(0, basedir.length(), "./");
+    boost::filesystem::path rel_fn = boost::filesystem::path(rel_path) / p.filename();
+    if ( boost::filesystem::is_regular_file(p) ) {
+      std::string fn_ext = p.extension().string();
+      if ( acceptable_types.count(fn_ext) == 1 ) {
+        std::cout << rel_fn << std::endl;
+        filelist << rel_fn.string() << std::endl;
+      }
+    }
+    ++dir_it;
+  }
+}
+
 // data_str =
 // key1=value1
 // key2=value2
@@ -122,6 +160,18 @@ void SearchEngine::SetEngineConfig(std::string engine_config) {
     std::string val = keyval.substr(sep_idx+1);
 
     engine_config_.insert( std::make_pair<std::string, std::string>(key, val) );
+  }
+}
+
+std::string SearchEngine::GetEngineConfigParam(std::string key) {
+  std::map<std::string, std::string>::iterator it;
+  it = engine_config_.find( key );
+
+  if ( it != engine_config_.end() ) {
+    return it->second;
+  }
+  else {
+    return "Not Found";
   }
 }
 

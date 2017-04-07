@@ -16,6 +16,7 @@
 #include <sstream>
 #include <streambuf>
 #include <map>
+#include <set>
 
 #include <boost/filesystem.hpp>
 
@@ -56,6 +57,7 @@ public:
   std::string GetResourceUri(std::string resource_name);
 
   void SetEngineConfig(std::string engine_config);
+  std::string GetEngineConfigParam(std::string key);
   void PrintEngineConfig();
  private:
   boost::filesystem::path basedir_;
@@ -69,6 +71,11 @@ public:
   void LoadEngine( std::string name );
   bool EngineExists( std::string name );
   bool EngineConfigExists();
+
+  void RunTrainingCommand(std::string cmd, std::vector< std::string > cmd_params);
+  void CreateFileList(boost::filesystem::path dir,
+                      std::set<std::string> acceptable_types,
+                      std::ostringstream &filelist);
 };
 
 #endif /* _VISE_SEARCH_ENGINE_H */
