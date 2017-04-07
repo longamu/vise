@@ -63,8 +63,6 @@
     var vise_config = document.getElementById("vise_config");
     var config_params = vise_config.getElementsByClassName("vise_config_param");
 
-    var config_head = "[" + document.getElementById("projectName").value + "]";
-    postdata.push( config_head );
     for ( var i = 0; i < config_params.length; i++) {
       var param_name  = config_params[i].name;
       var param_value = config_params[i].value;

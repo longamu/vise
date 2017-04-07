@@ -4,18 +4,68 @@
     <meta charset="UTF-8">
     <title>VISE Training</title>
     <meta name="author" content="Abhishek Dutta">
-    <meta name="description" content="Set configuration of the VGG Image Search Engine (VISE)">
+    <meta name="description" content="Control panel for training VISE search engine">
+
+    <!-- CSS style definition -->
+    <style type="text/css">
+      body {
+      min-width: 800px;
+      padding: 0;
+      margin: 0;
+      font-family: sans-serif;
+      }
+      #cmd_log {
+      display: block;
+      margin: 2em;
+      padding: 1em;
+      font-family: Mono;
+      font-size: 0.8em;
+      color: green;
+      background-color: black;
+      width: 90%;
+      height: 600px;
+      overflow: scroll;
+      }
+      .text_button {
+      color: blue;
+      }
+      .text_button:hover {
+      cursor: pointer;
+      }
+    </style>
   </head>
   <body>
   <h1>VISE Training</h1>
   <ol>
+    <li>Create image list : <span class="text_button" onclick="send_cmd('create_img_list start')">Start</span> | <span class="text_button" onclick="send_cmd('create_img_list stop')">Stop</span></li>
+
     <li>trainDescs</li>
     <li>cluster</li>
     <li>trainAssign</li>
     <li>trainHamm</li>
     <li>index</li>
   </ol>
+
+  <pre id="cmd_log">
+command output will be shown here
+  </pre>
   <script type="text/javascript">
+  var vise_server = new XMLHttpRequest();
+  vise_server.addEventListener("load", response_listener);
+
+  var cmd_log = document.getElementById('cmd_log');
+
+  function response_listener() {
+    cmd_log.innerHTML += this.responseText;
+  }
+
+  function send_cmd(cmd) {
+    var postdata = '$' + cmd;
+    cmd_log.innerHTML = '';
+
+    vise_server.open("POST", "__VISE_SEARCH_ENGINE_TRAINING_POST_URL__");
+    vise_server.send( postdata );
+  }
   </script>
   </body>
 </html>

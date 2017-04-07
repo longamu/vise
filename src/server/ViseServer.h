@@ -18,6 +18,7 @@
 #include <ctime>
 #include <unistd.h>
 #include <stdexcept>
+#include <set>
 
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <boost/shared_ptr.hpp>
@@ -64,12 +65,17 @@ class ViseServer {
   void SendHttpResponse(std::string html, boost::shared_ptr<tcp::socket> p_socket);
   void SendHttpNotFound(boost::shared_ptr<tcp::socket> p_socket);
   void SendHttpRedirect(std::string redirect_uri, boost::shared_ptr<tcp::socket> p_socket);
+  void SendErrorResponse(std::string message, std::string backtrace, boost::shared_ptr<tcp::socket> p_socket);
+  void SendRawResponse(std::string response, boost::shared_ptr<tcp::socket> p_socket);
 
   void ExtractHttpResource(std::string http_request, std::string &http_resource);
   void ExtractHttpContent(std::string http_request, std::string &http_content);
 
   void LoadFile(std::string filename, std::string &file_contents);
   void WriteFile(std::string filename, std::string &file_contents);
+  void CreateFileList(boost::filesystem::path dir,
+                      std::set<std::string> acceptable_types,
+                      std::ostringstream &filelist);
 
   void SplitString(std::string s, char sep, std::vector<std::string> &tokens);
   bool ReplaceString(std::string &s, std::string old_str, std::string new_str);

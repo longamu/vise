@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <streambuf>
 #include <map>
 
@@ -24,7 +25,14 @@ public:
     UNKNOWN = 0,
     INIT,
     CONFIG,
-    TRAIN,
+    TRAIN_UNKNOWN,
+    TRAIN_FILELIST,
+    TRAIN_DESCS,
+    TRAIN_CLUST,
+    TRAIN_ASSIGN,
+    TRAIN_HAMM,
+    TRAIN_INDEX,
+    TRAIN_DONE,
     QUERY,
     ERROR
   };
@@ -33,6 +41,10 @@ public:
   void Init(std::string name, boost::filesystem::path basedir);
   std::string MoveToNextState();
 
+  STATE GetEngineState() {
+    return state_;
+  }
+
   std::string Name() {
     return engine_name_;
   }
@@ -40,15 +52,18 @@ public:
   boost::filesystem::path GetEngineConfigPath() {
     return engine_config_fn_;
   }
+
   std::string GetResourceUri(std::string resource_name);
 
-private:
+  void SetEngineConfig(std::string engine_config);
+  void PrintEngineConfig();
+ private:
   boost::filesystem::path basedir_;
   boost::filesystem::path enginedir_;
   boost::filesystem::path engine_config_fn_;
   std::string engine_name_;
-  std::string engine_config;
   STATE state_;
+  std::map< std::string, std::string > engine_config_;
 
   void CreateEngine( std::string name );
   void LoadEngine( std::string name );
