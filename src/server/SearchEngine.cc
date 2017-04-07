@@ -63,7 +63,6 @@ bool SearchEngine::EngineExists( std::string name ) {
 
 std::string SearchEngine::MoveToNextState() {
   std::string redirect_uri;
-  std::cout << "\nEngineConfigExists() = " << EngineConfigExists();
   switch ( state_ ) {
   case SearchEngine::INIT :
     if ( EngineConfigExists() ) {

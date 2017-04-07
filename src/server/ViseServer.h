@@ -16,8 +16,13 @@
 #include <string>
 #include <sstream>
 #include <ctime>
+#include <unistd.h>
+#include <stdexcept>
 
-#include <boost/array.hpp>
+#include <boost/interprocess/sync/interprocess_semaphore.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
+#include <boost/thread.hpp>
 #include <boost/asio.hpp>
 
 #include "SearchEngine.h"
@@ -48,21 +53,23 @@ class ViseServer {
 
   boost::system::error_code error_;
 
-  void HandleConnection(boost::asio::ip::tcp::socket socket);
   void Read();
   void Evaluate();
   void Print();
   void CloseConnection();
   void MoveToNextState();
 
-  void HttpRedirect( std::string redirect_url, boost::asio::ip::tcp::iostream &httpstream);
-  void HandleRequest(std::string resource, boost::asio::ip::tcp::iostream &httpstream);
-  void SendHtml(std::string html, boost::asio::ip::tcp::iostream &httpstream);
-  void HttpError(std::string error_code, boost::asio::ip::tcp::iostream &httpstream);
+  void HandleConnection(boost::shared_ptr<tcp::socket> p_socket);
+  void HandleRequest(std::string resource, boost::shared_ptr<tcp::socket> p_socket);
+  void SendHttpResponse(std::string html, boost::shared_ptr<tcp::socket> p_socket);
+  void SendHttpNotFound(boost::shared_ptr<tcp::socket> p_socket);
+  void SendHttpRedirect(std::string redirect_uri, boost::shared_ptr<tcp::socket> p_socket);
+
+  void ExtractHttpResource(std::string http_request, std::string &http_resource);
+  void ExtractHttpContent(std::string http_request, std::string &http_content);
 
   void LoadFile(std::string filename, std::string &file_contents);
   void WriteFile(std::string filename, std::string &file_contents);
-
 
   void SplitString(std::string s, char sep, std::vector<std::string> &tokens);
   bool ReplaceString(std::string &s, std::string old_str, std::string new_str);

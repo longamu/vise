@@ -49,10 +49,13 @@
 
   <script type="text/javascript">
   var vise_server = new XMLHttpRequest();
-  vise_server.addEventListener('load', response_listener);
+  vise_server.addEventListener("load", response_listener);
 
   function response_listener() {
-    console.log("Response = " + this.responseText);
+    // xhr GET does not load the html in browser, rather the html is stored
+    // as this.responseText
+    // This is just a hack to get the browser redirect to the intended location
+    document.location = "__VISE_SEARCH_ENGINE_TRAINING_GET_URL__";
   }
 
   function send_config_data() {
@@ -67,9 +70,9 @@
       var param_value = config_params[i].value;
       postdata.push( param_name + "=" + param_value );
     }
-    var postdata_str = postdata.join('\n') + '\r\n';
+    var postdata_str = postdata.join('\n');
 
-    vise_server.open("PUT", "__VISE_SEARCH_ENGINE_SETTINGS_PUT_URL__");
+    vise_server.open("POST", "__VISE_SEARCH_ENGINE_SETTINGS_POST_URL__");
     vise_server.send( postdata_str );
   }
 
