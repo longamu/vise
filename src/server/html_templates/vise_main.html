@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>VISE Configuration</title>
+    <meta name="author" content="Abhishek Dutta">
+    <meta name="description" content="Page template of VGG Image Search Engine (VISE)">
+
+    <!-- CSS style definition -->
+    <style type="text/css">
+      body {
+        min-width: 800px;
+        padding: 0;
+        margin: 0;
+        font-family: sans-serif;
+      }
+      #header {
+        display: block;
+        width: 100%;
+        font-size: xx-large;
+        font-family: sans;
+        text-align: center;
+        border: 1px solid blue;
+      }
+      #content {
+        display: block;
+        width: 100%;
+        border: 1px solid red;
+      }
+      /* Displays the current state of search engine */      
+      #footer {
+        display: block;
+        width: 100%;
+        border: 1px solid green;
+        font-size: large;
+        text-align: center;
+      }
+      #footer .state_block {
+        display: inline-block;
+        color: #000000;
+        height: 100%;
+      }
+      #footer .state_block.highlight {
+        color: #ff6600;
+        font-weight: bold;
+      }
+
+      #footer .state_block_sep {
+        display: inline-block;
+        padding: 1em;
+      }
+    </style>
+  </head>
+  <body onload="_vise_init()">
+    <div id="header">VGG Image Search Engine</div>
+
+    <div id="content">content</div>
+
+    <div id="footer">
+    </div>
+
+  <script type="text/javascript">
+  var vise_server = new XMLHttpRequest();
+  var VISE_SERVER_ADDRESS = "__VISE_SERVER_ADDRESS__"
+  vise_server.addEventListener("load", _vise_response_listener);
+
+  function _vise_response_listener() {
+    var response_str = this.responseText;
+    var response = JSON.parse(response_str);
+    switch(response.id) {
+      case 'search_engine_state':
+        _vise_update_search_engine_state(response);
+        break;
+      default:
+        console.log("Do not know where to forward the received response!");
+        console.log(response_str);
+    }
+  }
+
+  function _vise_update_search_engine_state(response) {
+    console.log(response);
+    var html = [];
+    for ( var i=0; i<response['state_name_list'].length; i++ ) {
+      if ( i === response['current_state_id'] ) {
+        html.push('<div class="state_block highlight">' + response['state_name_list'][i] + '</div>');
+      } else {
+        html.push('<div class="state_block">' + response['state_name_list'][i] + '</div>');
+      }
+      html.push('<div class="state_block_sep">&rarr;</div>');
+    }
+    // remove the last arrow
+    html.splice(html.length - 1, 1);
+    document.getElementById("footer").innerHTML = html.join('');
+  }
+
+  function _vise_init() {
+    // update the search engine state
+    _vise_send_get_request("state_list");
+  }
+
+  function _vise_send_get_request(resource_name) {
+    try {
+      var get_url = VISE_SERVER_ADDRESS + resource_name;
+      vise_server.open("GET", get_url);
+      vise_server.send( "" );
+    } catch ( e ) {
+      console.log( "_vise_send_get_request() failed:");
+      console.log( e.message );
+    }
+  }
+  </script>
+  </body>
+</html>
+
