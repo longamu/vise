@@ -17,33 +17,51 @@
 #include <streambuf>
 #include <map>
 #include <set>
+#include <algorithm>
 
 #include <boost/filesystem.hpp>
 
 class SearchEngine {
 public:
   enum STATE {
-    UNKNOWN = 0,
-    INIT,
-    CONFIG,
-    TRAIN_UNKNOWN,
-    TRAIN_FILELIST,
-    TRAIN_DESCS,
-    TRAIN_CLUST,
-    TRAIN_ASSIGN,
-    TRAIN_HAMM,
-    TRAIN_INDEX,
-    TRAIN_DONE,
+    INITIALIZE=0,
+    SETTINGS,
+    OVERVIEW,
+    PREPROCESSING,
+    COMPUTE_DESCRIPTORS,
+    CLUSTER_DESCRIPTORS,
+    ASSIGN_CLUSTER,
+    COMPUTER_HAMM,
+    INDEX,
     QUERY,
-    ERROR
+    STATE_COUNT
   };
 
   SearchEngine();
   void Init(std::string name, boost::filesystem::path basedir);
-  std::string MoveToNextState();
 
+  std::string MoveToNextState();
   STATE GetEngineState() {
     return state_;
+  }
+  std::string GetEngineStateName() {
+    return state_name_list_.at(state_);
+  }
+  std::string GetEngineStateName( unsigned int state_id ) {
+    return state_name_list_.at(state_id);
+  }
+  std::string GetEngineStateInfo() {
+    return state_info_list_.at(state_);
+  }
+  std::string GetEngineStateList();
+  int GetEngineState(std::string state_name) {
+    std::vector<std::string>::iterator found;
+    found = std::find( state_name_list_.begin(), state_name_list_.end(), state_name );
+    if ( found != state_name_list_.end() ) {
+      return ( std::distance(state_name_list_.begin(), found) );
+    } else {
+      return -1;
+    }
   }
 
   std::string Name() {
@@ -55,16 +73,25 @@ public:
   }
 
   std::string GetResourceUri(std::string resource_name);
+  std::string GetSearchEngineBaseUri() {
+    return "/" + engine_name_ + "/";
+  }
 
   void SetEngineConfig(std::string engine_config);
   std::string GetEngineConfigParam(std::string key);
   void PrintEngineConfig();
+
  private:
   boost::filesystem::path basedir_;
   boost::filesystem::path enginedir_;
   boost::filesystem::path engine_config_fn_;
-  std::string engine_name_;
+
+  // to maintain state of the search engine
   STATE state_;
+  std::vector< std::string > state_name_list_;
+  std::vector< std::string > state_info_list_;
+
+  std::string engine_name_;
   std::map< std::string, std::string > engine_config_;
 
   void CreateEngine( std::string name );

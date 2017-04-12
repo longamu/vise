@@ -11,7 +11,7 @@
       body {
       min-width: 800px;
       padding: 0;
-      margin: 0;
+      margin: 1em;
       font-family: sans-serif;
       }
       #cmd_log {
@@ -32,19 +32,54 @@
       .text_button:hover {
       cursor: pointer;
       }
+
+      .progress {
+        display: inline-block;
+        width: 200px;
+        background-color: grey;
+      }
+      .bar {
+        width: 50px;
+        background-color: blue;
+      }
     </style>
   </head>
   <body>
   <h1>VISE Training</h1>
-  <ol>
-    <li>Create image list : <span class="text_button" onclick="send_cmd('create_img_list start')">Start</span> | <span class="text_button" onclick="send_cmd('create_img_list stop')">Stop</span></li>
+  <table>
+    <tr>
+      <td>Prepare images</td>
+      <td><span class="text_button" onclick="send_cmd('prepare_images start')">Start</span> | 
+      <span class="text_button" onclick="send_cmd('prepare_images stop')">Stop</span></td>
+      <td><div class="progress">
+        <div id="progress_create_img_list" class="bar">&nbsp;</div>
+      </div></td>
+    </tr>
 
-    <li>trainDescs</li>
-    <li>cluster</li>
-    <li>trainAssign</li>
-    <li>trainHamm</li>
-    <li>index</li>
-  </ol>
+    <tr>
+      <td>Compute descriptors</td>
+      <td></td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td>Cluster</td>
+      <td></td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td>Assign</td>
+      <td></td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td>Perform indexing</td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
 
   <pre id="cmd_log">
 command output will be shown here

@@ -1,0 +1,76 @@
+<h1>Search Engine Settings</h1>
+<table id="vise_settings">
+  <tr>
+    <td><h3>Basic Configuration</h3></td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td>imagePath</td>
+    <td><input class="vise_setting_param" type="text" name="imagePath" size="60" value="/data/datasets/vise/data/image/ox5k/test/"></td>
+  </tr>
+  <tr>
+    <td><h3>Advanced Configuration</h3></td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td>projectTitle</td>
+    <td><input class="vise_setting_param" type="text" name="projectTitle" value="Oxford Buildings Search" onchange="update_projectName()"></td>
+  </tr>
+  <tr>
+    <td>projectName</td>
+    <td><input id="projectName" class="vise_setting_param" type="text" name="projectName" value="ox5k"></td>
+  </tr>
+  <tr>
+    <td>RootSIFT</td>
+    <td><input class="vise_setting_param" type="checkbox" name="RootSIFT" checked></td>
+  </tr>
+  <tr>
+    <td>SIFTscale3</td>
+    <td><input class="vise_setting_param" type="checkbox" name="SIFTscale3" checked></td>
+  </tr>
+  <tr>
+    <td>hammEmbBits</td>
+    <td><input class="vise_setting_param" type="text" name="hammEmbBits" value="64"></td>
+  </tr>
+  <tr>
+    <td>trainNumDescs</td>
+    <td><input class="vise_setting_param" type="text" name="trainNumDescs" value="800000"></td>
+  </tr>
+  <tr>
+    <td>vocSize</td>
+    <td><input class="vise_setting_param" type="text" name="vocSize" value="10000"></td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td><input type="submit" name="Submit" value="Submit" onclick="send_settings_data()"></td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+function send_settings_data() {
+  var postdata = [];
+  var vise_settings = document.getElementById("vise_settings");
+  var setting_param = vise_settings.getElementsByClassName("vise_setting_param");
+
+  for ( var i = 0; i < setting_param.length; i++) {
+    var param_name  = setting_param[i].name;
+    var param_value = setting_param[i].value;
+    postdata.push( param_name + "=" + param_value );
+  }
+  var postdata_str = postdata.join('\n');
+
+  _vise_send_post_request( postdata_str );
+}
+
+function update_projectName() {
+  var title = document.getElementById("");
+  var name = document.getElementById("projectName");
+  // @todo
+}
+</script>
+
+

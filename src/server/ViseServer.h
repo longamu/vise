@@ -18,7 +18,6 @@
 #include <ctime>
 #include <unistd.h>
 #include <stdexcept>
-#include <set>
 
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <boost/shared_ptr.hpp>
@@ -38,11 +37,6 @@ class ViseServer {
   bool Stop();
   bool Restart();
 
-  void CreateFileList(boost::filesystem::path dir,
-                      std::set<std::string> acceptable_types,
-                      std::ostringstream &filelist);
-
-
  private:
   unsigned int port_;
   std::string hostname_;
@@ -54,8 +48,11 @@ class ViseServer {
   SearchEngine search_engine_;
 
   // html templates
-  std::string html_engine_settings_;
-  std::string html_engine_training_;
+  boost::filesystem::path html_dir_;
+  boost::filesystem::path vise_main_html_fn_;
+
+  std::string html_vise_main_;
+  std::vector<std::string> state_html_list_;
 
   boost::system::error_code error_;
 
@@ -66,17 +63,21 @@ class ViseServer {
   void MoveToNextState();
 
   void HandleConnection(boost::shared_ptr<tcp::socket> p_socket);
-  void HandleRequest(std::string resource, boost::shared_ptr<tcp::socket> p_socket);
+  void HandleGetRequest(std::string resource, boost::shared_ptr<tcp::socket> p_socket);
+  void HandlePostRequest(std::string resource, std::string post_data, boost::shared_ptr<tcp::socket> p_socket);
+
   void SendHttpResponse(std::string html, boost::shared_ptr<tcp::socket> p_socket);
   void SendHttpNotFound(boost::shared_ptr<tcp::socket> p_socket);
   void SendHttpRedirect(std::string redirect_uri, boost::shared_ptr<tcp::socket> p_socket);
   void SendErrorResponse(std::string message, std::string backtrace, boost::shared_ptr<tcp::socket> p_socket);
   void SendRawResponse(std::string response, boost::shared_ptr<tcp::socket> p_socket);
+  void SendJsonResponse(std::string json, boost::shared_ptr<tcp::socket> p_socket);
 
   void ExtractHttpResource(std::string http_request, std::string &http_resource);
   void ExtractHttpContent(std::string http_request, std::string &http_content);
 
-  void LoadFile(std::string filename, std::string &file_contents);
+  int LoadStateHtml(unsigned int state_id, std::string &state_html);
+  int LoadFile(std::string filename, std::string &file_contents);
   void WriteFile(std::string filename, std::string &file_contents);
 
   void SplitString(std::string s, char sep, std::vector<std::string> &tokens);

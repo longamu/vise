@@ -1,7 +1,29 @@
 #include "SearchEngine.h"
 
 SearchEngine::SearchEngine() {
-  state_ = SearchEngine::UNKNOWN;
+  state_ = SearchEngine::INITIALIZE;
+
+  state_name_list_.push_back("Initialize");
+  state_name_list_.push_back("Settings");
+  state_name_list_.push_back("Overview");
+  state_name_list_.push_back("Preprocessing");
+  state_name_list_.push_back("Descriptor");
+  state_name_list_.push_back("Cluster");
+  state_name_list_.push_back("Assignment");
+  state_name_list_.push_back("Hamm");
+  state_name_list_.push_back("Index");
+  state_name_list_.push_back("Query");
+
+  state_info_list_.push_back("");
+  state_info_list_.push_back("");
+  state_info_list_.push_back("");
+  state_info_list_.push_back("(2 min.)");
+  state_info_list_.push_back("(10 min.)");
+  state_info_list_.push_back("(3 min.)");
+  state_info_list_.push_back("(1 min.)");
+  state_info_list_.push_back("(1 min.)");
+  state_info_list_.push_back("(2 hours)");
+  state_info_list_.push_back("");
 }
 
 void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
@@ -11,7 +33,7 @@ void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
     LoadEngine( name );
 
     if ( EngineConfigExists() ) {
-      state_ = SearchEngine::CONFIG;
+      state_ = SearchEngine::SETTINGS;
     }
   } else {
     CreateEngine( name );
@@ -32,7 +54,7 @@ void SearchEngine::CreateEngine( std::string name ) {
               << "[" << enginedir_ << "]" << std::flush;
   }
 
-  state_ = SearchEngine::INIT;
+  state_ = SearchEngine::INITIALIZE;
   engine_name_ = name;
   std::cout << "\n" << name << " search engine created" << std::flush;
 }
@@ -42,7 +64,7 @@ void SearchEngine::LoadEngine( std::string name ) {
   enginedir_ = basedir_ / engine_name;
   if ( is_directory( enginedir_ ) ) {
     std::cout << "\n" << name << " search engine loaded" << std::flush;
-    state_ = SearchEngine::INIT;
+    state_ = SearchEngine::INITIALIZE;
     engine_name_ = name;
 
     boost::filesystem::path config_fn( "user_settings.txt" );
@@ -64,20 +86,20 @@ bool SearchEngine::EngineExists( std::string name ) {
 std::string SearchEngine::MoveToNextState() {
   std::string redirect_uri;
   switch ( state_ ) {
-  case SearchEngine::INIT :
+  case SearchEngine::INITIALIZE :
     if ( EngineConfigExists() ) {
-      state_ = SearchEngine::TRAIN_UNKNOWN;
+      state_ = SearchEngine::SETTINGS;
       redirect_uri = GetResourceUri("training");
     } else {
       redirect_uri = GetResourceUri("settings");
     }
     break;
 
-  case SearchEngine::CONFIG :
+  case SearchEngine::SETTINGS :
     redirect_uri = GetResourceUri("training");
     break;
 
-  case SearchEngine::TRAIN_DONE :
+  case SearchEngine::INDEX :
     redirect_uri = GetResourceUri("query");
     break;
 
@@ -103,7 +125,7 @@ std::string SearchEngine::GetResourceUri(std::string resource_name) {
   } else if ( resource_name == "training" ) {
     resource_uri = resource_uri + "/training";
   } else {
-    resource_uri = resource_uri + "/unknown";
+    resource_uri = resource_uri + "/";
   }
   return resource_uri;
 }
@@ -173,6 +195,25 @@ std::string SearchEngine::GetEngineConfigParam(std::string key) {
   else {
     return "Not Found";
   }
+}
+
+std::string SearchEngine::GetEngineStateList() {
+  std::ostringstream json;
+  json << "{ \"id\" : \"search_engine_state\",";
+  json << "\"state_id_list\" : [ 0";
+  for ( unsigned int i=1 ; i<SearchEngine::STATE_COUNT; i++ ) {
+    json << "," << i;
+  }
+  json << "], \"state_name_list\" : [ \"" << state_name_list_.at(0) << "\"";
+  for ( unsigned int i=1 ; i<SearchEngine::STATE_COUNT; i++ ) {
+    json << ", \"" << state_name_list_.at(i) << "\"";
+  }
+  json << "], \"state_info_list\" : [ \"" << state_info_list_.at(0) << "\"";
+  for ( unsigned int i=1 ; i<SearchEngine::STATE_COUNT; i++ ) {
+    json << ", \"" << state_info_list_.at(i) << "\"";
+  }
+  json << "], \"current_state_id\" : " << state_ << "  }";
+  return json.str();
 }
 
 // for debug
