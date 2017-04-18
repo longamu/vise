@@ -54,6 +54,11 @@ void SearchEngine::CreateEngine( std::string name ) {
               << "[" << enginedir_ << "]" << std::flush;
   }
 
+  transformed_imgdir_  = enginedir_ / "img";
+  training_datadir_    = enginedir_ / "training_data";
+  create_directory(transformed_imgdir_);
+  create_directory(training_datadir_);
+
   state_ = SearchEngine::INITIALIZE;
   engine_name_ = name;
   std::cout << "\n" << name << " search engine created" << std::flush;
@@ -69,6 +74,9 @@ void SearchEngine::LoadEngine( std::string name ) {
 
     boost::filesystem::path config_fn( "user_settings.txt" );
     engine_config_fn_ = enginedir_ / config_fn;
+
+    transformed_imgdir_  = enginedir_ / "img";
+    training_datadir_    = enginedir_ / "training_data";
   }
 }
 
@@ -158,7 +166,7 @@ void SearchEngine::CreateFileList(boost::filesystem::path dir,
   while ( dir_it != end_it ) {
     boost::filesystem::path p = dir_it->path();
     std::string fn_dir = p.parent_path().string();
-    std::string rel_path = fn_dir.replace(0, basedir.length(), "./");
+    std::string rel_path = fn_dir.replace(0, basedir.length(), "");
     boost::filesystem::path rel_fn = boost::filesystem::path(rel_path) / p.filename();
     if ( boost::filesystem::is_regular_file(p) ) {
       /*
@@ -173,6 +181,7 @@ void SearchEngine::CreateFileList(boost::filesystem::path dir,
     }
     ++dir_it;
   }
+  original_imgdir_ = dir;
 }
 
 // data_str =
@@ -268,11 +277,11 @@ void SearchEngine::UpdateEngineOverview() {
   engine_overview_.clear();
 
   boost::filesystem::path imagePath(GetEngineConfigParam("imagePath"));
-  CreateFileList( imagePath, image_file_list_ );
+  CreateFileList( imagePath, img_filename_list_ );
 
   engine_overview_ << "<h3>Overview of Search Engine</h3>";
   engine_overview_ << "<table id=\"engine_overview\">";
-  engine_overview_ << "<tr><td># of images</td><td>" << image_file_list_.size() << "</td></tr>";
+  engine_overview_ << "<tr><td># of images</td><td>" << img_filename_list_.size() << "</td></tr>";
   engine_overview_ << "<tr><td>Training time*</td><td>4 hours</td></tr>";
   engine_overview_ << "<tr><td>Memory required*</td><td>3 GB</td></tr>";
   engine_overview_ << "<tr><td>Disk space required*</td><td>10 GB</td></tr>";
@@ -280,6 +289,43 @@ void SearchEngine::UpdateEngineOverview() {
   engine_overview_ << "<tr><td><input type=\"button\" onclick=\"_vise_send_post_request('back')\" value=\"Back\"></td><td><input type=\"button\" onclick=\"_vise_send_post_request('proceed')\" value=\"Proceed\"></td></tr>";
   engine_overview_ << "</table>";
   engine_overview_ << "<p>&nbsp;</p><p>* : todo</p>";
+}
+
+void SearchEngine::Preprocess() {
+  SendStatus("Preprocessing started ...");
+  // scale and copy image to transformed_imgdir_
+  for ( unsigned int i=0; i<img_filename_list_.size(); i++ ) {
+    boost::filesystem::path img_rel_path = img_filename_list_.at(i);
+    boost::filesystem::path src_fn  = original_imgdir_ / img_rel_path;
+    boost::filesystem::path dest_fn = transformed_imgdir_ / img_rel_path;
+    SendStatus( "\n" + src_fn.string() + " -> " + dest_fn.string() );
+
+    //TransformImage(src_fn, dest_fn, imagemagick_param);
+  }
+
+  // export original and scaled image file list to training_datadir_
+
+  // save full configuration file to training_datadir_
+  return;
+}
+
+void SearchEngine::SendMessage(std::string message) {
+  SendMessage(GetEngineStateName(), message);
+}
+
+void SearchEngine::SendMessage(std::string sender, std::string message) {
+  std::string packet = sender + " message_panel " + message;
+  vise_message_queue_.Push( packet );
+}
+
+void SearchEngine::SendStatus(std::string status) {
+  SendStatus(GetEngineStateName(), status);
+}
+
+void SearchEngine::SendStatus(std::string sender, std::string status) {
+  std::string packet = sender + " status " + status;
+  vise_message_queue_.Push( packet );
+  std::cout << "\nSendStatus() : " << packet << std::flush;
 }
 
 // for debug

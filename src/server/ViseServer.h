@@ -27,6 +27,10 @@
 
 using boost::asio::ip::tcp;
 
+// defined in src/vise.cc
+// a global message queue to send communications to client HTTP browser
+extern ViseMessageQueue vise_message_queue_;
+
 class ViseServer {
 public:
   ViseServer();
@@ -45,7 +49,6 @@ public:
 
 private:
   SearchEngine     search_engine_;
-  ViseMessageQueue message_queue_;
 
   unsigned int port_;
   std::string hostname_;

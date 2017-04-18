@@ -21,6 +21,12 @@
 
 #include <boost/filesystem.hpp>
 
+#include "ViseMessageQueue.h"
+
+// defined in src/vise.cc
+// a global message queue to send communications to client HTTP browser
+extern ViseMessageQueue vise_message_queue_;
+
 class SearchEngine {
 public:
   enum STATE {
@@ -60,9 +66,13 @@ public:
   std::string GetEngineOverview();
   void UpdateEngineOverview();
 
+  void Preprocess();
  private:
   boost::filesystem::path basedir_;
   boost::filesystem::path enginedir_;
+  boost::filesystem::path original_imgdir_;
+  boost::filesystem::path transformed_imgdir_;
+  boost::filesystem::path training_datadir_;
   boost::filesystem::path engine_config_fn_;
 
   // to maintain state of the search engine
@@ -74,7 +84,7 @@ public:
   std::map< std::string, std::string > engine_config_;
 
   bool update_engine_overview_;
-  std::vector< std::string > image_file_list_;
+  std::vector< std::string > img_filename_list_;
   std::ostringstream engine_overview_;
 
   void CreateEngine( std::string name );
@@ -85,6 +95,10 @@ public:
   void CreateFileList(boost::filesystem::path dir,
                       std::vector<std::string> &filelist);
 
+  void SendMessage(std::string sender, std::string message);
+  void SendMessage(std::string message);
+  void SendStatus(std::string sender, std::string status);
+  void SendStatus(std::string status);
 };
 
 #endif /* _VISE_SEARCH_ENGINE_H */

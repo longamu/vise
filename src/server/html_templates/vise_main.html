@@ -94,17 +94,17 @@
         z-index: 1000;
       }
 
-      #log_message {
+      .status_message {
         display: block;
-        margin: 2em;
         padding: 1em;
         font-family: Mono;
         font-size: 0.8em;
         color: green;
         background-color: black;
         width: 90%;
-        height: 600px;
+        height: 400px;
         overflow: scroll;
+        white-space: pre;
       }
     </style>
   </head>
@@ -179,7 +179,7 @@
   function _vise_handle_status_msg(sender, msg) {
     var status_panel = document.getElementById( sender + "_status" );
     if ( typeof status_panel !== 'undefined' ) {
-      status_panel.innerHTML += "\n" + msg;
+      status_panel.innerHTML += msg;
     } else {
       console.log("Do not know where to deliver the status message. sender=" + sender + ", msg=" + msg);
     }

@@ -81,6 +81,9 @@ void ViseServer::Start(unsigned int port) {
   engine_config << "trainNumDescs=800000\n";
   engine_config << "vocSize=10000\n";
   search_engine_.SetEngineConfig( engine_config.str() );
+
+  search_engine_.UpdateEngineOverview();
+
   search_engine_.MoveToNextState(); // Settings
   search_engine_.MoveToNextState(); // Overview
   search_engine_.MoveToNextState(); // Preprocessing
@@ -160,7 +163,7 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       if ( tokens.at(2) == "_message" ) {
         std::string msg;
         std::cout << "\nWaiting for messeage queue to be populated" << std::flush;
-        message_queue_.BlockingPop( msg );
+        vise_message_queue_.BlockingPop( msg );
         SendRawResponse( msg, p_socket );
         std::cout << "\nSend message: " << msg << std::flush;
         return;
@@ -240,10 +243,14 @@ void ViseServer::HandlePostRequest( std::string search_engine_name,
       search_engine_.MoveToNextState();
     } else if ( resource_name == "Overview" ) {
       if ( post_data == "proceed" ) {
+        search_engine_.MoveToNextState();
       } else {
-
+        search_engine_.MoveToPrevState();
       }
     } else if ( resource_name == "Preprocessing" ) {
+      if ( post_data == "start_preprocessing" ) {
+        search_engine_.Preprocess();
+      }
     } else if ( resource_name == "Descriptor" ) {
     } else if ( resource_name == "Cluster" ) {
     } else if ( resource_name == "Assignment" ) {
@@ -378,7 +385,7 @@ void ViseServer::SendMessage(std::string message) {
 
 void ViseServer::SendMessage(std::string sender, std::string message) {
   std::string packet = sender + " message_panel " + message;
-  message_queue_.Push( packet );
+  vise_message_queue_.Push( packet );
 }
 
 void ViseServer::SendStatus(std::string status) {
@@ -387,7 +394,7 @@ void ViseServer::SendStatus(std::string status) {
 
 void ViseServer::SendStatus(std::string sender, std::string status) {
   std::string packet = sender + " status " + status;
-  message_queue_.Push( packet );
+  vise_message_queue_.Push( packet );
 }
 
 void ViseServer::SendHttpNotFound(boost::shared_ptr<tcp::socket> p_socket) {

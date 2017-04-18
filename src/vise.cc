@@ -10,6 +10,9 @@
 
 #include "ViseServer.h"
 
+// global context ensure that any object can send messages to the client
+ViseMessageQueue vise_message_queue_;
+
 int main(int argc, char** argv) {
   std::cout << "\nVGG Image Search Engine (VISE)";
   std::cout << "\n";
