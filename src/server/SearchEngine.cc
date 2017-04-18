@@ -18,11 +18,11 @@ SearchEngine::SearchEngine() {
   state_info_list_.push_back("");
   state_info_list_.push_back("");
   state_info_list_.push_back("(2 min.)");
-  state_info_list_.push_back("(10 min.)");
-  state_info_list_.push_back("(3 min.)");
+  state_info_list_.push_back("(6 min.)");
+  state_info_list_.push_back("(49 min.)");
   state_info_list_.push_back("(1 min.)");
   state_info_list_.push_back("(1 min.)");
-  state_info_list_.push_back("(2 hours)");
+  state_info_list_.push_back("(3 hours)");
   state_info_list_.push_back("");
 }
 
@@ -111,6 +111,22 @@ void SearchEngine::MoveToNextState() {
   }
 }
 
+void SearchEngine::MoveToPrevState() {
+  std::string redirect_uri;
+  switch ( state_ ) {
+  case SearchEngine::SETTINGS :
+    state_ = SearchEngine::INITIALIZE;
+    break;
+
+  case SearchEngine::OVERVIEW :
+    state_ = SearchEngine::SETTINGS;
+    break;
+
+  default:
+    std::cerr << "Do not know how to move to previous state!" << std::flush;
+  }
+}
+
 bool SearchEngine::EngineConfigExists() {
   if ( is_regular_file(engine_config_fn_) ) {
     return true;
@@ -131,25 +147,11 @@ std::string SearchEngine::GetResourceUri(std::string resource_name) {
   return resource_uri;
 }
 
-void SearchEngine::RunTrainingCommand(std::string cmd, std::vector< std::string > cmd_params) {
-  if ( cmd == "create_img_list" ) {
-  std::string img_path = GetEngineConfigParam("imagePath");
-      boost::filesystem::path image_dir(img_path);
-      std::set<std::string> acceptable_types;
-      acceptable_types.insert(".jpg");
-      acceptable_types.insert(".png");
-      std::ostringstream filelist;
-      CreateFileList(image_dir, acceptable_types, filelist);
-  } else {
-    std::cerr << "\nSearchEngine::RunTrainingCommand() : unknown command : " << cmd << std::flush;
-  }
-}
-
 void SearchEngine::CreateFileList(boost::filesystem::path dir,
-                                std::set<std::string> acceptable_types,
-                                std::ostringstream &filelist) {
+                                  std::vector< std::string > &filelist) {
 
-  std::cout << "\nShowing directory contents of : " << dir.string() << std::endl;
+  //std::cout << "\nShowing directory contents of : " << dir.string() << std::endl;
+  filelist.clear();
   boost::filesystem::recursive_directory_iterator dir_it( dir ), end_it;
 
   std::string basedir = dir.string();
@@ -159,11 +161,15 @@ void SearchEngine::CreateFileList(boost::filesystem::path dir,
     std::string rel_path = fn_dir.replace(0, basedir.length(), "./");
     boost::filesystem::path rel_fn = boost::filesystem::path(rel_path) / p.filename();
     if ( boost::filesystem::is_regular_file(p) ) {
+      /*
+      // todo : add only image files which can be read by VISE
       std::string fn_ext = p.extension().string();
       if ( acceptable_types.count(fn_ext) == 1 ) {
         std::cout << rel_fn << std::endl;
         filelist << rel_fn.string() << std::endl;
       }
+      */
+      filelist.push_back( rel_fn.string() );
     }
     ++dir_it;
   }
@@ -184,6 +190,7 @@ void SearchEngine::SetEngineConfig(std::string engine_config) {
 
     engine_config_.insert( std::make_pair<std::string, std::string>(key, val) );
   }
+  update_engine_overview_ = true;
 }
 
 std::string SearchEngine::GetEngineConfigParam(std::string key) {
@@ -247,6 +254,32 @@ boost::filesystem::path SearchEngine::GetEngineConfigPath() {
 }
 std::string SearchEngine::GetSearchEngineBaseUri() {
   return "/" + engine_name_ + "/";
+}
+
+std::string SearchEngine::GetEngineOverview() {
+  if ( update_engine_overview_ ) {
+    UpdateEngineOverview();
+  }
+  return engine_overview_.str();
+}
+
+void SearchEngine::UpdateEngineOverview() {
+  engine_overview_.str("");
+  engine_overview_.clear();
+
+  boost::filesystem::path imagePath(GetEngineConfigParam("imagePath"));
+  CreateFileList( imagePath, image_file_list_ );
+
+  engine_overview_ << "<h3>Overview of Search Engine</h3>";
+  engine_overview_ << "<table id=\"engine_overview\">";
+  engine_overview_ << "<tr><td># of images</td><td>" << image_file_list_.size() << "</td></tr>";
+  engine_overview_ << "<tr><td>Training time*</td><td>4 hours</td></tr>";
+  engine_overview_ << "<tr><td>Memory required*</td><td>3 GB</td></tr>";
+  engine_overview_ << "<tr><td>Disk space required*</td><td>10 GB</td></tr>";
+  engine_overview_ << "<tr><td>&nbsp;</td><td>&nbsp;</td></tr>";
+  engine_overview_ << "<tr><td><input type=\"button\" onclick=\"_vise_send_post_request('back')\" value=\"Back\"></td><td><input type=\"button\" onclick=\"_vise_send_post_request('proceed')\" value=\"Proceed\"></td></tr>";
+  engine_overview_ << "</table>";
+  engine_overview_ << "<p>&nbsp;</p><p>* : todo</p>";
 }
 
 // for debug

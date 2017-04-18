@@ -46,6 +46,9 @@ void ViseServer::Start(unsigned int port) {
 
   std::cout << "\nServer started on port " << port << " :-)";
 
+  //
+  // debugging code START
+  //
   // for debugging, we initial a search engine
   std::string search_engine_name = "ox5k";
   search_engine_.Init(search_engine_name, vise_enginedir_);
@@ -67,6 +70,23 @@ void ViseServer::Start(unsigned int port) {
     state_html_list_.push_back("");
     LoadStateHtml(i, state_html_list_.at(i));
   }
+
+  std::ostringstream engine_config;
+  engine_config << "imagePath=/data/datasets/vise/data/image/ox5k/test/\n";
+  engine_config << "projectTitle=Oxford Buildings Search\n";
+  engine_config << "projectName=ox5k\n";
+  engine_config << "RootSIFT=on\n";
+  engine_config << "SIFTscale3=on\n";
+  engine_config << "hammEmbBits=64\n";
+  engine_config << "trainNumDescs=800000\n";
+  engine_config << "vocSize=10000\n";
+  search_engine_.SetEngineConfig( engine_config.str() );
+  search_engine_.MoveToNextState(); // Settings
+  search_engine_.MoveToNextState(); // Overview
+  search_engine_.MoveToNextState(); // Preprocessing
+  //
+  // debugging code END
+  //
 
   try {
     while ( 1 ) {
@@ -117,14 +137,22 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
 
   std::vector<std::string> tokens;
   SplitString( http_method_uri, '/', tokens );
-  /*
+
   // debug
   for ( unsigned int i=0; i<tokens.size(); i++ ) {
     std::cout << "\ntokens[" << i << "] = " << tokens.at(i) << std::flush;
   }
-  std::cout << "\nhttp_method_uri = " << http_method_uri << std::flush;
-  std::cout << "\nmsg_uri_ = " << msg_url_ << std::flush;
+
+  /*
+    std::cout << "\nhttp_method_uri = " << http_method_uri << std::flush;
+    std::cout << "\nmsg_uri_ = " << msg_url_ << std::flush;
   */
+
+  if ( tokens.size() == 0 ) {
+    SendHttpNotFound( p_socket );
+    p_socket->close();
+    return;
+  }
   std::string search_engine_name;
   if ( http_method == "GET " ) { // note the extra space in "GET "
     // check if this is a request for message
@@ -172,7 +200,7 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
           std::string http_post_data;
           ExtractHttpContent(http_request, http_post_data);
 
-          HandlePostRequest( resource, http_post_data, p_socket);
+          HandlePostRequest( search_engine_name, resource, http_post_data, p_socket);
         } else {
           SendHttpNotFound( p_socket );
         }
@@ -186,7 +214,8 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
 }
 
 
-void ViseServer::HandlePostRequest( std::string resource_name,
+void ViseServer::HandlePostRequest( std::string search_engine_name,
+                                    std::string resource_name,
                                     std::string post_data,
                                     boost::shared_ptr<tcp::socket> p_socket)
 {
@@ -194,12 +223,34 @@ void ViseServer::HandlePostRequest( std::string resource_name,
             << ", post_data=" << post_data << std::flush;
 
   if ( search_engine_.GetEngineStateName() == resource_name ) {
-    std::string msg = "Sample message from VISE server";
-    std::cout << "Sending message : " << msg << std::flush;
-    SendMessage( search_engine_.GetEngineStateName(), msg );
+    if ( resource_name == "Initialize" ) {
+      if ( post_data == "initialize_search_engine" ) {
+        // InitializeSearchEngine(search_engine_name);
+        // for debug, we initialize everything in Start()
+        SendMessage("Initialized search engine " + search_engine_name);
+        search_engine_.MoveToNextState();
+      }
+    } else if ( resource_name == "Settings" ) {
+      search_engine_.SetEngineConfig(post_data);
+      SendMessage("Saved settings for  " + search_engine_name);
 
-    // move to next state
-    search_engine_.MoveToNextState();
+      // create overview
+      state_html_list_.at(SearchEngine::OVERVIEW) = search_engine_.GetEngineOverview();
+
+      search_engine_.MoveToNextState();
+    } else if ( resource_name == "Overview" ) {
+      if ( post_data == "proceed" ) {
+      } else {
+
+      }
+    } else if ( resource_name == "Preprocessing" ) {
+    } else if ( resource_name == "Descriptor" ) {
+    } else if ( resource_name == "Cluster" ) {
+    } else if ( resource_name == "Assignment" ) {
+    } else if ( resource_name == "Hamm" ) {
+    } else if ( resource_name == "Index" ) {
+    } else if ( resource_name == "Query" ) {
+    }
 
     // ask the client to refresh its page
     SendJsonResponse( search_engine_.GetEngineStateList(), p_socket );
@@ -225,13 +276,40 @@ void ViseServer::HandleGetRequest( std::string resource_name,
     }
   } else if ( resource_name == "state_list" ) {
     SendJsonResponse( search_engine_.GetEngineStateList(), p_socket );
-  } else if ( resource_name == "search_engine_message" ) {
-    std::cout << "\nProcessing search engine message" << std::flush;
   } else {
     SendHttpNotFound(p_socket);
   }
 }
 
+//
+// Processing of HTTP POST data
+//
+void ViseServer::InitializeSearchEngine(std::string search_engine_name) {
+  search_engine_.Init(search_engine_name, vise_enginedir_);
+
+  std::string search_engine_base_url = url_prefix_;
+  search_engine_base_url += search_engine_.GetSearchEngineBaseUri();
+  ReplaceString(html_vise_main_,
+                "__VISE_SERVER_ADDRESS__",
+                search_engine_base_url);
+
+  msg_url_ = search_engine_base_url + "_message";
+  ReplaceString(html_vise_main_,
+                "__VISE_MESSENGER_ADDRESS__",
+                msg_url_);
+
+
+  // load html file resources
+  for (unsigned int i=0; i < SearchEngine::STATE_COUNT; i++) {
+    state_html_list_.push_back("");
+    LoadStateHtml(i, state_html_list_.at(i));
+  }
+
+}
+
+//
+// Sending reply to HTTP client
+//
 void ViseServer::SendErrorResponse(std::string message, std::string backtrace, boost::shared_ptr<tcp::socket> p_socket) {
   std::string html;
   html  = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">";
@@ -258,7 +336,7 @@ void ViseServer::SendRawResponse(std::string response, boost::shared_ptr<tcp::so
   http_response << response;
 
   boost::asio::write( *p_socket, boost::asio::buffer(http_response.str()) );
-  std::cout << "\nSent response : [" << response << "]" << std::flush;
+  //std::cout << "\nSent response : [" << response << "]" << std::flush;
 }
 
 void ViseServer::SendJsonResponse(std::string json, boost::shared_ptr<tcp::socket> p_socket) {
@@ -271,7 +349,7 @@ void ViseServer::SendJsonResponse(std::string json, boost::shared_ptr<tcp::socke
   http_response << json;
 
   boost::asio::write( *p_socket, boost::asio::buffer(http_response.str()) );
-  std::cout << "\nSent json response : [" << json << "]" << std::flush;
+  //std::cout << "\nSent json response : [" << json << "]" << std::flush;
 }
 
 void ViseServer::SendHttpResponse(std::string response, boost::shared_ptr<tcp::socket> p_socket) {
@@ -291,12 +369,20 @@ void ViseServer::SendHttpResponse(std::string response, boost::shared_ptr<tcp::s
   http_response << response;
   boost::asio::write( *p_socket, boost::asio::buffer(http_response.str()) );
 
-  std::cout << "\nSent http html response of length : " << response.length() << std::flush;
+  //std::cout << "\nSent http html response of length : " << response.length() << std::flush;
+}
+
+void ViseServer::SendMessage(std::string message) {
+  SendMessage(search_engine_.GetEngineStateName(), message);
 }
 
 void ViseServer::SendMessage(std::string sender, std::string message) {
   std::string packet = sender + " message_panel " + message;
   message_queue_.Push( packet );
+}
+
+void ViseServer::SendStatus(std::string status) {
+  SendStatus(search_engine_.GetEngineStateName(), status);
 }
 
 void ViseServer::SendStatus(std::string sender, std::string status) {

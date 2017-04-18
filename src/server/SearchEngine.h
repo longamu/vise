@@ -41,6 +41,8 @@ public:
   void Init(std::string name, boost::filesystem::path basedir);
 
   void MoveToNextState();
+  void MoveToPrevState();
+
   STATE GetEngineState();
   std::string GetEngineStateName();
   std::string GetEngineStateName( unsigned int state_id );
@@ -55,6 +57,9 @@ public:
   std::string GetEngineConfigParam(std::string key);
   void PrintEngineConfig();
 
+  std::string GetEngineOverview();
+  void UpdateEngineOverview();
+
  private:
   boost::filesystem::path basedir_;
   boost::filesystem::path enginedir_;
@@ -68,15 +73,18 @@ public:
   std::string engine_name_;
   std::map< std::string, std::string > engine_config_;
 
+  bool update_engine_overview_;
+  std::vector< std::string > image_file_list_;
+  std::ostringstream engine_overview_;
+
   void CreateEngine( std::string name );
   void LoadEngine( std::string name );
   bool EngineExists( std::string name );
   bool EngineConfigExists();
 
-  void RunTrainingCommand(std::string cmd, std::vector< std::string > cmd_params);
   void CreateFileList(boost::filesystem::path dir,
-                      std::set<std::string> acceptable_types,
-                      std::ostringstream &filelist);
+                      std::vector<std::string> &filelist);
+
 };
 
 #endif /* _VISE_SEARCH_ENGINE_H */

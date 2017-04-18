@@ -74,7 +74,13 @@ private:
 
   void HandleConnection(boost::shared_ptr<tcp::socket> p_socket);
   void HandleGetRequest(std::string resource, boost::shared_ptr<tcp::socket> p_socket);
-  void HandlePostRequest(std::string resource, std::string post_data, boost::shared_ptr<tcp::socket> p_socket);
+
+  void HandlePostRequest(std::string search_engine_name,
+                         std::string resource,
+                         std::string post_data,
+                         boost::shared_ptr<tcp::socket> p_socket);
+
+  void InitializeSearchEngine(std::string search_engine_name);
 
   void SendHttpResponse(std::string html, boost::shared_ptr<tcp::socket> p_socket);
   void SendHttpNotFound(boost::shared_ptr<tcp::socket> p_socket);
@@ -84,13 +90,15 @@ private:
   void SendJsonResponse(std::string json, boost::shared_ptr<tcp::socket> p_socket);
 
   void SendMessage(std::string sender, std::string message);
+  void SendMessage(std::string message);
   void SendStatus(std::string sender, std::string status);
+  void SendStatus(std::string status);
 
   void ExtractHttpResource(std::string http_request, std::string &http_resource);
   void ExtractHttpContent(std::string http_request, std::string &http_content);
 
-  int LoadStateHtml(unsigned int state_id, std::string &state_html);
-  int LoadFile(std::string filename, std::string &file_contents);
+  int  LoadStateHtml(unsigned int state_id, std::string &state_html);
+  int  LoadFile(std::string filename, std::string &file_contents);
   void WriteFile(std::string filename, std::string &file_contents);
 
   void SplitString(std::string s, char sep, std::vector<std::string> &tokens);
