@@ -1,4 +1,4 @@
-/** @file   vise_server.h
+/** @file   ViseServer.h
  *  @brief  provides HTTP based user interface for VISE
  *
  *  Provides a HTTP based user interface to configure, train and query the
@@ -15,42 +15,52 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <ctime>
-#include <unistd.h>
 #include <stdexcept>
 
-#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 
 #include "SearchEngine.h"
+#include "ViseMessageQueue.h"
 
 using boost::asio::ip::tcp;
 
 class ViseServer {
- public:
-  ViseServer( std::string vise_datadir );
+public:
+  ViseServer();
 
+  void InitResources( std::string vise_datadir, std::string html_template_dir );
   void Start(unsigned int port);
   bool Stop();
   bool Restart();
 
- private:
+  std::string GetViseDataDir() {
+    return vise_datadir_.string();
+  }
+  std::string GetHtmlTemplateDir() {
+    return html_template_dir_.string();
+  }
+
+private:
+  SearchEngine     search_engine_;
+  ViseMessageQueue message_queue_;
+
   unsigned int port_;
   std::string hostname_;
   std::string url_prefix_;
+  std::string msg_url_;
 
-  boost::filesystem::path  vise_datadir_;
-  boost::filesystem::path  vise_enginedir_;
-  boost::filesystem::path  vise_htmldir_;
-  SearchEngine search_engine_;
+  boost::filesystem::path vise_datadir_;
+  boost::filesystem::path html_template_dir_;
 
-  // html templates
-  boost::filesystem::path html_dir_;
+  // location of search engine temporary files
+  boost::filesystem::path vise_enginedir_;
+  boost::filesystem::path vise_htmldir_;
   boost::filesystem::path vise_main_html_fn_;
 
+  // html contents
   std::string html_vise_main_;
   std::vector<std::string> state_html_list_;
 
@@ -72,6 +82,9 @@ class ViseServer {
   void SendErrorResponse(std::string message, std::string backtrace, boost::shared_ptr<tcp::socket> p_socket);
   void SendRawResponse(std::string response, boost::shared_ptr<tcp::socket> p_socket);
   void SendJsonResponse(std::string json, boost::shared_ptr<tcp::socket> p_socket);
+
+  void SendMessage(std::string sender, std::string message);
+  void SendStatus(std::string sender, std::string status);
 
   void ExtractHttpResource(std::string http_request, std::string &http_resource);
   void ExtractHttpContent(std::string http_request, std::string &http_content);

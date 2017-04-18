@@ -168,7 +168,7 @@ CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/ui/web/send_comments.cmake.py ${CMAKE_SOURCE
 ############################## Boost
 
 
-find_package(Boost 1.44.0 COMPONENTS ${REQURE_BOOST_MPI} filesystem system thread date_time REQUIRED)
+find_package(Boost 1.44.0 COMPONENTS ${REQURE_BOOST_MPI} filesystem system thread date_time atomic REQUIRED)
 
 link_directories( ${Boost_LIBRARY_DIRS} )
 include_directories( ${Boost_INCLUDE_DIRS} )
@@ -214,7 +214,7 @@ endif()
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_executable( vise vise.cc )
-target_link_libraries( vise ViseServer )
+target_link_libraries( vise ViseServer)
 
 include_directories( api )
 include_directories( compression )

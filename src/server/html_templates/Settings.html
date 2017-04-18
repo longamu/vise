@@ -1,7 +1,6 @@
-<h1>Search Engine Settings</h1>
 <table id="vise_settings">
   <tr>
-    <td><h3>Basic Configuration</h3></td>
+    <td><h3>Basic Settings</h3></td>
     <td>&nbsp;</td>
   </tr>
   <tr>
@@ -9,7 +8,7 @@
     <td><input class="vise_setting_param" type="text" name="imagePath" size="60" value="/data/datasets/vise/data/image/ox5k/test/"></td>
   </tr>
   <tr>
-    <td><h3>Advanced Configuration</h3></td>
+    <td><h3>Advanced Settings</h3></td>
     <td>&nbsp;</td>
   </tr>
   <tr>
@@ -46,31 +45,8 @@
   </tr>
   <tr>
     <td>&nbsp;</td>
-    <td><input type="submit" name="Submit" value="Submit" onclick="send_settings_data()"></td>
+    <td><input type="submit" name="Submit" value="Submit" onclick="post_settings_data()"></td>
   </tr>
 </table>
-
-<script type="text/javascript">
-function send_settings_data() {
-  var postdata = [];
-  var vise_settings = document.getElementById("vise_settings");
-  var setting_param = vise_settings.getElementsByClassName("vise_setting_param");
-
-  for ( var i = 0; i < setting_param.length; i++) {
-    var param_name  = setting_param[i].name;
-    var param_value = setting_param[i].value;
-    postdata.push( param_name + "=" + param_value );
-  }
-  var postdata_str = postdata.join('\n');
-
-  _vise_send_post_request( postdata_str );
-}
-
-function update_projectName() {
-  var title = document.getElementById("");
-  var name = document.getElementById("projectName");
-  // @todo
-}
-</script>
 
 

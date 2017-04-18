@@ -40,43 +40,17 @@ public:
   SearchEngine();
   void Init(std::string name, boost::filesystem::path basedir);
 
-  std::string MoveToNextState();
-  STATE GetEngineState() {
-    return state_;
-  }
-  std::string GetEngineStateName() {
-    return state_name_list_.at(state_);
-  }
-  std::string GetEngineStateName( unsigned int state_id ) {
-    return state_name_list_.at(state_id);
-  }
-  std::string GetEngineStateInfo() {
-    return state_info_list_.at(state_);
-  }
+  void MoveToNextState();
+  STATE GetEngineState();
+  std::string GetEngineStateName();
+  std::string GetEngineStateName( unsigned int state_id );
+  std::string GetEngineStateInfo();
   std::string GetEngineStateList();
-  int GetEngineState(std::string state_name) {
-    std::vector<std::string>::iterator found;
-    found = std::find( state_name_list_.begin(), state_name_list_.end(), state_name );
-    if ( found != state_name_list_.end() ) {
-      return ( std::distance(state_name_list_.begin(), found) );
-    } else {
-      return -1;
-    }
-  }
-
-  std::string Name() {
-    return engine_name_;
-  }
-
-  boost::filesystem::path GetEngineConfigPath() {
-    return engine_config_fn_;
-  }
-
+  int GetEngineState(std::string state_name);
+  std::string Name();
+  boost::filesystem::path GetEngineConfigPath();
   std::string GetResourceUri(std::string resource_name);
-  std::string GetSearchEngineBaseUri() {
-    return "/" + engine_name_ + "/";
-  }
-
+  std::string GetSearchEngineBaseUri();
   void SetEngineConfig(std::string engine_config);
   std::string GetEngineConfigParam(std::string key);
   void PrintEngineConfig();

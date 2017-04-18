@@ -83,31 +83,32 @@ bool SearchEngine::EngineExists( std::string name ) {
   }
 }
 
-std::string SearchEngine::MoveToNextState() {
+void SearchEngine::MoveToNextState() {
   std::string redirect_uri;
   switch ( state_ ) {
   case SearchEngine::INITIALIZE :
-    if ( EngineConfigExists() ) {
-      state_ = SearchEngine::SETTINGS;
-      redirect_uri = GetResourceUri("training");
-    } else {
-      redirect_uri = GetResourceUri("settings");
-    }
+    state_ = SearchEngine::SETTINGS;
     break;
 
   case SearchEngine::SETTINGS :
-    redirect_uri = GetResourceUri("training");
+    state_ = SearchEngine::OVERVIEW;
     break;
 
-  case SearchEngine::INDEX :
-    redirect_uri = GetResourceUri("query");
+  case SearchEngine::OVERVIEW :
+    state_ = SearchEngine::PREPROCESSING;
+    break;
+
+  case SearchEngine::PREPROCESSING :
+    state_ = SearchEngine::COMPUTE_DESCRIPTORS;
+    break;
+
+  case SearchEngine::COMPUTE_DESCRIPTORS :
+    state_ = SearchEngine::CLUSTER_DESCRIPTORS;
     break;
 
   default:
-    redirect_uri = GetResourceUri("unknown");
     std::cerr << "Do not know how to move to next state!" << std::flush;
   }
-  return redirect_uri;
 }
 
 bool SearchEngine::EngineConfigExists() {
@@ -214,6 +215,38 @@ std::string SearchEngine::GetEngineStateList() {
   }
   json << "], \"current_state_id\" : " << state_ << "  }";
   return json.str();
+}
+
+int SearchEngine::GetEngineState(std::string state_name) {
+  std::vector<std::string>::iterator found;
+  found = std::find( state_name_list_.begin(), state_name_list_.end(), state_name );
+  if ( found != state_name_list_.end() ) {
+    return ( std::distance(state_name_list_.begin(), found) );
+  } else {
+    return -1;
+  }
+}
+
+SearchEngine::STATE SearchEngine::GetEngineState() {
+  return state_;
+}
+std::string SearchEngine::GetEngineStateName() {
+  return state_name_list_.at(state_);
+}
+std::string SearchEngine::GetEngineStateName( unsigned int state_id ) {
+  return state_name_list_.at(state_id);
+}
+std::string SearchEngine::GetEngineStateInfo() {
+  return state_info_list_.at(state_);
+}
+std::string SearchEngine::Name() {
+  return engine_name_;
+}
+boost::filesystem::path SearchEngine::GetEngineConfigPath() {
+  return engine_config_fn_;
+}
+std::string SearchEngine::GetSearchEngineBaseUri() {
+  return "/" + engine_name_ + "/";
 }
 
 // for debug

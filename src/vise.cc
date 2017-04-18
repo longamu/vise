@@ -11,13 +11,14 @@
 #include "ViseServer.h"
 
 int main(int argc, char** argv) {
-  std::cout << "\nVGG Image Search Enginer (VISE)";
+  std::cout << "\nVGG Image Search Engine (VISE)";
   std::cout << "\n";
-
   unsigned int port = 8080;
 
   std::string visedata_dir = "/home/tlm/vise/";
-  ViseServer vise_server = ViseServer( visedata_dir );
+  std::string html_template_dir = "/home/tlm/dev/vise/src/server/html_templates/";
+  ViseServer vise_server;
+  vise_server.InitResources( visedata_dir, html_template_dir );
 
   vise_server.Start(port);
 
