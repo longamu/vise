@@ -362,7 +362,34 @@ void SearchEngine::Preprocess() {
 
 void SearchEngine::Descriptor() {
   SendStatus("Computing training descriptors ...");
-  boost::this_thread::sleep( boost::posix_time::seconds(4) );
+
+  std::string const trainImagelistFn = GetEngineConfigParam("trainImagelistFn");
+  std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
+
+  int32_t trainNumDescs;
+  std::stringstream s;
+  s << GetEngineConfigParam("trainNumDescs");
+  s >> trainNumDescs;
+
+  std::string const trainFilesPrefix = GetEngineConfigParam("trainFilesPrefix");
+  std::string const trainDescsFn  = trainFilesPrefix + "descs.e3bin";
+
+  bool SIFTscale3 = false;
+  if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
+    SIFTscale3 = true;
+  }
+
+  // source: src/v2/indexing/compute_index_v2.cpp
+  featGetter_standard const featGetter_obj( (
+                                             std::string("hesaff-") +
+                                             "sift" +
+                                             std::string(SIFTscale3 ? "-scale3" : "")
+                                             ).c_str() );
+
+  buildIndex::computeTrainDescs(trainImagelistFn, trainDatabasePath,
+                                trainDescsFn,
+                                trainNumDescs,
+                                featGetter_obj);
 
   SendControl("<div id=\"Descriptor_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
 }

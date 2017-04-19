@@ -26,6 +26,9 @@
 
 #include "ViseMessageQueue.h"
 
+#include "feat_standard.h"
+#include "train_descs.h"
+
 // defined in src/vise.cc
 // a global message queue to send communications to client HTTP browser
 extern ViseMessageQueue vise_message_queue_;
