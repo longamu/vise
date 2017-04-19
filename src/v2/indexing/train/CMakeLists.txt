@@ -15,6 +15,7 @@ target_link_libraries( train_assign
 
 add_library( train_descs train_descs.cpp )
 target_link_libraries( train_descs
+    ViseMessageQueue
     clst_centres
     par_queue
     same_random # added by @Abhishek to support compilation in Mac

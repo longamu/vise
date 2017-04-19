@@ -23,8 +23,6 @@ No usage or redistribution is allowed without explicit permission.
 #include "timing.h"
 #include "util.h"
 
-
-
 void reduceIidxScale(std::string iidxFn, std::string iidxFn_new, float keepPercent, embedderFactory const &embFactory){
     
     protoDbFile dbIidx(iidxFn);

@@ -361,8 +361,17 @@ void SearchEngine::Preprocess() {
 }
 
 void SearchEngine::Descriptor() {
-  SendStatus("Computing training descriptors ...");
+  std::string const trainFilesPrefix = GetEngineConfigParam("trainFilesPrefix");
+  std::string const trainDescsFn  = trainFilesPrefix + "descs.e3bin";
+  boost::filesystem::path train_desc_fn( trainDescsFn );
 
+  if ( boost::filesystem::exists( train_desc_fn ) ) {
+    // delete file
+    boost::filesystem::remove( train_desc_fn );
+    SendStatus("\nDeleted old training descriptors ...");
+  }
+
+  SendStatus("\nComputing training descriptors ...");
   std::string const trainImagelistFn = GetEngineConfigParam("trainImagelistFn");
   std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
 
@@ -370,9 +379,6 @@ void SearchEngine::Descriptor() {
   std::stringstream s;
   s << GetEngineConfigParam("trainNumDescs");
   s >> trainNumDescs;
-
-  std::string const trainFilesPrefix = GetEngineConfigParam("trainFilesPrefix");
-  std::string const trainDescsFn  = trainFilesPrefix + "descs.e3bin";
 
   bool SIFTscale3 = false;
   if ( GetEngineConfigParam("SIFTscale3") == "on" ) {

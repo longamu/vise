@@ -32,7 +32,6 @@ No usage or redistribution is allowed without explicit permission.
 #include "util.h"
 
 
-
 int main(int argc, char* argv[]){
     
     MPI_INIT_ENV

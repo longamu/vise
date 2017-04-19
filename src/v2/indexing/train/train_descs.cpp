@@ -16,6 +16,7 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <fstream>
 #include <vector>
+#include <sstream>
 
 #include <boost/filesystem.hpp>
 
@@ -32,10 +33,7 @@ No usage or redistribution is allowed without explicit permission.
 #include "timing.h"
 
 
-
-
 namespace buildIndex {
-
 
 
 typedef std::pair<uint32_t, std::string> trainDescsResult;
@@ -53,8 +51,10 @@ class trainDescsManager : public queueManager<trainDescsResult> {
                 nextID_(0),
                 progressPrint_(
                     trainNumDescs<0 ? numDocs : trainNumDescs,
-                    std::string("trainDescsManager") + (trainNumDescs<0 ? "(images)" : "(descs)") ) {
+                    std::string("Descriptor") ) {
 
+                  total_img_count_     = numDocs;
+                  processed_img_count_ = 0;
                   f_= fopen(trainDescsFn.c_str(), "wb");
                   ASSERT(f_!=NULL);
                   fwrite( &numDims, sizeof(numDims), 1, f_ );
@@ -74,6 +74,9 @@ class trainDescsManager : public queueManager<trainDescsResult> {
         FILE *f_;
         timing::progressPrint progressPrint_;
 
+        uint32_t total_img_count_;
+        uint32_t processed_img_count_;
+
         DISALLOW_COPY_AND_ASSIGN(trainDescsManager)
 };
 
@@ -85,6 +88,7 @@ trainDescsManager::operator()( uint32_t jobID, trainDescsResult &result ){
         results_.clear();
         return;
     }
+
     // make sure results are saved sorted by job/docID!
     results_[jobID]= result;
     if (jobID==nextID_){
@@ -95,8 +99,9 @@ trainDescsManager::operator()( uint32_t jobID, trainDescsResult &result ){
              ++nextID_){
 
             trainDescsResult const &res= it->second;
-            if (allDescs_)
+            if (allDescs_) {
                 progressPrint_.inc();
+            }
 
             if (res.first>0) {
                 uint32_t numToCopy= (allDescs_ || res.first < remainNumDescs_) ?
@@ -108,8 +113,14 @@ trainDescsManager::operator()( uint32_t jobID, trainDescsResult &result ){
                         sizeof(char),
                         numToCopy*res.second.size()/res.first,
                         f_ );
-                if (!allDescs_)
+                if (!allDescs_) {
                     progressPrint_.inc(numToCopy);
+                    processed_img_count_++;
+
+                    std::ostringstream s;
+                    s << "Descriptor status \nProcessed image " << processed_img_count_ << " / " << total_img_count_;
+                    vise_message_queue_.Push( s.str() );
+                }
                 remainNumDescs_-= numToCopy;
             }
             results_.erase(it++);

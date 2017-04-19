@@ -11,6 +11,7 @@
 #include <Magick++.h>            // to transform images
 
 #include "ViseServer.h"
+#include "ViseMessageQueue.h"
 
 // global context ensure that any object can send messages to the client
 ViseMessageQueue vise_message_queue_;
