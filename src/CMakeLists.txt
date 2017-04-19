@@ -199,7 +199,8 @@ set( BUILD_SHARED_LIBS "ON" )
 
 
 
-set( CMAKE_CXX_FLAGS "-Wall -DEIGEN_NO_DEBUG -O2 -g3 -msse2 -mpopcnt")
+#set( CMAKE_CXX_FLAGS "-Wall -DEIGEN_NO_DEBUG -O2 -g3 -msse2 -mpopcnt")
+set( CMAKE_CXX_FLAGS "-Wall -DEIGEN_NO_DEBUG -O2 -g3 -msse2 -mpopcnt -DMAGICKCORE_QUANTUM_DEPTH=16 -DMAGICKCORE_HDRI_ENABLE=1")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.7.1")
@@ -214,7 +215,7 @@ endif()
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_executable( vise vise.cc )
-target_link_libraries( vise ViseServer)
+target_link_libraries( vise ViseServer ${ImageMagick_LIBRARIES})
 
 include_directories( api )
 include_directories( compression )

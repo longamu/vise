@@ -8,6 +8,8 @@
 #include <iostream>
 #include <string>
 
+#include <Magick++.h>            // to transform images
+
 #include "ViseServer.h"
 
 // global context ensure that any object can send messages to the client
@@ -17,6 +19,8 @@ int main(int argc, char** argv) {
   std::cout << "\nVGG Image Search Engine (VISE)";
   std::cout << "\n";
   unsigned int port = 8080;
+
+  Magick::InitializeMagick(*argv);
 
   std::string visedata_dir = "/home/tlm/vise/";
   std::string html_template_dir = "/home/tlm/dev/vise/src/server/html_templates/";

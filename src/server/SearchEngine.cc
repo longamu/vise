@@ -29,54 +29,43 @@ SearchEngine::SearchEngine() {
 void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
   basedir_ = boost::filesystem::path(basedir);
 
-  if ( EngineExists(name) ) {
-    LoadEngine( name );
-
-    if ( EngineConfigExists() ) {
-      state_ = SearchEngine::SETTINGS;
-    }
-  } else {
-    CreateEngine( name );
-  }
-}
-
-void SearchEngine::CreateEngine( std::string name ) {
-  boost::filesystem::path engine_name( name );
-  enginedir_ = basedir_ / engine_name;
-
-  boost::filesystem::path config_fn( "user_settings.txt" );
-  engine_config_fn_ = enginedir_ / config_fn;
-
-  // create directory
-  if ( ! create_directory( enginedir_ ) ) {
-    std::cerr << "\nSearchEngine::CreateEngine() : "
-              << "failed to create search engine directory "
-              << "[" << enginedir_ << "]" << std::flush;
-  }
-
-  transformed_imgdir_  = enginedir_ / "img";
-  training_datadir_    = enginedir_ / "training_data";
-  create_directory(transformed_imgdir_);
-  create_directory(training_datadir_);
+  engine_name_ = name;
+  InitEngineResources();
 
   state_ = SearchEngine::INITIALIZE;
-  engine_name_ = name;
-  std::cout << "\n" << name << " search engine created" << std::flush;
 }
 
-void SearchEngine::LoadEngine( std::string name ) {
-  boost::filesystem::path engine_name( name );
+void SearchEngine::InitEngineResources() {
+  boost::filesystem::path engine_name( engine_name_ );
   enginedir_ = basedir_ / engine_name;
-  if ( is_directory( enginedir_ ) ) {
-    std::cout << "\n" << name << " search engine loaded" << std::flush;
-    state_ = SearchEngine::INITIALIZE;
-    engine_name_ = name;
 
-    boost::filesystem::path config_fn( "user_settings.txt" );
-    engine_config_fn_ = enginedir_ / config_fn;
+  engine_config_fn_    = enginedir_ / "user_settings.txt";
+  transformed_imgdir_  = enginedir_ / "img";
+  training_datadir_    = enginedir_ / "training_data";
+  tmp_datadir_         = enginedir_ / "tmp";
 
-    transformed_imgdir_  = enginedir_ / "img";
-    training_datadir_    = enginedir_ / "training_data";
+  transformed_imgdir_ += boost::filesystem::path::preferred_separator;
+  training_datadir_ += boost::filesystem::path::preferred_separator;
+  tmp_datadir_ += boost::filesystem::path::preferred_separator;
+
+  // create directory
+  if ( ! boost::filesystem::exists( enginedir_ ) ) {
+    boost::filesystem::create_directory( enginedir_ );
+    boost::filesystem::create_directory( transformed_imgdir_ );
+    boost::filesystem::create_directory( training_datadir_ );
+    std::cout << "\n" << engine_name_ << " search engine created" << std::flush;
+  } else {
+    if ( ! boost::filesystem::exists( transformed_imgdir_ ) ) {
+      boost::filesystem::create_directory( transformed_imgdir_ );
+    }
+    if ( ! boost::filesystem::exists( training_datadir_ ) ) {
+      boost::filesystem::create_directory( training_datadir_ );
+    }
+    if ( ! boost::filesystem::exists( tmp_datadir_ ) ) {
+      boost::filesystem::create_directory( tmp_datadir_ );
+    }
+
+    std::cout << "\n" << engine_name_ << " search engine loaded" << std::flush;
   }
 }
 
@@ -214,6 +203,19 @@ std::string SearchEngine::GetEngineConfigParam(std::string key) {
   }
 }
 
+
+void SearchEngine::SetEngineConfigParam(std::string key, std::string value) {
+  std::map<std::string, std::string>::iterator it;
+  it = engine_config_.find( key );
+
+  if ( it != engine_config_.end() ) {
+    it->second = value;
+  }
+  else {
+    engine_config_.insert( std::make_pair<std::string, std::string>(key, value) );
+  }
+}
+
 std::string SearchEngine::GetEngineStateList() {
   std::ostringstream json;
   json << "{ \"id\" : \"search_engine_state\",";
@@ -277,11 +279,11 @@ void SearchEngine::UpdateEngineOverview() {
   engine_overview_.clear();
 
   boost::filesystem::path imagePath(GetEngineConfigParam("imagePath"));
-  CreateFileList( imagePath, img_filename_list_ );
+  CreateFileList( imagePath, imglist_);
 
   engine_overview_ << "<h3>Overview of Search Engine</h3>";
   engine_overview_ << "<table id=\"engine_overview\">";
-  engine_overview_ << "<tr><td># of images</td><td>" << img_filename_list_.size() << "</td></tr>";
+  engine_overview_ << "<tr><td># of images</td><td>" << imglist_.size() << "</td></tr>";
   engine_overview_ << "<tr><td>Training time*</td><td>4 hours</td></tr>";
   engine_overview_ << "<tr><td>Memory required*</td><td>3 GB</td></tr>";
   engine_overview_ << "<tr><td>Disk space required*</td><td>10 GB</td></tr>";
@@ -293,39 +295,124 @@ void SearchEngine::UpdateEngineOverview() {
 
 void SearchEngine::Preprocess() {
   SendStatus("Preprocessing started ...");
+
   // scale and copy image to transformed_imgdir_
-  for ( unsigned int i=0; i<img_filename_list_.size(); i++ ) {
-    boost::filesystem::path img_rel_path = img_filename_list_.at(i);
+  SendStatus("\nSaved transformed images to [" + transformed_imgdir_.string() + "] ");
+  for ( unsigned int i=0; i<imglist_.size(); i++ ) {
+    boost::filesystem::path img_rel_path = imglist_.at(i);
     boost::filesystem::path src_fn  = original_imgdir_ / img_rel_path;
     boost::filesystem::path dest_fn = transformed_imgdir_ / img_rel_path;
-    SendStatus( "\n" + src_fn.string() + " -> " + dest_fn.string() );
 
-    //TransformImage(src_fn, dest_fn, imagemagick_param);
+    if ( !boost::filesystem::exists( dest_fn ) ) {
+      try {
+        Magick::Image im;
+        im.read( src_fn.string() );
+        Magick::Geometry size = im.size();
+
+        double aspect_ratio =  ((double) size.height()) / ((double) size.width());
+        unsigned int new_width = 400;
+        unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
+
+        Magick::Geometry resize = Magick::Geometry(new_width, new_height);
+        resize.greater(true); // Resize if image is greater than size (>)
+
+        std::ostringstream info;
+        info << std::string(size) << " -> " << std::string(resize);
+        im.zoom( resize );
+
+        // check if image path exists
+        if ( ! boost::filesystem::is_directory( dest_fn.parent_path() ) ) {
+          boost::filesystem::create_directories( dest_fn.parent_path() );
+        }
+        im.write( dest_fn.string() );
+        SendStatus( "." );
+      } catch (std::exception &error) {
+        SendStatus( "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
+      }
+    }
   }
+  SendStatus("[DONE]");
 
-  // export original and scaled image file list to training_datadir_
+  //if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
+  imglist_fn_ = training_datadir_ / "imlist.txt";
+  WriteImageListToFile( imglist_fn_.string(), imglist_ );
+  SendStatus( "\nWritten image list to : [" + imglist_fn_.string() + "]" );
 
   // save full configuration file to training_datadir_
-  return;
+  SetEngineConfigParam("trainDatabasePath", transformed_imgdir_.string());
+  SetEngineConfigParam("databasePath", transformed_imgdir_.string());
+  SetEngineConfigParam("trainImagelistFn",  imglist_fn_.string());
+  SetEngineConfigParam("imagelistFn",  imglist_fn_.string());
+  boost::filesystem::path train_file_prefix = training_datadir_ / "train_";
+  SetEngineConfigParam("trainFilesPrefix", train_file_prefix.string() );
+  SetEngineConfigParam("pathManHide", transformed_imgdir_.string() );
+  SetEngineConfigParam("dsetFn", train_file_prefix.string() + "dset.v2bin" );
+  SetEngineConfigParam("clstFn", train_file_prefix.string() + "clst.e3bin" );
+  SetEngineConfigParam("iidxFn", train_file_prefix.string() + "iidx.e3bin" );
+  SetEngineConfigParam("fidxFn", train_file_prefix.string() + "fidx.e3bin" );
+  SetEngineConfigParam("wdhtFn", train_file_prefix.string() + "wght.e3bin" );
+  SetEngineConfigParam("tmpDir", tmp_datadir_.string());
+
+  engine_config_fn_ = training_datadir_ / "vise_config.cfg";
+  WriteConfigToFile();
+  SendStatus( "\nWritten search engine configuration to : [" + engine_config_fn_.string() + "]" );
+
+  SendControl("<div id=\"Preprocessing_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
+}
+
+void SearchEngine::Descriptor() {
+  SendStatus("Computing training descriptors ...");
+  boost::this_thread::sleep( boost::posix_time::seconds(4) );
+
+  SendControl("<div id=\"Descriptor_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
+}
+
+void SearchEngine::WriteImageListToFile(const std::string fn,
+                                        const std::vector< std::string > &imlist) {
+  try {
+    std::ofstream f( fn.c_str() );
+    for ( unsigned int i=0; i < imlist.size(); i++) {
+      f << imlist.at(i) << "\n";
+    }
+    f.close();
+  } catch( std::exception &e) {
+    std::cerr << "\nSearchEngine::WriteImageListToFile() : error writing image filename list to [" << fn << "]" << std::flush;
+    std::cerr << e.what() << std::flush;
+  }
+}
+
+void SearchEngine::WriteConfigToFile() {
+  try {
+    std::map<std::string, std::string>::iterator it;
+    std::ofstream f( engine_config_fn_.c_str() );
+
+    f << "[" << engine_name_ << "]";
+    for ( it = engine_config_.begin(); it != engine_config_.end(); ++it) {
+      f << "\n" << it->first << "=" << it->second;
+    }
+    f.close();
+  } catch( std::exception &e) {
+    std::cerr << "\nSearchEngine::WriteConfigToFile() : error writing configuration to [" << engine_config_fn_ << "]" << std::flush;
+    std::cerr << e.what() << std::flush;
+  }
 }
 
 void SearchEngine::SendMessage(std::string message) {
-  SendMessage(GetEngineStateName(), message);
-}
-
-void SearchEngine::SendMessage(std::string sender, std::string message) {
-  std::string packet = sender + " message_panel " + message;
-  vise_message_queue_.Push( packet );
+  SendPacket(GetEngineStateName(), "message", message);
 }
 
 void SearchEngine::SendStatus(std::string status) {
-  SendStatus(GetEngineStateName(), status);
+  SendPacket(GetEngineStateName(), "status", status);
 }
 
-void SearchEngine::SendStatus(std::string sender, std::string status) {
-  std::string packet = sender + " status " + status;
-  vise_message_queue_.Push( packet );
-  std::cout << "\nSendStatus() : " << packet << std::flush;
+void SearchEngine::SendControl(std::string control) {
+  SendPacket(GetEngineStateName(), "control", control);
+}
+
+void SearchEngine::SendPacket(std::string sender, std::string type, std::string message) {
+  std::ostringstream s;
+  s << sender << " " << type << " " << message;
+  vise_message_queue_.Push( s.str() );
 }
 
 // for debug

@@ -64,7 +64,6 @@ void ViseServer::Start(unsigned int port) {
                 "__VISE_MESSENGER_ADDRESS__",
                 msg_url_);
 
-
   // load html file resources
   for (unsigned int i=0; i < SearchEngine::STATE_COUNT; i++) {
     state_html_list_.push_back("");
@@ -108,17 +107,6 @@ bool ViseServer::Stop() {
   return true;
 }
 
-void ViseServer::SplitString( std::string s, char sep, std::vector<std::string> &tokens ) {
-  unsigned int start = 0;
-  for ( unsigned int i=0; i<s.length(); ++i) {
-    if ( s.at(i) == sep ) {
-      tokens.push_back( s.substr(start, (i-start)) );
-      start = i + 1;
-    }
-  }
-  tokens.push_back( s.substr(start, s.length()) );
-}
-
 void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
   char http_buffer[1024];
 
@@ -141,21 +129,22 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
   std::vector<std::string> tokens;
   SplitString( http_method_uri, '/', tokens );
 
-  // debug
-  for ( unsigned int i=0; i<tokens.size(); i++ ) {
-    std::cout << "\ntokens[" << i << "] = " << tokens.at(i) << std::flush;
-  }
-
-  /*
-    std::cout << "\nhttp_method_uri = " << http_method_uri << std::flush;
-    std::cout << "\nmsg_uri_ = " << msg_url_ << std::flush;
-  */
-
   if ( tokens.size() == 0 ) {
     SendHttpNotFound( p_socket );
     p_socket->close();
     return;
   }
+
+  /*
+  // debug
+  for ( unsigned int i=0; i<tokens.size(); i++ ) {
+  std::cout << "\ntokens[" << i << "] = " << tokens.at(i) << std::flush;
+  }
+
+  std::cout << "\nhttp_method_uri = " << http_method_uri << std::flush;
+  std::cout << "\nmsg_uri_ = " << msg_url_ << std::flush;
+  */
+
   std::string search_engine_name;
   if ( http_method == "GET " ) { // note the extra space in "GET "
     // check if this is a request for message
@@ -248,10 +237,21 @@ void ViseServer::HandlePostRequest( std::string search_engine_name,
         search_engine_.MoveToPrevState();
       }
     } else if ( resource_name == "Preprocessing" ) {
-      if ( post_data == "start_preprocessing" ) {
+      if ( post_data == "start" ) {
         search_engine_.Preprocess();
+      } else if ( post_data == "proceed" ) {
+        search_engine_.MoveToNextState();
+      } else {
+        search_engine_.MoveToPrevState();
       }
     } else if ( resource_name == "Descriptor" ) {
+      if ( post_data == "start" ) {
+        search_engine_.Descriptor();
+      } else if ( post_data == "proceed" ) {
+        search_engine_.MoveToNextState();
+      } else {
+        search_engine_.MoveToPrevState();
+      }
     } else if ( resource_name == "Cluster" ) {
     } else if ( resource_name == "Assignment" ) {
     } else if ( resource_name == "Hamm" ) {
@@ -493,4 +493,19 @@ bool ViseServer::ReplaceString(std::string &s, std::string old_str, std::string 
     return true;
   }
 
+}
+
+void ViseServer::SplitString( std::string s, char sep, std::vector<std::string> &tokens ) {
+  if ( s.length() == 0 ) {
+    return;
+  }
+
+  unsigned int start = 0;
+  for ( unsigned int i=0; i<s.length(); ++i) {
+    if ( s.at(i) == sep ) {
+      tokens.push_back( s.substr(start, (i-start)) );
+      start = i + 1;
+    }
+  }
+  tokens.push_back( s.substr(start, s.length()) );
 }

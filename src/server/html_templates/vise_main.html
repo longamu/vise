@@ -106,6 +106,21 @@
         overflow: scroll;
         white-space: pre;
       }
+
+      .control_panel {
+        display: block;
+        padding: 0;
+        margin: 1em 0;
+      }
+      .control_panel .action_button {
+        display: inline-block;
+        margin-left: 1em;
+        border: none;
+        color: #0000ff;
+      }
+      .control_panel .action_button:hover {
+        cursor: pointer;
+      }
     </style>
   </head>
   <body onload="_vise_init()">
@@ -171,6 +186,9 @@
       case "status":
         _vise_handle_status_msg(sender, msg);
         break;
+      case "control":
+        _vise_handle_control_msg(sender, msg);
+        break;
       default:
         console.log("Do not know how to handle this message : " + packet);
     }
@@ -182,6 +200,15 @@
       status_panel.innerHTML += msg;
     } else {
       console.log("Do not know where to deliver the status message. sender=" + sender + ", msg=" + msg);
+    }
+  }
+
+  function _vise_handle_control_msg(sender, msg) {
+    var control_panel = document.getElementById( sender + "_control" );
+    if ( typeof control_panel !== 'undefined' ) {
+      control_panel.innerHTML += msg;
+    } else {
+      console.log("Do not know where to deliver the control message. sender=" + sender + ", msg=" + msg);
     }
   }
 

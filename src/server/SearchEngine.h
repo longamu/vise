@@ -14,12 +14,15 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <streambuf>
 #include <map>
 #include <set>
 #include <algorithm>
 
-#include <boost/filesystem.hpp>
+#include <boost/filesystem.hpp>  // to query/update filesystem
+
+#include <Magick++.h>            // to transform images
 
 #include "ViseMessageQueue.h"
 
@@ -45,10 +48,16 @@ public:
 
   SearchEngine();
   void Init(std::string name, boost::filesystem::path basedir);
+  void InitEngineResources();
+  void UpdateEngineOverview();
+
+  void Preprocess();
+  void Descriptor();
 
   void MoveToNextState();
   void MoveToPrevState();
 
+  // getters and setters
   STATE GetEngineState();
   std::string GetEngineStateName();
   std::string GetEngineStateName( unsigned int state_id );
@@ -60,20 +69,22 @@ public:
   std::string GetResourceUri(std::string resource_name);
   std::string GetSearchEngineBaseUri();
   void SetEngineConfig(std::string engine_config);
+  void SetEngineConfigParam(std::string key, std::string value);
   std::string GetEngineConfigParam(std::string key);
   void PrintEngineConfig();
-
   std::string GetEngineOverview();
-  void UpdateEngineOverview();
 
-  void Preprocess();
  private:
   boost::filesystem::path basedir_;
   boost::filesystem::path enginedir_;
+
   boost::filesystem::path original_imgdir_;
   boost::filesystem::path transformed_imgdir_;
+  boost::filesystem::path imglist_fn_;
+  std::vector< std::string > imglist_;
+
   boost::filesystem::path training_datadir_;
-  boost::filesystem::path engine_config_fn_;
+  boost::filesystem::path tmp_datadir_;
 
   // to maintain state of the search engine
   STATE state_;
@@ -81,10 +92,11 @@ public:
   std::vector< std::string > state_info_list_;
 
   std::string engine_name_;
+
   std::map< std::string, std::string > engine_config_;
+  boost::filesystem::path engine_config_fn_;
 
   bool update_engine_overview_;
-  std::vector< std::string > img_filename_list_;
   std::ostringstream engine_overview_;
 
   void CreateEngine( std::string name );
@@ -95,10 +107,16 @@ public:
   void CreateFileList(boost::filesystem::path dir,
                       std::vector<std::string> &filelist);
 
-  void SendMessage(std::string sender, std::string message);
   void SendMessage(std::string message);
-  void SendStatus(std::string sender, std::string status);
   void SendStatus(std::string status);
+  void SendControl(std::string control);
+  void SendPacket(std::string sender, std::string type, std::string status);
+
+  void WriteImageListToFile(const std::string fn,
+                            const std::vector< std::string > &imlist);
+  void WriteConfigToFile();
+
+  void InitEngineResources( std::string name );
 };
 
 #endif /* _VISE_SEARCH_ENGINE_H */
