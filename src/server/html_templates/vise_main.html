@@ -6,6 +6,33 @@
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="Page template of VGG Image Search Engine (VISE)">
 
+    <script>
+    /*    
+      @licstart  The following is the entire license notice for the 
+      JavaScript code in this page.
+
+      Copyright (C) 2017  Abhishek Dutta <adutta@robotos.ox.ac.uk>
+
+      The JavaScript code in this page is free software: you can
+      redistribute it and/or modify it under the terms of the GNU
+      General Public License (GNU GPL) as published by the Free Software
+      Foundation, either version 3 of the License, or (at your option)
+      any later version.  The code is distributed WITHOUT ANY WARRANTY;
+      without even the implied warranty of MERCHANTABILITY or FITNESS
+      FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+      As additional permission under GNU GPL version 3 section 7, you
+      may distribute non-source (e.g., minimized or compacted) forms of
+      that code without the copy of the GNU GPL normally required by
+      section 4, provided you include this license notice and a URL
+      through which recipients can access the Corresponding Source.   
+
+
+      @licend  The above is the entire license notice
+      for the JavaScript code in this page.
+    */
+    </script>
+
     <!-- CSS style definition -->
     <style type="text/css">
       body {
@@ -179,18 +206,22 @@
     var receiver = packet.substr(first_space + 1, second_space - first_space - 1);
     var msg = packet.substr(second_space + 1);
 
-    switch ( receiver ) {
-      case "message_panel":
-        _vise_show_message(msg, 0);
-        break;
-      case "status":
-        _vise_handle_status_msg(sender, msg);
-        break;
-      case "control":
-        _vise_handle_control_msg(sender, msg);
-        break;
-      default:
-        console.log("Do not know how to handle this message : " + packet);
+    if ( sender === _vise_current_state_name) {
+      switch ( receiver ) {
+        case "message_panel":
+          _vise_show_message(msg, 0);
+          break;
+        case "status":
+          _vise_handle_status_msg(sender, msg);
+          break;
+        case "control":
+          _vise_handle_control_msg(sender, msg);
+          break;
+        default:
+          console.log("Do not know how to handle this message : " + packet);
+      }
+    } else {
+      console.log("Do not know where to deliver the status message. sender=" + sender + ", msg=" + msg);
     }
   }
 
@@ -198,17 +229,13 @@
     var status_panel = document.getElementById( sender + "_status" );
     if ( typeof status_panel !== 'undefined' ) {
       status_panel.innerHTML += msg;
-    } else {
-      console.log("Do not know where to deliver the status message. sender=" + sender + ", msg=" + msg);
-    }
+    } 
   }
 
   function _vise_handle_control_msg(sender, msg) {
     var control_panel = document.getElementById( sender + "_control" );
     if ( typeof control_panel !== 'undefined' ) {
       control_panel.innerHTML += msg;
-    } else {
-      console.log("Do not know where to deliver the control message. sender=" + sender + ", msg=" + msg);
     }
   }
 

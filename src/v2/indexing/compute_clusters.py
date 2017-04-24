@@ -47,9 +47,9 @@ if __name__=='__main__':
     
     vocSize= getOptional( lambda: config.getint(dsetname, 'vocSize'), 100 );
     seed= 43;
-    
+  
     compute_clusters(clstFn, pntsFn, vocSize,
-                     30, approx=True, seed= seed,
+                     4, approx=True, seed= seed,
                      featureWrapper= ("hell" if RootSIFT else None) );
     
     mpi.finalize();

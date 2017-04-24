@@ -11,6 +11,8 @@
 #ifndef _VISE_SEARCH_ENGINE_H
 #define _VISE_SEARCH_ENGINE_H
 
+#include <cstdio>                 // for popen()
+
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -19,6 +21,7 @@
 #include <map>
 #include <set>
 #include <algorithm>
+#include <unistd.h>
 
 #include <boost/filesystem.hpp>  // to query/update filesystem
 
@@ -56,6 +59,7 @@ public:
 
   void Preprocess();
   void Descriptor();
+  void Cluster();
 
   void MoveToNextState();
   void MoveToPrevState();
@@ -120,6 +124,8 @@ public:
   void WriteConfigToFile();
 
   void InitEngineResources( std::string name );
+
+  void RunClusterCommand();
 };
 
 #endif /* _VISE_SEARCH_ENGINE_H */

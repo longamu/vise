@@ -124,6 +124,153 @@ void SearchEngine::MoveToPrevState() {
   }
 }
 
+//
+// Workers for each state
+//
+void SearchEngine::Preprocess() {
+  SendStatus("Preprocessing started ...");
+
+  // scale and copy image to transformed_imgdir_
+  SendStatus("\nSaved transformed images to [" + transformed_imgdir_.string() + "] ");
+  for ( unsigned int i=0; i<imglist_.size(); i++ ) {
+    boost::filesystem::path img_rel_path = imglist_.at(i);
+    boost::filesystem::path src_fn  = original_imgdir_ / img_rel_path;
+    boost::filesystem::path dest_fn = transformed_imgdir_ / img_rel_path;
+
+    if ( !boost::filesystem::exists( dest_fn ) ) {
+      try {
+        Magick::Image im;
+        im.read( src_fn.string() );
+        Magick::Geometry size = im.size();
+
+        double aspect_ratio =  ((double) size.height()) / ((double) size.width());
+        unsigned int new_width = 400;
+        unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
+
+        Magick::Geometry resize = Magick::Geometry(new_width, new_height);
+        resize.greater(true); // Resize if image is greater than size (>)
+
+        std::ostringstream info;
+        info << std::string(size) << " -> " << std::string(resize);
+        im.zoom( resize );
+
+        // check if image path exists
+        if ( ! boost::filesystem::is_directory( dest_fn.parent_path() ) ) {
+          boost::filesystem::create_directories( dest_fn.parent_path() );
+        }
+        im.write( dest_fn.string() );
+        SendStatus( "." );
+      } catch (std::exception &error) {
+        SendStatus( "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
+      }
+    }
+  }
+  SendStatus("[DONE]");
+
+  //if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
+  imglist_fn_ = training_datadir_ / "imlist.txt";
+  WriteImageListToFile( imglist_fn_.string(), imglist_ );
+  SendStatus( "\nWritten image list to : [" + imglist_fn_.string() + "]" );
+
+  // save full configuration file to training_datadir_
+  SetEngineConfigParam("trainDatabasePath", transformed_imgdir_.string());
+  SetEngineConfigParam("databasePath", transformed_imgdir_.string());
+  SetEngineConfigParam("trainImagelistFn",  imglist_fn_.string());
+  SetEngineConfigParam("imagelistFn",  imglist_fn_.string());
+  boost::filesystem::path train_file_prefix = training_datadir_ / "train_";
+  SetEngineConfigParam("trainFilesPrefix", train_file_prefix.string() );
+  SetEngineConfigParam("pathManHide", transformed_imgdir_.string() );
+  SetEngineConfigParam("dsetFn", train_file_prefix.string() + "dset.v2bin" );
+  SetEngineConfigParam("clstFn", train_file_prefix.string() + "clst.e3bin" );
+  SetEngineConfigParam("iidxFn", train_file_prefix.string() + "iidx.e3bin" );
+  SetEngineConfigParam("fidxFn", train_file_prefix.string() + "fidx.e3bin" );
+  SetEngineConfigParam("wghtFn", train_file_prefix.string() + "wght.e3bin" );
+  SetEngineConfigParam("tmpDir", tmp_datadir_.string());
+
+  engine_config_fn_ = training_datadir_ / "vise_config.cfg";
+  WriteConfigToFile();
+  SendStatus( "\nWritten search engine configuration to : [" + engine_config_fn_.string() + "]" );
+
+  SendControl("<div id=\"Preprocessing_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
+}
+
+void SearchEngine::Descriptor() {
+  std::string const trainFilesPrefix = GetEngineConfigParam("trainFilesPrefix");
+  std::string const trainDescsFn  = trainFilesPrefix + "descs.e3bin";
+  boost::filesystem::path train_desc_fn( trainDescsFn );
+
+  if ( boost::filesystem::exists( train_desc_fn ) ) {
+    // delete file
+    boost::filesystem::remove( train_desc_fn );
+    SendStatus("\nDeleted old training descriptors ...");
+  }
+
+  SendStatus("\nComputing training descriptors ...");
+  std::string const trainImagelistFn = GetEngineConfigParam("trainImagelistFn");
+  std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
+
+  int32_t trainNumDescs;
+  std::stringstream s;
+  s << GetEngineConfigParam("trainNumDescs");
+  s >> trainNumDescs;
+
+  bool SIFTscale3 = false;
+  if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
+    SIFTscale3 = true;
+  }
+
+  // source: src/v2/indexing/compute_index_v2.cpp
+  featGetter_standard const featGetter_obj( (
+                                             std::string("hesaff-") +
+                                             "sift" +
+                                             std::string(SIFTscale3 ? "-scale3" : "")
+                                             ).c_str() );
+
+  buildIndex::computeTrainDescs(trainImagelistFn, trainDatabasePath,
+                                trainDescsFn,
+                                trainNumDescs,
+                                featGetter_obj);
+
+  SendControl("<div id=\"Descriptor_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
+}
+
+// ensure that you install the dkmeans_relja as follows
+// $ cd src/external/dkmeans_relja/
+// $ python setup.py build
+// $ sudo python setup.py install
+void SearchEngine::Cluster() {
+  SendStatus("\nStarting clustering of descriptors ...");
+
+  boost::thread t( boost::bind( &SearchEngine::RunClusterCommand, this ) );
+}
+
+void SearchEngine::RunClusterCommand() {
+  // @todo: avoid relative path and discover the file "compute_clusters.py" automatically
+  std::string cmd = "python ../src/v2/indexing/compute_clusters.py";
+  cmd += " " + engine_name_;
+  cmd += " " + engine_config_fn_.string();
+
+  FILE *pipe = popen( cmd.c_str(), "r");
+
+  if ( pipe != NULL ) {
+    SendStatus("\nCommand executed: $" + cmd);
+
+    char line[128];
+    while ( fgets(line, 64, pipe) ) {
+      std::string status_txt(line);
+      SendStatus(status_txt);
+    }
+    pclose( pipe );
+
+    SendControl("<div id=\"Cluster_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
+  } else {
+    SendStatus("\nFailed to execute python script for clustering: \n\t $" + cmd);
+  }
+}
+
+//
+// Helper functions
+//
 bool SearchEngine::EngineConfigExists() {
   if ( is_regular_file(engine_config_fn_) ) {
     return true;
@@ -291,113 +438,6 @@ void SearchEngine::UpdateEngineOverview() {
   engine_overview_ << "<tr><td><input type=\"button\" onclick=\"_vise_send_post_request('back')\" value=\"Back\"></td><td><input type=\"button\" onclick=\"_vise_send_post_request('proceed')\" value=\"Proceed\"></td></tr>";
   engine_overview_ << "</table>";
   engine_overview_ << "<p>&nbsp;</p><p>* : todo</p>";
-}
-
-void SearchEngine::Preprocess() {
-  SendStatus("Preprocessing started ...");
-
-  // scale and copy image to transformed_imgdir_
-  SendStatus("\nSaved transformed images to [" + transformed_imgdir_.string() + "] ");
-  for ( unsigned int i=0; i<imglist_.size(); i++ ) {
-    boost::filesystem::path img_rel_path = imglist_.at(i);
-    boost::filesystem::path src_fn  = original_imgdir_ / img_rel_path;
-    boost::filesystem::path dest_fn = transformed_imgdir_ / img_rel_path;
-
-    if ( !boost::filesystem::exists( dest_fn ) ) {
-      try {
-        Magick::Image im;
-        im.read( src_fn.string() );
-        Magick::Geometry size = im.size();
-
-        double aspect_ratio =  ((double) size.height()) / ((double) size.width());
-        unsigned int new_width = 400;
-        unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
-
-        Magick::Geometry resize = Magick::Geometry(new_width, new_height);
-        resize.greater(true); // Resize if image is greater than size (>)
-
-        std::ostringstream info;
-        info << std::string(size) << " -> " << std::string(resize);
-        im.zoom( resize );
-
-        // check if image path exists
-        if ( ! boost::filesystem::is_directory( dest_fn.parent_path() ) ) {
-          boost::filesystem::create_directories( dest_fn.parent_path() );
-        }
-        im.write( dest_fn.string() );
-        SendStatus( "." );
-      } catch (std::exception &error) {
-        SendStatus( "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
-      }
-    }
-  }
-  SendStatus("[DONE]");
-
-  //if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
-  imglist_fn_ = training_datadir_ / "imlist.txt";
-  WriteImageListToFile( imglist_fn_.string(), imglist_ );
-  SendStatus( "\nWritten image list to : [" + imglist_fn_.string() + "]" );
-
-  // save full configuration file to training_datadir_
-  SetEngineConfigParam("trainDatabasePath", transformed_imgdir_.string());
-  SetEngineConfigParam("databasePath", transformed_imgdir_.string());
-  SetEngineConfigParam("trainImagelistFn",  imglist_fn_.string());
-  SetEngineConfigParam("imagelistFn",  imglist_fn_.string());
-  boost::filesystem::path train_file_prefix = training_datadir_ / "train_";
-  SetEngineConfigParam("trainFilesPrefix", train_file_prefix.string() );
-  SetEngineConfigParam("pathManHide", transformed_imgdir_.string() );
-  SetEngineConfigParam("dsetFn", train_file_prefix.string() + "dset.v2bin" );
-  SetEngineConfigParam("clstFn", train_file_prefix.string() + "clst.e3bin" );
-  SetEngineConfigParam("iidxFn", train_file_prefix.string() + "iidx.e3bin" );
-  SetEngineConfigParam("fidxFn", train_file_prefix.string() + "fidx.e3bin" );
-  SetEngineConfigParam("wdhtFn", train_file_prefix.string() + "wght.e3bin" );
-  SetEngineConfigParam("tmpDir", tmp_datadir_.string());
-
-  engine_config_fn_ = training_datadir_ / "vise_config.cfg";
-  WriteConfigToFile();
-  SendStatus( "\nWritten search engine configuration to : [" + engine_config_fn_.string() + "]" );
-
-  SendControl("<div id=\"Preprocessing_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
-}
-
-void SearchEngine::Descriptor() {
-  std::string const trainFilesPrefix = GetEngineConfigParam("trainFilesPrefix");
-  std::string const trainDescsFn  = trainFilesPrefix + "descs.e3bin";
-  boost::filesystem::path train_desc_fn( trainDescsFn );
-
-  if ( boost::filesystem::exists( train_desc_fn ) ) {
-    // delete file
-    boost::filesystem::remove( train_desc_fn );
-    SendStatus("\nDeleted old training descriptors ...");
-  }
-
-  SendStatus("\nComputing training descriptors ...");
-  std::string const trainImagelistFn = GetEngineConfigParam("trainImagelistFn");
-  std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
-
-  int32_t trainNumDescs;
-  std::stringstream s;
-  s << GetEngineConfigParam("trainNumDescs");
-  s >> trainNumDescs;
-
-  bool SIFTscale3 = false;
-  if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
-    SIFTscale3 = true;
-  }
-
-  // source: src/v2/indexing/compute_index_v2.cpp
-  featGetter_standard const featGetter_obj( (
-                                             std::string("hesaff-") +
-                                             "sift" +
-                                             std::string(SIFTscale3 ? "-scale3" : "")
-                                             ).c_str() );
-
-  buildIndex::computeTrainDescs(trainImagelistFn, trainDatabasePath,
-                                trainDescsFn,
-                                trainNumDescs,
-                                featGetter_obj);
-
-  SendControl("<div id=\"Descriptor_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
 }
 
 void SearchEngine::WriteImageListToFile(const std::string fn,

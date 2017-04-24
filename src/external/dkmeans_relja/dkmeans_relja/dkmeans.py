@@ -96,6 +96,7 @@ def dkmeans3(pnts_fn, nk, niters, clst_fn, nn_class=nn.nn, seed=42, pnts_step=50
 
   if rank==root_rank:
     print 'Using a (%d x %d) %s array for the datapoints' % (npnts,ndims,pnts.dtype)
+    sys.stdout.flush()
 
   if rank==root_rank and ndims>npnts:
     raise RuntimeError, 'dodgy matrix format -- number of dimensions is greater than the number of points!'
@@ -109,10 +110,12 @@ def dkmeans3(pnts_fn, nk, niters, clst_fn, nn_class=nn.nn, seed=42, pnts_step=50
   clst_data = np.empty((nk,ndims), dtype=pref_dtype)
   if rank==root_rank:
     print 'Using a (%d x %d) %s array for the clusters' % (clst_data.shape[0], clst_data.shape[1], clst_data.dtype)
+    sys.stdout.flush()
     checkpoint_fn = clst_fn + '.checkpoint'
     if os.path.exists(checkpoint_fn):
       start_iter[0], clst_data, distortion[0] = dkmeans3_read_clusters(checkpoint_fn)
       print 'Restarting from checkpoint. Start iteration = %d' % start_iter
+      sys.stdout.flush()
     else:
       clst_inds = np.arange(npnts)
       npr.shuffle(clst_inds)
@@ -171,7 +174,9 @@ def dkmeans3(pnts_fn, nk, niters, clst_fn, nn_class=nn.nn, seed=42, pnts_step=50
 
       t2 = time.time()
 
-      print 'Iteration %d, sse = %g, mem = %.2fMB, took %.2fs' % (iter_num+1, distortion[0], resident()/2**20, t2-t1)
+      #print 'Iteration %d, sse = %g, mem = %.2fMB, took %.2fs' % (iter_num+1, distortion[0], resident()/2**20, t2-t1)
+      sys.stdout.write('\nIteration %d, sse = %g, mem = %.2fMB, took %.2fs' % (iter_num+1, distortion[0], resident()/2**20, t2-t1))
+      sys.stdout.flush() # done to send intermediate messages to waiting threads
 
       # Potentially save the clusters.
       if checkpoint:
@@ -220,9 +225,10 @@ def compute_clusters(clst_fn, pnt_fn, nclusters, niters=30, ntrees=8,
                      approx=True,
                      featureWrapper= featureNoWrapper):
   import file_utils
+
   if rank==0:
     print 'Computing clusters:'
-
+    sys.stdout.flush()
     file_utils.remove_if_newer(clst_fn, [pnt_fn])
     file_utils.remove_if_corrupt_clusters(clst_fn)
   
