@@ -103,6 +103,22 @@ void SearchEngine::MoveToNextState() {
     state_ = SearchEngine::CLUSTER_DESCRIPTORS;
     break;
 
+  case SearchEngine::CLUSTER_DESCRIPTORS :
+    state_ = SearchEngine::ASSIGN_CLUSTER;
+    break;
+
+  case SearchEngine::ASSIGN_CLUSTER :
+    state_ = SearchEngine::COMPUTE_HAMM;
+    break;
+
+  case SearchEngine::COMPUTE_HAMM :
+    state_ = SearchEngine::INDEX;
+    break;
+
+  case SearchEngine::INDEX :
+    state_ = SearchEngine::QUERY;
+    break;
+
   default:
     std::cerr << "Do not know how to move to next state!" << std::flush;
   }
@@ -180,6 +196,9 @@ void SearchEngine::Preprocess() {
   boost::filesystem::path train_file_prefix = training_datadir_ / "train_";
   SetEngineConfigParam("trainFilesPrefix", train_file_prefix.string() );
   SetEngineConfigParam("pathManHide", transformed_imgdir_.string() );
+  SetEngineConfigParam("descFn", train_file_prefix.string() + "descs.e3bin" );
+  SetEngineConfigParam("assignFn", train_file_prefix.string() + "assign.bin" );
+  SetEngineConfigParam("hammFn", train_file_prefix.string() + "hamm.v2bin" );
   SetEngineConfigParam("dsetFn", train_file_prefix.string() + "dset.v2bin" );
   SetEngineConfigParam("clstFn", train_file_prefix.string() + "clst.e3bin" );
   SetEngineConfigParam("iidxFn", train_file_prefix.string() + "iidx.e3bin" );
@@ -195,8 +214,7 @@ void SearchEngine::Preprocess() {
 }
 
 void SearchEngine::Descriptor() {
-  std::string const trainFilesPrefix = GetEngineConfigParam("trainFilesPrefix");
-  std::string const trainDescsFn  = trainFilesPrefix + "descs.e3bin";
+  std::string const trainDescsFn  = GetEngineConfigParam("descFn");
   boost::filesystem::path train_desc_fn( trainDescsFn );
 
   if ( boost::filesystem::exists( train_desc_fn ) ) {
@@ -266,6 +284,96 @@ void SearchEngine::RunClusterCommand() {
   } else {
     SendStatus("\nFailed to execute python script for clustering: \n\t $" + cmd);
   }
+}
+
+void SearchEngine::Assignment() {
+  SendStatus("\nStarting assignment ...");
+  bool useRootSIFT = false;
+  if ( GetEngineConfigParam("RootSIFT") == "on" ) {
+    useRootSIFT = true;
+  }
+
+  buildIndex::computeTrainAssigns( GetEngineConfigParam("clstFn"),
+                                   useRootSIFT,
+                                   GetEngineConfigParam("descFn"),
+                                   GetEngineConfigParam("assignFn"));
+
+  SendControl("<div id=\"Assignment_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
+}
+
+void SearchEngine::Hamm() {
+  SendStatus("\nComputing hamm ...");
+  uint32_t hammEmbBits;
+  std::string hamm_emb_bits = GetEngineConfigParam("hammEmbBits");
+  std::istringstream s(hamm_emb_bits);
+  s >> hammEmbBits;
+
+  bool useRootSIFT = false;
+  if ( GetEngineConfigParam("RootSIFT") == "on" ) {
+    useRootSIFT = true;
+  }
+
+  buildIndex::computeHamming(GetEngineConfigParam("clstFn"),
+                             useRootSIFT,
+                             GetEngineConfigParam("descFn"),
+                             GetEngineConfigParam("assignFn"),
+                             GetEngineConfigParam("hammFn"),
+                             hammEmbBits);
+
+  SendControl("<div id=\"Hamm_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
+}
+
+void SearchEngine::Index() {
+    SendStatus("\nStarting indexing ...");
+  bool SIFTscale3 = false;
+  if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
+    SIFTscale3 = true;
+  }
+
+  bool useRootSIFT = false;
+  if ( GetEngineConfigParam("RootSIFT") == "on" ) {
+    useRootSIFT = true;
+  }
+
+  // source: src/v2/indexing/compute_index_v2.cpp
+  std::ostringstream feat_getter_config;
+  feat_getter_config << "hesaff-";
+  if (useRootSIFT) {
+    feat_getter_config << "rootsift";
+  } else {
+    feat_getter_config << "sift";
+  }
+  if (SIFTscale3) {
+    feat_getter_config << "-scale3";
+  }
+  featGetter_standard const featGetter_obj( feat_getter_config.str().c_str() );
+
+  // embedder
+  uint32_t hammEmbBits;
+  std::string hamm_emb_bits = GetEngineConfigParam("hammEmbBits");
+  std::istringstream s(hamm_emb_bits);
+  s >> hammEmbBits;
+
+  embedderFactory *embFactory= NULL;
+  if ( EngineConfigParamExists("hammEmbBits") ) {
+    embFactory= new hammingEmbedderFactory(GetEngineConfigParam("hammFn"), hammEmbBits);
+  } else {
+    embFactory= new noEmbedderFactory;
+  }
+
+  buildIndex::build(GetEngineConfigParam("imagelistFn"),
+                    GetEngineConfigParam("databasePath"),
+                    GetEngineConfigParam("dsetFn"),
+                    GetEngineConfigParam("iidxFn"),
+                    GetEngineConfigParam("fidxFn"),
+                    GetEngineConfigParam("tmpDir"),
+                    featGetter_obj,
+                    GetEngineConfigParam("clstFn"),
+                    embFactory);
+
+  SendControl("<div id=\"Index_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
+
+  delete embFactory;
 }
 
 //
@@ -346,10 +454,21 @@ std::string SearchEngine::GetEngineConfigParam(std::string key) {
     return it->second;
   }
   else {
-    return "Not Found";
+    return "";
   }
 }
 
+bool SearchEngine::EngineConfigParamExists(std::string key) {
+  std::map<std::string, std::string>::iterator it;
+  it = engine_config_.find( key );
+
+  if ( it != engine_config_.end() ) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
 
 void SearchEngine::SetEngineConfigParam(std::string key, std::string value) {
   std::map<std::string, std::string>::iterator it;

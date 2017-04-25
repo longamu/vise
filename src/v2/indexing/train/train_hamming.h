@@ -18,6 +18,12 @@ No usage or redistribution is allowed without explicit permission.
 #include <stdint.h>
 #include <string>
 
+#include "ViseMessageQueue.h"
+
+// defined in src/vise.cc
+// a global message queue to send communications to client HTTP browser
+extern ViseMessageQueue vise_message_queue_;
+
 namespace buildIndex {
     
     void

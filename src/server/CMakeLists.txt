@@ -2,7 +2,10 @@ add_library( SearchEngine SearchEngine.cc)
 target_link_libraries( SearchEngine
   ViseMessageQueue
   train_descs
+  train_assign
+  train_hamming
   feat_standard
+  hamming_embedder
   build_index
   ${Boost_LIBRARIES} 
   ${ImageMagick_LIBRARIES})

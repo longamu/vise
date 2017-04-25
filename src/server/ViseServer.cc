@@ -92,6 +92,10 @@ void ViseServer::Start(unsigned int port) {
 
   search_engine_.MoveToNextState(); // Descriptor
   search_engine_.MoveToNextState(); // Cluster
+  search_engine_.MoveToNextState(); // Assignment
+  search_engine_.MoveToNextState(); // Hamm
+  search_engine_.MoveToNextState(); // Indexing
+
   //
   // debugging code END
   //
@@ -268,8 +272,29 @@ void ViseServer::HandlePostRequest( std::string search_engine_name,
         search_engine_.MoveToPrevState();
       }
     } else if ( resource_name == "Assignment" ) {
+      if ( post_data == "start" ) {
+        search_engine_.Assignment();
+      } else if ( post_data == "proceed" ) {
+        search_engine_.MoveToNextState();
+      } else {
+        search_engine_.MoveToPrevState();
+      }
     } else if ( resource_name == "Hamm" ) {
+      if ( post_data == "start" ) {
+        search_engine_.Hamm();
+      } else if ( post_data == "proceed" ) {
+        search_engine_.MoveToNextState();
+      } else {
+        search_engine_.MoveToPrevState();
+      }
     } else if ( resource_name == "Index" ) {
+      if ( post_data == "start" ) {
+        search_engine_.Index();
+      } else if ( post_data == "proceed" ) {
+        search_engine_.MoveToNextState();
+      } else {
+        search_engine_.MoveToPrevState();
+      }
     } else if ( resource_name == "Query" ) {
     }
 

@@ -180,12 +180,19 @@ class buildManagerSemiSorted : public managerWithTiming<buildResultSemiSorted> {
             : managerWithTiming<buildResultSemiSorted>(numDocs, "buildManagerSemiSorted"),
               dsetBuilder_(dsetFn),
               nextID_(0)
-              {}
+              {
+
+                completed_jobs = 0;
+                total_jobs = numDocs;
+              }
         
         void
             compute( uint32_t jobID, buildResultSemiSorted &result );
     
     private:
+        uint32_t completed_jobs;
+        uint32_t total_jobs;
+
         datasetBuilder dsetBuilder_;
         uint32_t nextID_;
         std::map<uint32_t, buildResultSemiSorted> results_;
@@ -209,7 +216,11 @@ buildManagerSemiSorted::compute( uint32_t jobID, buildResultSemiSorted &result )
                               res.second.first,
                               res.second.second );
             results_.erase(it++);
+            completed_jobs += 1;
         }
+        std::ostringstream s;
+        s << "Index status \nSemiSorted processed " << completed_jobs << " / " << total_jobs;
+        vise_message_queue_.Push( s.str() );
     }
 }
 
@@ -1005,6 +1016,7 @@ build(
     MPI_GLOBAL_ALL
     bool useThreads= detectUseThreads();
     uint32_t numWorkerThreads= 8;
+    std::ostringstream s;
     
     ASSERT(tmpDir[tmpDir.length()-1]=='/');
     std::string indexingStatusFn= tmpDir+"indexingstatus.bin";
@@ -1032,19 +1044,27 @@ build(
         // also save the bare fidx (i.e. list of unique wordIDs)
         // also construct the dataset info (i.e. list of images, width/height)
         
-        if (rank==0)
+        if (rank==0) {
             std::cout<<"buildIndex::build: beginning\n";
-        
+        }
         // clusters
-        if (rank==0)
-            std::cout<<"buildIndex::build: Loading cluster centres\n";
+        if (rank==0) {
+            //std::cout<<"buildIndex::build: Loading cluster centres\n";
+            vise_message_queue_.Push( "Index status \nLoading cluster centres ... " );
+        }
         double t0= timing::tic();
         clstCentres clstCentres_obj( clstFn.c_str(), true );
-        if (rank==0)
-            std::cout<<"buildIndex::build: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
-        
-        if (rank==0)
-            std::cout<<"buildIndex::build: Constructing NN search object\n";
+        if (rank==0) {
+            //std::cout<<"buildIndex::build: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
+            s.str(""); 
+            s.clear();
+            s << "Index status done (" << timing::toc(t0) << " ms)";
+            vise_message_queue_.Push( s.str() );
+        }
+        if (rank==0) {
+            //std::cout<<"buildIndex::build: Constructing NN search object\n";
+            vise_message_queue_.Push( "Hamm status \nConstructing NN search object ... " );
+        }
         t0= timing::tic();
         
         fastann::nn_obj<float> const *nn_obj=
@@ -1059,8 +1079,13 @@ build(
                 clstCentres_obj.numClst,
                 clstCentres_obj.numDims);
         #endif
-        if (rank==0)
-            std::cout<<"buildIndex::build: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
+        if (rank==0) {
+            //std::cout<<"buildIndex::build: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
+            s.str(""); 
+            s.clear();
+            s << "Index status done (" << timing::toc(t0) << " ms)";
+            vise_message_queue_.Push( s.str() );
+        }
         
         // get number of documents
         uint32_t numDocs= 0;
@@ -1190,8 +1215,9 @@ build(
         // sort the previously generated files (sorted within each indexEntry by clusterID) such that sorting is maintained accorss indexEntries as well (i.e. last element of first indexEntry is < than first element of second indexEntry)
         
         if (rank==0){
-            std::cout<<"buildIndex::build: semiSorted\n";
-            std::cout<< "\n" << status.DebugString() <<"\n";
+            //std::cout<<"buildIndex::build: semiSorted\n";
+            //std::cout<< "\n" << status.DebugString() <<"\n";
+            vise_message_queue_.Push( "Index status \nindex semi sorted" );
         }
         
         std::vector<std::string> fns;
@@ -1242,8 +1268,9 @@ build(
     if (status.state()==rr::buildIndexStatus::merged){
         
         if (rank==0){
-            std::cout<<"buildIndex::build: merged\n";
-            std::cout<< "\n" << status.DebugString() <<"\n";
+            //std::cout<<"buildIndex::build: merged\n";
+            //std::cout<< "\n" << status.DebugString() <<"\n";
+            vise_message_queue_.Push( "Index status \nindex merged" );
         }
         
         std::vector<std::string> fns;
@@ -1303,8 +1330,12 @@ build(
     if (rank==0){
         ASSERT(loadStatus(indexingStatusFn, status));
         ASSERT(status.state()==rr::buildIndexStatus::done);
-        std::cout<<"buildIndex::build: done in "<< timing::hrminsec(timing::toc(t0)/1000) <<"\n";
-        std::cout<< "\n" << status.DebugString() <<"\n";
+        //std::cout<<"buildIndex::build: done in "<< timing::hrminsec(timing::toc(t0)/1000) <<"\n";
+        //std::cout<< "\n" << status.DebugString() <<"\n";
+        s.str(""); 
+        s.clear();
+        s << "Index status \nIndexing completed in " << timing::hrminsec(timing::toc(t0)/1000);
+        vise_message_queue_.Push( s.str() );
     }
     
 }

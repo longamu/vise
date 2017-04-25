@@ -22,12 +22,11 @@ No usage or redistribution is allowed without explicit permission.
 
 #include "ViseMessageQueue.h"
 
+// defined in src/vise.cc
+// a global message queue to send communications to client HTTP browser
+extern ViseMessageQueue vise_message_queue_;
+
 namespace buildIndex {
-
-    // defined in src/vise.cc
-    // a global message queue to send communications to client HTTP browser
-    extern ViseMessageQueue vise_message_queue_;
-
     void
         build(std::string const imagelistFn, std::string const databasePath,
               std::string const dsetFn,

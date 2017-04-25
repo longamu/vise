@@ -67,6 +67,9 @@ class trainHammingManager : public managerWithTiming<trainHammingResult> {
                 
                 // resize the array to its final size
                 median_.resize(numClst*hammEmbBits_, 0);
+
+                completed_jobs = 0;
+                total_jobs = nJobs;
             }
         
         ~trainHammingManager();
@@ -75,6 +78,9 @@ class trainHammingManager : public managerWithTiming<trainHammingResult> {
             compute( uint32_t jobID, trainHammingResult &result );
     
     private:
+        uint32_t completed_jobs;
+        uint32_t total_jobs;
+
         std::string trainHammFn_;
         uint32_t const vocChunkSize_, hammEmbBits_;
         rr::hammingData hamm_;
@@ -115,6 +121,11 @@ trainHammingManager::compute( uint32_t jobID, trainHammingResult &result ){
     std::memcpy( &median_[wordStart*hammEmbBits_],
                  &result[0],
                  result.size() * sizeof(float) );
+
+    completed_jobs += 1;
+    std::ostringstream s;
+    s << "Hamm status \nProcessed " << completed_jobs << " / " << total_jobs;
+    vise_message_queue_.Push( s.str() );
 }
 
 
@@ -242,10 +253,13 @@ computeHamming(
         uint32_t const hammEmbBits){
     
     MPI_GLOBAL_ALL;
-    
+    std::ostringstream s;
+
     if (boost::filesystem::exists(trainHammFn)){
-        if (rank==0)
-            std::cout<<"buildIndex::computeHamming: trainHammFn already exist ("<<trainHammFn<<")\n";
+        if (rank==0) {
+            //std::cout<<"buildIndex::computeHamming: trainHammFn already exist ("<<trainHammFn<<")\n";
+            vise_message_queue_.Push( "Hamm status \nfile already exists!" );
+        }
         return;
     }
     ASSERT( boost::filesystem::exists(trainDescsFn) );
@@ -253,18 +267,25 @@ computeHamming(
     ASSERT( hammEmbBits<=64 );
     
     // clusters
-    if (rank==0)
-        std::cout<<"buildIndex::computeHamming: Loading cluster centres\n";
+    if (rank==0) {
+        //std::cout<<"buildIndex::computeHamming: Loading cluster centres\n";
+        vise_message_queue_.Push( "Hamm status \nLoading cluster centres ... " );
+    }
     double t0= timing::tic();
     clstCentres const clstCentres_obj( clstFn.c_str(), true );
     uint32_t numClst= clstCentres_obj.numClst;
     uint32_t numDims= clstCentres_obj.numDims;
-    if (rank==0)
-        std::cout<<"buildIndex::computeHamming: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
+    if (rank==0) {
+        //std::cout<<"buildIndex::computeHamming: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
+        s.str(""); 
+        s.clear();
+        s << "Hamm status done (" << timing::toc(t0) << " ms)";
+        vise_message_queue_.Push( s.str() );
+    }
     ASSERT(numDims>=hammEmbBits);
     
     bool useThreads= detectUseThreads();
-    uint32_t numWorkerThreads= 4;
+    uint32_t numWorkerThreads= 8;
     
     // rotation
     std::vector<float> rot;
@@ -295,7 +316,12 @@ computeHamming(
         float *itDesc= descs;
         float const *descsEnd= descs + numTrainDescsPCA*numDims;
         uint32_t *clusterIDs= new uint32_t[blockSize];
-        std::cout<<"buildIndex::computeHamming: Reading training "<<numTrainDescsPCA<<" descriptors for PCA\n";
+
+        //std::cout<<"buildIndex::computeHamming: Reading training "<<numTrainDescsPCA<<" descriptors for PCA\n";
+        s.str(""); 
+        s.clear();
+        s << "Hamm status \nReading " << numTrainDescsPCA << " training descriptors for PCA";
+        vise_message_queue_.Push( s.str() );
         
         for (uint32_t iDescStart= 0; itDesc!=descsEnd; iDescStart+= blockStep){
             float *thisBlockDescs;
@@ -319,7 +345,10 @@ computeHamming(
         delete []clusterIDs;
         
         double t0= timing::tic();
-        std::cout<<"buildIndex::computeHamming: Computing PCA\n";
+
+        //std::cout<<"buildIndex::computeHamming: Computing PCA\n";
+        vise_message_queue_.Push( "Hamm status \nComputing PCA" );
+
         Eigen::Map<Eigen::MatrixXf> trainData(descs, numDims, numTrainDescsPCA);
         Eigen::JacobiSVD<Eigen::MatrixXf> svdForPCA(trainData, Eigen::ComputeThinU);
         // doing SVD of trainData is like eig(trainData*trainData'), leftmost columns of U are largest eigenvectors
@@ -328,8 +357,9 @@ computeHamming(
         delete []descs;
         
         // --- get the random rotation (hammEmbBits x hammEmbBits)
-        std::cout<<"buildIndex::computeHamming: Computing random rotation\n";
-        
+        //std::cout<<"buildIndex::computeHamming: Computing random rotation\n";
+        vise_message_queue_.Push( "Hamm status \nComputing random rotation" );
+
         // make random matrix
         sameRandomUint32 sr(hammEmbBits * hammEmbBits, 43);
         sameRandomStreamUint32 srS(sr);
@@ -355,8 +385,9 @@ computeHamming(
         double t0= timing::tic();
         
         // --- get the random rotation (hammEmbBits x numDims)
-        std::cout<<"buildIndex::computeHamming: Computing random rotation\n";
-        
+        //std::cout<<"buildIndex::computeHamming: Computing random rotation\n";
+        vise_message_queue_.Push( "Hamm status \nComputing random rotation" );
+
         // make random matrix
         sameRandomUint32 sr(numDims * numDims, 43);
         sameRandomStreamUint32 srS(sr);
@@ -381,7 +412,11 @@ computeHamming(
             for (uint32_t j= 0; j<numDims; ++j)
                 rot.push_back(R(i,j));
         
-        std::cout<<"buildIndex::computeHamming: Done with rotation ("<< timing::toc(t0) <<" ms)\n";
+        //std::cout<<"buildIndex::computeHamming: Done with rotation ("<< timing::toc(t0) <<" ms)\n";
+        s.str(""); 
+        s.clear();
+        s << "Hamm status \nFinished with rotation (" << timing::toc(t0) << " ms)";
+        vise_message_queue_.Push( s.str() );
     }
     
     #ifdef RR_MPI

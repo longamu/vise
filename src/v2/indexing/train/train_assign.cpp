@@ -16,6 +16,7 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <stdint.h>
 #include <vector>
+#include <sstream>
 
 #include <boost/filesystem.hpp>
 
@@ -46,6 +47,9 @@ class trainAssignsManager : public managerWithTiming<trainAssignsResult> {
               nextID_(0){
                 f_= fopen(trainAssignsFn.c_str(), "wb");
                 ASSERT(f_!=NULL);
+
+                completed_jobs = 0;
+                total_jobs = numDocs;
             }
         
         ~trainAssignsManager(){ fclose(f_); }
@@ -57,7 +61,10 @@ class trainAssignsManager : public managerWithTiming<trainAssignsResult> {
         FILE *f_;
         uint32_t nextID_;
         std::map<uint32_t, trainAssignsResult> results_;
-        
+
+        uint32_t completed_jobs;
+        uint32_t total_jobs;
+
         DISALLOW_COPY_AND_ASSIGN(trainAssignsManager)
 };
 
@@ -81,7 +88,12 @@ trainAssignsManager::compute( uint32_t jobID, trainAssignsResult &result ){
                     f_ );
             
             results_.erase(it++);
+            completed_jobs += 1;
         }
+
+        std::ostringstream s;
+        s << "Assignment status \nProcessed " << completed_jobs << " / " << total_jobs;
+        vise_message_queue_.Push( s.str() );
     }
 }
 
@@ -155,17 +167,24 @@ computeTrainAssigns(
     uint32_t numWorkerThreads= 4;
     
     // clusters
-    if (rank==0)
-        std::cout<<"buildIndex::computeTrainAssigns: Loading cluster centres\n";
+    if (rank==0) {
+        //std::cout<<"buildIndex::computeTrainAssigns: Loading cluster centres\n";
+        vise_message_queue_.Push( "Assignment status \nLoading cluster centers ..." );
+    }
     double t0= timing::tic();
     clstCentres clstCentres_obj( clstFn.c_str(), true );
-    if (rank==0)
-        std::cout<<"buildIndex::computeTrainAssigns: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
-    
-    if (rank==0)
-        std::cout<<"buildIndex::computeTrainAssigns: Constructing NN search object\n";
+    if (rank==0) {
+        //std::cout<<"buildIndex::computeTrainAssigns: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
+        std::ostringstream s;
+        s << "Assignment status done (" << timing::toc(t0) << " ms)";
+        vise_message_queue_.Push( s.str() );
+    }
+    if (rank==0) {
+      //std::cout<<"buildIndex::computeTrainAssigns: Constructing NN search object\n";
+      vise_message_queue_.Push( "Assignment status \nConstructing NN search object ..." );
+    }
+
     t0= timing::tic();
-    
     fastann::nn_obj<float> const *nn_obj=
     #if 1
         fastann::nn_obj_build_kdtree(
@@ -178,14 +197,20 @@ computeTrainAssigns(
             clstCentres_obj.numClst,
             clstCentres_obj.numDims);
     #endif
-    if (rank==0)
-        std::cout<<"buildIndex::computeTrainAssigns: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
-    
+    if (rank==0) {
+      //std::cout<<"buildIndex::computeTrainAssigns: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
+      std::ostringstream s;
+      s << "Assignment status done (" << timing::toc(t0) << " ms)";
+      vise_message_queue_.Push( s.str() );
+    }
     flatDescsFile const descFile(trainDescsFn, RootSIFT);
     uint32_t const numTrainDescs= descFile.numDescs();
-    if (rank==0)
-        std::cout<<"buildIndex::computeTrainAssigns: numTrainDescs= "<<numTrainDescs<<"\n";
-    
+    if (rank==0) {
+      //std::cout<<"buildIndex::computeTrainAssigns: numTrainDescs= "<<numTrainDescs<<"\n";
+      std::ostringstream s;
+      s << "Assignment status \nnumTrainDescs= "<<numTrainDescs;
+      vise_message_queue_.Push( s.str() );
+    }
     uint32_t const chunkSize=
         std::min( static_cast<uint32_t>(10000),
                   static_cast<uint32_t>(

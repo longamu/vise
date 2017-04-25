@@ -31,6 +31,10 @@
 
 #include "feat_standard.h"
 #include "train_descs.h"
+#include "train_assign.h"
+#include "train_hamming.h"
+#include "build_index.h"
+#include "hamming_embedder.h"
 
 // defined in src/vise.cc
 // a global message queue to send communications to client HTTP browser
@@ -46,7 +50,7 @@ public:
     COMPUTE_DESCRIPTORS,
     CLUSTER_DESCRIPTORS,
     ASSIGN_CLUSTER,
-    COMPUTER_HAMM,
+    COMPUTE_HAMM,
     INDEX,
     QUERY,
     STATE_COUNT
@@ -60,6 +64,9 @@ public:
   void Preprocess();
   void Descriptor();
   void Cluster();
+  void Assignment();
+  void Hamm();
+  void Index();
 
   void MoveToNextState();
   void MoveToPrevState();
@@ -78,6 +85,7 @@ public:
   void SetEngineConfig(std::string engine_config);
   void SetEngineConfigParam(std::string key, std::string value);
   std::string GetEngineConfigParam(std::string key);
+  bool EngineConfigParamExists(std::string key);
   void PrintEngineConfig();
   std::string GetEngineOverview();
 
