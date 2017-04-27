@@ -32,80 +32,102 @@ using boost::asio::ip::tcp;
 extern ViseMessageQueue vise_message_queue_;
 
 class ViseServer {
-public:
-  ViseServer();
-
-  void InitResources( std::string vise_datadir, std::string html_template_dir );
-  void Start(unsigned int port);
-  bool Stop();
-  bool Restart();
-
-  std::string GetViseDataDir() {
-    return vise_datadir_.string();
-  }
-  std::string GetHtmlTemplateDir() {
-    return html_template_dir_.string();
-  }
-
-private:
-  SearchEngine     search_engine_;
-
+ private:
+  SearchEngine search_engine_;
   unsigned int port_;
   std::string hostname_;
   std::string url_prefix_;
   std::string msg_url_;
 
-  boost::filesystem::path vise_datadir_;
-  boost::filesystem::path html_template_dir_;
+  int state_id_;
+  std::vector< int > state_id_list_;
+  std::vector< std::string > state_name_list_;
+  std::vector< std::string > state_info_list_;
+  std::vector< std::string > state_html_fn_list_;
+  std::vector< std::string > state_html_list_;
 
-  // location of search engine temporary files
-  boost::filesystem::path vise_enginedir_;
-  boost::filesystem::path vise_htmldir_;
+  // html content
+  std::string vise_main_html_;
+  std::string vise_help_html_;
+  std::string vise_404_html_;
+  std::string vise_css_;
+  std::string vise_js_;
+
+  std::string vise_index_html_;
+  bool vise_index_html_reload_;
+
+  // html content location
+  boost::filesystem::path vise_css_fn_;
+  boost::filesystem::path vise_js_fn_;
   boost::filesystem::path vise_main_html_fn_;
+  boost::filesystem::path vise_help_html_fn_;
+  boost::filesystem::path vise_404_html_fn_;
 
-  // html contents
-  std::string html_vise_main_;
-  std::vector<std::string> state_html_list_;
+  // resource dir
+  boost::filesystem::path vise_datadir_;
+  boost::filesystem::path vise_templatedir_;
+  boost::filesystem::path vise_enginedir_;
 
   boost::system::error_code error_;
 
-  void Read();
-  void Evaluate();
-  void Print();
-  void CloseConnection();
-  void MoveToNextState();
+  // state maintainanace
+  bool UpdateState();
+  std::string GetStateJsonData();
+  void ServeStateHtmlPage( int state_id, boost::shared_ptr<tcp::socket> p_socket );
+  void GenerateViseIndexHtml();
 
+  // HTTP connection handler
   void HandleConnection(boost::shared_ptr<tcp::socket> p_socket);
   void HandleGetRequest(std::string resource, boost::shared_ptr<tcp::socket> p_socket);
-
   void HandlePostRequest(std::string search_engine_name,
                          std::string resource,
                          std::string post_data,
                          boost::shared_ptr<tcp::socket> p_socket);
-
-  void InitializeSearchEngine(std::string search_engine_name);
-
   void SendHttpResponse(std::string html, boost::shared_ptr<tcp::socket> p_socket);
   void SendHttpNotFound(boost::shared_ptr<tcp::socket> p_socket);
   void SendHttpRedirect(std::string redirect_uri, boost::shared_ptr<tcp::socket> p_socket);
   void SendErrorResponse(std::string message, std::string backtrace, boost::shared_ptr<tcp::socket> p_socket);
-  void SendRawResponse(std::string response, boost::shared_ptr<tcp::socket> p_socket);
+  void SendRawResponse(std::string content_type, std::string content, boost::shared_ptr<tcp::socket> p_socket);
   void SendJsonResponse(std::string json, boost::shared_ptr<tcp::socket> p_socket);
 
-  void SendMessage(std::string sender, std::string message);
   void SendMessage(std::string message);
-  void SendStatus(std::string sender, std::string status);
   void SendStatus(std::string status);
+  void SendControl(std::string control);
+  void SendPacket(std::string type, std::string message);
 
+  // helper functions
   void ExtractHttpResource(std::string http_request, std::string &http_resource);
   void ExtractHttpContent(std::string http_request, std::string &http_content);
-
-  int  LoadStateHtml(unsigned int state_id, std::string &state_html);
   int  LoadFile(std::string filename, std::string &file_contents);
   void WriteFile(std::string filename, std::string &file_contents);
-
   void SplitString(std::string s, char sep, std::vector<std::string> &tokens);
   bool ReplaceString(std::string &s, std::string old_str, std::string new_str);
+
+ public:
+  static const int STATE_NOT_LOADED =  0;
+  static const int STATE_INIT       =  1;
+  static const int STATE_SETTING    =  2;
+  static const int STATE_INFO       =  3;
+  static const int STATE_PREPROCESS =  4;
+  static const int STATE_DESCRIPTOR =  5;
+  static const int STATE_CLUSTER    =  6;
+  static const int STATE_ASSIGN     =  7;
+  static const int STATE_HAMM       =  8;
+  static const int STATE_INDEX      =  9;
+  static const int STATE_QUERY      = 10;
+
+  ViseServer( std::string vise_datadir, std::string vise_templatedir );
+
+  std::string GetCurrentStateName();
+  std::string GetCurrentStateInfo();
+  std::string GetStateName( int state_id );
+  std::string GetStateInfo( int state_id );
+  int GetStateId( std::string );
+
+  //void InitResources( std::string vise_datadir, std::string vise_templatedir );
+  void Start(unsigned int port);
+  bool Stop();
+  bool Restart();
 };
 
 #endif /* _VISE_SERVER_H */

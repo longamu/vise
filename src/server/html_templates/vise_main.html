@@ -2,371 +2,55 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>VISE Configuration</title>
+    <title>VISE</title>
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="Page template of VGG Image Search Engine (VISE)">
+    <link rel="stylesheet" type="text/css" href="vise.css">
 
     <script>
     /*    
       @licstart  The following is the entire license notice for the 
       JavaScript code in this page.
 
-      Copyright (C) 2017  Abhishek Dutta <adutta@robotos.ox.ac.uk>
+      Copyright (c) 2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
+      All rights reserved.
 
-      The JavaScript code in this page is free software: you can
-      redistribute it and/or modify it under the terms of the GNU
-      General Public License (GNU GPL) as published by the Free Software
-      Foundation, either version 3 of the License, or (at your option)
-      any later version.  The code is distributed WITHOUT ANY WARRANTY;
-      without even the implied warranty of MERCHANTABILITY or FITNESS
-      FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+      Redistribution and use in source and binary forms, with or without
+      modification, are permitted provided that the following conditions are met:
 
-      As additional permission under GNU GPL version 3 section 7, you
-      may distribute non-source (e.g., minimized or compacted) forms of
-      that code without the copy of the GNU GPL normally required by
-      section 4, provided you include this license notice and a URL
-      through which recipients can access the Corresponding Source.   
-
+      Redistributions of source code must retain the above copyright notice, this
+      list of conditions and the following disclaimer.
+      Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+      THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+      AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+      IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+      ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+      LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+      CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+      SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+      INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+      CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+      ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+      POSSIBILITY OF SUCH DAMAGE.  
 
       @licend  The above is the entire license notice
       for the JavaScript code in this page.
     */
     </script>
-
-    <!-- CSS style definition -->
-    <style type="text/css">
-      body {
-        padding: 0;
-        margin: 0;
-        font-family: sans-serif;
-      }
-      #header {
-        display: block;
-        width: 100%;
-        font-size: xx-large;
-        font-family: serif;
-        letter-spacing: 1px;
-        text-align: center;
-        padding-top: 1em;
-        padding-bottom: 1em;
-        border-bottom: 1px solid #f2f2f2;
-      }
-      #content {
-        display: block;
-        width: 100%;
-        height: 100%;
-        padding: 1em;
-      }
-      /* Displays the current state of search engine */      
-      #footer {
-        position: absolute;
-        bottom: 0px;
-        z-index: 10;
-        display: block;
-        width: 100%;
-        font-size: large;
-        text-align: center;
-        background-color: #f2f2f2;
-        padding-top: 1em;
-        padding-bottom: 2em;
-      }
-      #footer .state_block {
-        position: relative;
-        display: inline-block;
-        color: #000000;
-        height: 100%;
-      }
-      #footer .state_block:link {
-      }
-      #footer .state_block:hover {
-      }
-
-      #footer .state_block .title {
-        padding: 0.5em;
-      }
-      #footer .state_block .current_state {
-        font-weight: bold;
-      }
-
-      #footer .state_block .info {
-        padding: 1em;
-        padding-top: 0em;
-        font-size: small;
-      }
-      #footer .state_block.highlight {
-        color: #ff6600;
-        font-weight: bold;
-      }
-
-      #footer .state_block_sep {
-        display: inline-block;
-        position: relative;
-        vertical-align: top;
-        top: 0.5em;
-      }
-
-      #message_panel {
-        position: fixed;
-        left: 0;
-        bottom: 0px;
-        line-height: 3em;
-        width: 100%;
-        background-color: #000000;
-        color: #ffff00;
-        font-size: small;
-        text-align: center;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        z-index: 1000;
-      }
-
-      .status_message {
-        display: block;
-        padding: 1em;
-        font-family: Mono;
-        font-size: 0.8em;
-        color: green;
-        background-color: black;
-        width: 90%;
-        height: 400px;
-        overflow: scroll;
-        white-space: pre;
-      }
-
-      .control_panel {
-        display: block;
-        padding: 0;
-        margin: 1em 0;
-      }
-      .control_panel .action_button {
-        display: inline-block;
-        margin-left: 1em;
-        border: none;
-        color: #0000ff;
-      }
-      .control_panel .action_button:hover {
-        cursor: pointer;
-      }
-    </style>
   </head>
   <body onload="_vise_init()">
     <div id="header">VGG Image Search Engine</div>
 
-    <div id="content"><!--__VISE_CONTENT_HTML__--></div>
+    <div id="content"><!-- Content will be dynamically updated by Javascript --></div>
 
-    <div id="footer">
-      <!-- 
-        Will be dynamically updated based on VISE server response . See
-          * _vise_init()
-          * _vise_response_listener()
-          * _vise_update_search_engine_state()
-      -->
-    </div>
+    <div id="footer"><!-- Content will be dynamically updated by Javascript --></div>
 
     <!-- to show status messages -->
     <div id="message_panel"></div>
 
-  <script type="text/javascript">
-  var VISE_THEME_MESSAGE_TIMEOUT_MS = 4000;
-
-  var _vise_message_clear_timer;
-
-  var _vise_server = new XMLHttpRequest();
-  var _vise_messenger = new XMLHttpRequest();
-
-  var VISE_SERVER_ADDRESS = "__VISE_SERVER_ADDRESS__"
-  var VISE_MESSENGER_ADDRESS = "__VISE_MESSENGER_ADDRESS__"
-
-  _vise_server.addEventListener("load", _vise_response_listener);
-  _vise_messenger.addEventListener("load", _vise_msg_listener);
-
-  var _vise_current_state_id = -1;
-  var _vise_current_state_name = '';
-  var _vise_search_engine_state;
-
-  function _vise_msg_listener() {
-    var packet = this.responseText;
-
-    // create a connection for next message
-    _vise_messenger.open("GET", VISE_MESSENGER_ADDRESS);
-    _vise_messenger.send();
-
-    // process the received message asynchronously
-    setTimeout( function() {
-      _vise_handle_message( packet );
-    }, 0);
-  }
-  // msg = sender receiver msg
-  function _vise_handle_message(packet) {
-    var first_space  = packet.indexOf(' ', 0);
-    var second_space = packet.indexOf(' ', first_space + 1);
-
-    var sender   = packet.substr(0, first_space);
-    var receiver = packet.substr(first_space + 1, second_space - first_space - 1);
-    var msg = packet.substr(second_space + 1);
-
-    if ( sender === _vise_current_state_name) {
-      switch ( receiver ) {
-        case "message_panel":
-          _vise_show_message(msg, 0);
-          break;
-        case "status":
-          _vise_handle_status_msg(sender, msg);
-          break;
-        case "control":
-          _vise_handle_control_msg(sender, msg);
-          break;
-        default:
-          console.log("Do not know how to handle this message : " + packet);
-      }
-    } else {
-      console.log("Do not know where to deliver the status message. sender=" + sender + ", msg=" + msg);
-    }
-  }
-
-  function _vise_handle_status_msg(sender, msg) {
-    var status_panel = document.getElementById( sender + "_status" );
-    if ( typeof status_panel !== 'undefined' ) {
-      status_panel.innerHTML += msg;
-    } 
-  }
-
-  function _vise_handle_control_msg(sender, msg) {
-    var control_panel = document.getElementById( sender + "_control" );
-    if ( typeof control_panel !== 'undefined' ) {
-      control_panel.innerHTML += msg;
-    }
-  }
-
-  function _vise_response_listener() {
-    var response_str = this.responseText;
-    var content_type = this.getResponseHeader('Content-Type')
-    if ( content_type.includes("application/json") ) {
-      var json = JSON.parse(response_str);
-      switch(json.id) {
-        case 'search_engine_state':
-          _vise_update_search_engine_state(json);
-          break;
-
-        case 'search_engine_message':
-          _vise_show_message( json['message'], 0 );
-          break;
-
-        default:
-          console.log("Do not know where to forward the received response!");
-          console.log(response_str);
-      }
-    } else if ( content_type.includes("text/html") ) {
-      document.getElementById('content').innerHTML = response_str;
-    } else {
-      console.log("Received response of unknown content-type : " + content_type);
-    }
-  }
-
-  function _vise_update_search_engine_state(response) {
-    console.log(response);
-    var html = [];
-    for ( var i=0; i<response['state_name_list'].length; i++ ) {
-      html.push('<div class="state_block">');
-      if ( i === response['current_state_id'] ) {
-        html.push('<div class="title current_state">' + response['state_name_list'][i] + '</div>');
-      } else {
-        html.push('<div class="title">' + response['state_name_list'][i] + '</div>');
-      }
-      if ( response['state_info_list'][i] === '' ) {
-        html.push('<div class="info">&nbsp;</div>');
-      } else {
-        html.push('<div class="info">' + response['state_info_list'][i] + '</div>');
-      }
-      html.push('</div>');
-      html.push('<div class="state_block_sep">&rarr;</div>');
-    }
-    // remove the last arrow
-    html.splice(html.length - 1, 1);
-    document.getElementById("footer").innerHTML = html.join('');
-
-    if ( _vise_current_state_id !== response['current_state_id'] ) {
-      _vise_current_state_id = response['current_state_id'];
-      _vise_current_state_name = response['state_name_list'][_vise_current_state_id];
-      _vise_search_engine_state = response;
-      _vise_get_current_state_html();
-    }
-  }
-
-  function _vise_update_search_engine_state_html(response) {
-    document.getElementById('content').innerHTML = response['innerHTML'];
-  }
-
-  function _vise_init() {
-    // update the search engine state
-    _vise_send_get_request("state_list");
-
-    // create the seed connection to receive messages
-    _vise_messenger.open("GET", VISE_MESSENGER_ADDRESS);
-    _vise_messenger.send();
-  }
-
-  function _vise_get_current_state_html() {
-    _vise_send_get_request( _vise_current_state_name );
-  }
-
-  function _vise_send_get_request(resource_name) {
-    try {
-      var get_url = VISE_SERVER_ADDRESS + resource_name;
-      _vise_server.open("GET", get_url);
-      _vise_server.send();
-    } catch ( e ) {
-      console.log( "_vise_send_get_request() failed:");
-      console.log( e.message );
-    }
-  }
-
-  function _vise_send_post_request(postdata) {
-    try {
-      var post_url = VISE_SERVER_ADDRESS + _vise_current_state_name;
-      _vise_server.open("POST", post_url);
-      _vise_server.send( postdata );
-    } catch ( e ) {
-      console.log( "_vise_send_post_request() failed:");
-      console.log( e.message );
-    }
-  }
-
-  function _vise_show_message(msg, t) {
-    if ( _vise_message_clear_timer ) {
-      clearTimeout(_vise_message_clear_timer); // stop any previous timeouts
-    }
-    document.getElementById('message_panel').innerHTML = msg;
-
-    var timeout = t;
-    if ( timeout > 0 || typeof t === 'undefined') {
-      if ( typeof t === 'undefined') {
-        timeout = VISE_THEME_MESSAGE_TIMEOUT_MS;
-      }
-      _vise_message_clear_timer = setTimeout( function() {
-          document.getElementById('message_panel').innerHTML = ' ';
-      }, timeout);
-    }
-  }
-
-  function post_settings_data() {
-    var postdata = [];
-    var vise_settings = document.getElementById("vise_settings");
-    if ( typeof vise_settings !== 'undefined' && vise_settings !== null ) {
-      var setting_param = vise_settings.getElementsByClassName("vise_setting_param");
-
-      for ( var i = 0; i < setting_param.length; i++) {
-        var param_name  = setting_param[i].name;
-        var param_value = setting_param[i].value;
-        postdata.push( param_name + "=" + param_value );
-      }
-      var postdata_str = postdata.join('\n');
-
-      _vise_send_post_request( postdata_str );
-    }
-  }
-  </script>
+  <script src="vise.js"></script>
   </body>
 </html>
 

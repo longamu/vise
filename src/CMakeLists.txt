@@ -205,7 +205,7 @@ set( CMAKE_CXX_FLAGS "-Wall -DEIGEN_NO_DEBUG -O2 -g3 -msse2 -mpopcnt -DMAGICKCOR
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.7.1")
     # -Wno-unused-local-typedefs is just for EIGEN and more recent g++
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedefs")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -unused-local-typedefs")
   endif()
 endif()
 

@@ -42,23 +42,9 @@ extern ViseMessageQueue vise_message_queue_;
 
 class SearchEngine {
 public:
-  enum STATE {
-    INITIALIZE=0,
-    SETTINGS,
-    OVERVIEW,
-    PREPROCESSING,
-    COMPUTE_DESCRIPTORS,
-    CLUSTER_DESCRIPTORS,
-    ASSIGN_CLUSTER,
-    COMPUTE_HAMM,
-    INDEX,
-    QUERY,
-    STATE_COUNT
-  };
 
   SearchEngine();
   void Init(std::string name, boost::filesystem::path basedir);
-  void InitEngineResources();
   void UpdateEngineOverview();
 
   void Preprocess();
@@ -68,28 +54,23 @@ public:
   void Hamm();
   void Index();
 
-  void MoveToNextState();
-  void MoveToPrevState();
+  std::string GetName();
 
-  // getters and setters
-  STATE GetEngineState();
-  std::string GetEngineStateName();
-  std::string GetEngineStateName( unsigned int state_id );
-  std::string GetEngineStateInfo();
-  std::string GetEngineStateList();
-  int GetEngineState(std::string state_name);
-  std::string Name();
   boost::filesystem::path GetEngineConfigPath();
   std::string GetResourceUri(std::string resource_name);
   std::string GetSearchEngineBaseUri();
+
   void SetEngineConfig(std::string engine_config);
   void SetEngineConfigParam(std::string key, std::string value);
   std::string GetEngineConfigParam(std::string key);
   bool EngineConfigParamExists(std::string key);
   void PrintEngineConfig();
+
   std::string GetEngineOverview();
 
  private:
+  std::string engine_name_;
+
   boost::filesystem::path basedir_;
   boost::filesystem::path enginedir_;
 
@@ -100,13 +81,6 @@ public:
 
   boost::filesystem::path training_datadir_;
   boost::filesystem::path tmp_datadir_;
-
-  // to maintain state of the search engine
-  STATE state_;
-  std::vector< std::string > state_name_list_;
-  std::vector< std::string > state_info_list_;
-
-  std::string engine_name_;
 
   std::map< std::string, std::string > engine_config_;
   boost::filesystem::path engine_config_fn_;
@@ -119,20 +93,16 @@ public:
   bool EngineExists( std::string name );
   bool EngineConfigExists();
 
-  void CreateFileList(boost::filesystem::path dir,
-                      std::vector<std::string> &filelist);
-
-  void SendMessage(std::string message);
-  void SendStatus(std::string status);
-  void SendControl(std::string control);
-  void SendPacket(std::string sender, std::string type, std::string status);
+  void SendStatus(std::string sender, std::string status);
+  void SendPacket(std::string sender, std::string type, std::string messsage);
 
   void WriteImageListToFile(const std::string fn,
                             const std::vector< std::string > &imlist);
+  void CreateFileList(boost::filesystem::path dir,
+                      std::vector<std::string> &filelist);
+
   void WriteConfigToFile();
-
   void InitEngineResources( std::string name );
-
   void RunClusterCommand();
 };
 

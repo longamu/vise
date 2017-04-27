@@ -24,9 +24,9 @@ int main(int argc, char** argv) {
   Magick::InitializeMagick(*argv);
 
   std::string visedata_dir = "/home/tlm/vise/";
-  std::string html_template_dir = "/home/tlm/dev/vise/src/server/html_templates/";
-  ViseServer vise_server;
-  vise_server.InitResources( visedata_dir, html_template_dir );
+  std::string template_dir = "/home/tlm/dev/vise/src/server/html_templates/";
+  ViseServer vise_server( visedata_dir, template_dir );
+  //vise_server.InitResources( visedata_dir, template_dir );
 
   vise_server.Start(port);
 

@@ -1,41 +1,13 @@
 #include "SearchEngine.h"
 
 SearchEngine::SearchEngine() {
-  state_ = SearchEngine::INITIALIZE;
-
-  state_name_list_.push_back("Initialize");
-  state_name_list_.push_back("Settings");
-  state_name_list_.push_back("Overview");
-  state_name_list_.push_back("Preprocessing");
-  state_name_list_.push_back("Descriptor");
-  state_name_list_.push_back("Cluster");
-  state_name_list_.push_back("Assignment");
-  state_name_list_.push_back("Hamm");
-  state_name_list_.push_back("Index");
-  state_name_list_.push_back("Query");
-
-  state_info_list_.push_back("");
-  state_info_list_.push_back("");
-  state_info_list_.push_back("");
-  state_info_list_.push_back("(2 min.)");
-  state_info_list_.push_back("(6 min.)");
-  state_info_list_.push_back("(49 min.)");
-  state_info_list_.push_back("(1 min.)");
-  state_info_list_.push_back("(1 min.)");
-  state_info_list_.push_back("(3 hours)");
-  state_info_list_.push_back("");
+  engine_name_ = "";
 }
 
 void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
   basedir_ = boost::filesystem::path(basedir);
-
   engine_name_ = name;
-  InitEngineResources();
 
-  state_ = SearchEngine::INITIALIZE;
-}
-
-void SearchEngine::InitEngineResources() {
   boost::filesystem::path engine_name( engine_name_ );
   enginedir_ = basedir_ / engine_name;
 
@@ -43,6 +15,9 @@ void SearchEngine::InitEngineResources() {
   transformed_imgdir_  = enginedir_ / "img";
   training_datadir_    = enginedir_ / "training_data";
   tmp_datadir_         = enginedir_ / "tmp";
+
+  imglist_fn_ = training_datadir_ / "imlist.txt";
+  engine_config_fn_ = training_datadir_ / "vise_config.cfg";
 
   transformed_imgdir_ += boost::filesystem::path::preferred_separator;
   training_datadir_ += boost::filesystem::path::preferred_separator;
@@ -61,6 +36,8 @@ void SearchEngine::InitEngineResources() {
     if ( ! boost::filesystem::exists( training_datadir_ ) ) {
       boost::filesystem::create_directory( training_datadir_ );
     }
+    imglist_fn_ = training_datadir_ / "imlist.txt";
+
     if ( ! boost::filesystem::exists( tmp_datadir_ ) ) {
       boost::filesystem::create_directory( tmp_datadir_ );
     }
@@ -69,85 +46,16 @@ void SearchEngine::InitEngineResources() {
   }
 }
 
-bool SearchEngine::EngineExists( std::string name ) {
-  boost::filesystem::path engine_name( name );
-  boost::filesystem::path engine_dir = basedir_ / engine_name;
-
-  if ( is_directory( engine_dir ) ) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-void SearchEngine::MoveToNextState() {
-  std::string redirect_uri;
-  switch ( state_ ) {
-  case SearchEngine::INITIALIZE :
-    state_ = SearchEngine::SETTINGS;
-    break;
-
-  case SearchEngine::SETTINGS :
-    state_ = SearchEngine::OVERVIEW;
-    break;
-
-  case SearchEngine::OVERVIEW :
-    state_ = SearchEngine::PREPROCESSING;
-    break;
-
-  case SearchEngine::PREPROCESSING :
-    state_ = SearchEngine::COMPUTE_DESCRIPTORS;
-    break;
-
-  case SearchEngine::COMPUTE_DESCRIPTORS :
-    state_ = SearchEngine::CLUSTER_DESCRIPTORS;
-    break;
-
-  case SearchEngine::CLUSTER_DESCRIPTORS :
-    state_ = SearchEngine::ASSIGN_CLUSTER;
-    break;
-
-  case SearchEngine::ASSIGN_CLUSTER :
-    state_ = SearchEngine::COMPUTE_HAMM;
-    break;
-
-  case SearchEngine::COMPUTE_HAMM :
-    state_ = SearchEngine::INDEX;
-    break;
-
-  case SearchEngine::INDEX :
-    state_ = SearchEngine::QUERY;
-    break;
-
-  default:
-    std::cerr << "Do not know how to move to next state!" << std::flush;
-  }
-}
-
-void SearchEngine::MoveToPrevState() {
-  std::string redirect_uri;
-  switch ( state_ ) {
-  case SearchEngine::SETTINGS :
-    state_ = SearchEngine::INITIALIZE;
-    break;
-
-  case SearchEngine::OVERVIEW :
-    state_ = SearchEngine::SETTINGS;
-    break;
-
-  default:
-    std::cerr << "Do not know how to move to previous state!" << std::flush;
-  }
-}
-
 //
 // Workers for each state
 //
 void SearchEngine::Preprocess() {
-  SendStatus("Preprocessing started ...");
+  SendStatus("Preprocess", "\nPreprocessing started ...");
 
   // scale and copy image to transformed_imgdir_
-  SendStatus("\nSaved transformed images to [" + transformed_imgdir_.string() + "] ");
+  SendStatus("Preprocess",
+             "\nSaving transformed images to [" + transformed_imgdir_.string() + "] ");
+
   for ( unsigned int i=0; i<imglist_.size(); i++ ) {
     boost::filesystem::path img_rel_path = imglist_.at(i);
     boost::filesystem::path src_fn  = original_imgdir_ / img_rel_path;
@@ -175,18 +83,19 @@ void SearchEngine::Preprocess() {
           boost::filesystem::create_directories( dest_fn.parent_path() );
         }
         im.write( dest_fn.string() );
-        SendStatus( "." );
+        SendStatus("Preprocess", ".");
       } catch (std::exception &error) {
-        SendStatus( "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
+        SendStatus("Preprocess",
+                   "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
       }
     }
   }
-  SendStatus("[DONE]");
+  SendStatus("Preprocess", "[Done]");
 
   //if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
-  imglist_fn_ = training_datadir_ / "imlist.txt";
   WriteImageListToFile( imglist_fn_.string(), imglist_ );
-  SendStatus( "\nWritten image list to : [" + imglist_fn_.string() + "]" );
+  SendStatus("Preprocess",
+             "\nWritten image list to : [" + imglist_fn_.string() + "]" );
 
   // save full configuration file to training_datadir_
   SetEngineConfigParam("trainDatabasePath", transformed_imgdir_.string());
@@ -206,11 +115,9 @@ void SearchEngine::Preprocess() {
   SetEngineConfigParam("wghtFn", train_file_prefix.string() + "wght.e3bin" );
   SetEngineConfigParam("tmpDir", tmp_datadir_.string());
 
-  engine_config_fn_ = training_datadir_ / "vise_config.cfg";
   WriteConfigToFile();
-  SendStatus( "\nWritten search engine configuration to : [" + engine_config_fn_.string() + "]" );
-
-  SendControl("<div id=\"Preprocessing_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
+  SendStatus("Preprocess",
+             "\nWritten search engine configuration to : [" + engine_config_fn_.string() + "]" );
 }
 
 void SearchEngine::Descriptor() {
@@ -220,10 +127,10 @@ void SearchEngine::Descriptor() {
   if ( boost::filesystem::exists( train_desc_fn ) ) {
     // delete file
     boost::filesystem::remove( train_desc_fn );
-    SendStatus("\nDeleted old training descriptors ...");
+    SendStatus("Descriptor", "\nDeleted old training descriptors ...");
   }
 
-  SendStatus("\nComputing training descriptors ...");
+  SendStatus("Descriptor", "\nComputing training descriptors ...");
   std::string const trainImagelistFn = GetEngineConfigParam("trainImagelistFn");
   std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
 
@@ -248,8 +155,6 @@ void SearchEngine::Descriptor() {
                                 trainDescsFn,
                                 trainNumDescs,
                                 featGetter_obj);
-
-  SendControl("<div id=\"Descriptor_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
 }
 
 // ensure that you install the dkmeans_relja as follows
@@ -257,7 +162,7 @@ void SearchEngine::Descriptor() {
 // $ python setup.py build
 // $ sudo python setup.py install
 void SearchEngine::Cluster() {
-  SendStatus("\nStarting clustering of descriptors ...");
+  SendStatus("Cluster", "\nStarting clustering of descriptors ...");
 
   boost::thread t( boost::bind( &SearchEngine::RunClusterCommand, this ) );
 }
@@ -271,23 +176,22 @@ void SearchEngine::RunClusterCommand() {
   FILE *pipe = popen( cmd.c_str(), "r");
 
   if ( pipe != NULL ) {
-    SendStatus("\nCommand executed: $" + cmd);
+    SendPacket("Cluster", "status", "\nCommand executed: $" + cmd);
 
     char line[128];
     while ( fgets(line, 64, pipe) ) {
       std::string status_txt(line);
-      SendStatus(status_txt);
+      SendStatus("Cluster", status_txt);
     }
     pclose( pipe );
-
-    SendControl("<div id=\"Cluster_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
   } else {
-    SendStatus("\nFailed to execute python script for clustering: \n\t $" + cmd);
+    SendStatus("Cluster",
+               "\nFailed to execute python script for clustering: \n\t $" + cmd);
   }
 }
 
 void SearchEngine::Assignment() {
-  SendStatus("\nStarting assignment ...");
+  SendStatus("Assign", "\nStarting assignment ...");
   bool useRootSIFT = false;
   if ( GetEngineConfigParam("RootSIFT") == "on" ) {
     useRootSIFT = true;
@@ -298,11 +202,10 @@ void SearchEngine::Assignment() {
                                    GetEngineConfigParam("descFn"),
                                    GetEngineConfigParam("assignFn"));
 
-  SendControl("<div id=\"Assignment_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
 }
 
 void SearchEngine::Hamm() {
-  SendStatus("\nComputing hamm ...");
+  SendStatus("Hamm", "\nComputing hamm ...");
   uint32_t hammEmbBits;
   std::string hamm_emb_bits = GetEngineConfigParam("hammEmbBits");
   std::istringstream s(hamm_emb_bits);
@@ -320,11 +223,10 @@ void SearchEngine::Hamm() {
                              GetEngineConfigParam("hammFn"),
                              hammEmbBits);
 
-  SendControl("<div id=\"Hamm_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
 }
 
 void SearchEngine::Index() {
-    SendStatus("\nStarting indexing ...");
+  SendStatus("Index", "\nStarting indexing ...");
   bool SIFTscale3 = false;
   if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
     SIFTscale3 = true;
@@ -371,8 +273,6 @@ void SearchEngine::Index() {
                     GetEngineConfigParam("clstFn"),
                     embFactory);
 
-  SendControl("<div id=\"Index_button_proceed\" class=\"action_button\" onclick=\"_vise_send_post_request('proceed')\">Proceed</div>");
-
   delete embFactory;
 }
 
@@ -385,18 +285,6 @@ bool SearchEngine::EngineConfigExists() {
   } else {
     return false;
   }
-}
-
-std::string SearchEngine::GetResourceUri(std::string resource_name) {
-  std::string resource_uri = "/" + engine_name_;
-  if ( resource_name == "settings" ) {
-    resource_uri = resource_uri + "/settings";
-  } else if ( resource_name == "training" ) {
-    resource_uri = resource_uri + "/training";
-  } else {
-    resource_uri = resource_uri + "/";
-  }
-  return resource_uri;
 }
 
 void SearchEngine::CreateFileList(boost::filesystem::path dir,
@@ -482,48 +370,7 @@ void SearchEngine::SetEngineConfigParam(std::string key, std::string value) {
   }
 }
 
-std::string SearchEngine::GetEngineStateList() {
-  std::ostringstream json;
-  json << "{ \"id\" : \"search_engine_state\",";
-  json << "\"state_id_list\" : [ 0";
-  for ( unsigned int i=1 ; i<SearchEngine::STATE_COUNT; i++ ) {
-    json << "," << i;
-  }
-  json << "], \"state_name_list\" : [ \"" << state_name_list_.at(0) << "\"";
-  for ( unsigned int i=1 ; i<SearchEngine::STATE_COUNT; i++ ) {
-    json << ", \"" << state_name_list_.at(i) << "\"";
-  }
-  json << "], \"state_info_list\" : [ \"" << state_info_list_.at(0) << "\"";
-  for ( unsigned int i=1 ; i<SearchEngine::STATE_COUNT; i++ ) {
-    json << ", \"" << state_info_list_.at(i) << "\"";
-  }
-  json << "], \"current_state_id\" : " << state_ << "  }";
-  return json.str();
-}
-
-int SearchEngine::GetEngineState(std::string state_name) {
-  std::vector<std::string>::iterator found;
-  found = std::find( state_name_list_.begin(), state_name_list_.end(), state_name );
-  if ( found != state_name_list_.end() ) {
-    return ( std::distance(state_name_list_.begin(), found) );
-  } else {
-    return -1;
-  }
-}
-
-SearchEngine::STATE SearchEngine::GetEngineState() {
-  return state_;
-}
-std::string SearchEngine::GetEngineStateName() {
-  return state_name_list_.at(state_);
-}
-std::string SearchEngine::GetEngineStateName( unsigned int state_id ) {
-  return state_name_list_.at(state_id);
-}
-std::string SearchEngine::GetEngineStateInfo() {
-  return state_info_list_.at(state_);
-}
-std::string SearchEngine::Name() {
+std::string SearchEngine::GetName() {
   return engine_name_;
 }
 boost::filesystem::path SearchEngine::GetEngineConfigPath() {
@@ -589,16 +436,8 @@ void SearchEngine::WriteConfigToFile() {
   }
 }
 
-void SearchEngine::SendMessage(std::string message) {
-  SendPacket(GetEngineStateName(), "message", message);
-}
-
-void SearchEngine::SendStatus(std::string status) {
-  SendPacket(GetEngineStateName(), "status", status);
-}
-
-void SearchEngine::SendControl(std::string control) {
-  SendPacket(GetEngineStateName(), "control", control);
+void SearchEngine::SendStatus(std::string sender, std::string message) {
+  SendPacket(sender, "status", message);
 }
 
 void SearchEngine::SendPacket(std::string sender, std::string type, std::string message) {
