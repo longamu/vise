@@ -15,6 +15,7 @@ body {
 }
 #content {
   display: block;
+  margin: 1em;
 }
 /* VISE Main Page : create new or load existing search engines */
 #create_engine_panel {
@@ -75,7 +76,7 @@ body {
   font-size: small;
 }
 #footer .state_block.highlight {
-  color: #ff6600;
+  color: #00ff00;
   font-weight: bold;
 }
 
@@ -102,7 +103,7 @@ body {
   z-index: 1000;
 }
 
-.status_message {
+#log {
   display: block;
   padding: 1em;
   font-family: Mono;
@@ -127,4 +128,9 @@ body {
 }
 .action_button:hover {
   cursor: pointer;
+}
+
+/* State: Setting */
+#vise_setting {
+  padding: 1em 2em;
 }

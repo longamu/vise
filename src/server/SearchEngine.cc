@@ -2,6 +2,7 @@
 
 SearchEngine::SearchEngine() {
   engine_name_ = "";
+  engine_config_.clear();
 }
 
 void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
@@ -28,6 +29,7 @@ void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
     boost::filesystem::create_directory( enginedir_ );
     boost::filesystem::create_directory( transformed_imgdir_ );
     boost::filesystem::create_directory( training_datadir_ );
+    boost::filesystem::create_directory( tmp_datadir_ );
     std::cout << "\n" << engine_name_ << " search engine created" << std::flush;
   } else {
     if ( ! boost::filesystem::exists( transformed_imgdir_ ) ) {
@@ -36,8 +38,6 @@ void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
     if ( ! boost::filesystem::exists( training_datadir_ ) ) {
       boost::filesystem::create_directory( training_datadir_ );
     }
-    imglist_fn_ = training_datadir_ / "imlist.txt";
-
     if ( ! boost::filesystem::exists( tmp_datadir_ ) ) {
       boost::filesystem::create_directory( tmp_datadir_ );
     }
@@ -50,11 +50,15 @@ void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
 // Workers for each state
 //
 void SearchEngine::Preprocess() {
-  SendStatus("Preprocess", "\nPreprocessing started ...");
+  SendLog("Preprocess", "\nPreprocessing started ...");
+
+  if ( imglist_.empty() ) {
+    boost::filesystem::path imagePath(GetEngineConfigParam("imagePath"));
+    CreateFileList( imagePath );
+  }
 
   // scale and copy image to transformed_imgdir_
-  SendStatus("Preprocess",
-             "\nSaving transformed images to [" + transformed_imgdir_.string() + "] ");
+  SendLog("Preprocess", "\nSaving transformed images to [" + transformed_imgdir_.string() + "] ");
 
   for ( unsigned int i=0; i<imglist_.size(); i++ ) {
     boost::filesystem::path img_rel_path = imglist_.at(i);
@@ -68,33 +72,40 @@ void SearchEngine::Preprocess() {
         Magick::Geometry size = im.size();
 
         double aspect_ratio =  ((double) size.height()) / ((double) size.width());
-        unsigned int new_width = 400;
-        unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
 
-        Magick::Geometry resize = Magick::Geometry(new_width, new_height);
-        resize.greater(true); // Resize if image is greater than size (>)
+        std::string transformed_img_width = GetEngineConfigParam("transformed_img_width");
+        if (transformed_img_width != "original") {
+          std::stringstream s;
+          s << transformed_img_width;
+          unsigned int new_width;
+          s >> new_width;
+          unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
 
-        std::ostringstream info;
-        info << std::string(size) << " -> " << std::string(resize);
-        im.zoom( resize );
+          Magick::Geometry resize = Magick::Geometry(new_width, new_height);
+
+          std::ostringstream info;
+          info << std::string(size) << " -> " << std::string(resize);
+          std::cout << "\nResized = " << info.str() << std::flush;
+          im.zoom( resize );
+        }
 
         // check if image path exists
         if ( ! boost::filesystem::is_directory( dest_fn.parent_path() ) ) {
           boost::filesystem::create_directories( dest_fn.parent_path() );
         }
         im.write( dest_fn.string() );
-        SendStatus("Preprocess", ".");
+        imglist_fn_transformed_size_.at(i) = boost::filesystem::file_size(dest_fn.string().c_str());
+        SendLog("Preprocess", ".");
       } catch (std::exception &error) {
-        SendStatus("Preprocess",
-                   "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
+        SendLog("Preprocess", "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
       }
     }
   }
-  SendStatus("Preprocess", "[Done]");
+  SendLog("Preprocess", "[Done]");
 
   //if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
   WriteImageListToFile( imglist_fn_.string(), imglist_ );
-  SendStatus("Preprocess",
+  SendLog("Preprocess",
              "\nWritten image list to : [" + imglist_fn_.string() + "]" );
 
   // save full configuration file to training_datadir_
@@ -116,7 +127,7 @@ void SearchEngine::Preprocess() {
   SetEngineConfigParam("tmpDir", tmp_datadir_.string());
 
   WriteConfigToFile();
-  SendStatus("Preprocess",
+  SendLog("Preprocess",
              "\nWritten search engine configuration to : [" + engine_config_fn_.string() + "]" );
 }
 
@@ -126,35 +137,35 @@ void SearchEngine::Descriptor() {
 
   if ( boost::filesystem::exists( train_desc_fn ) ) {
     // delete file
-    boost::filesystem::remove( train_desc_fn );
-    SendStatus("Descriptor", "\nDeleted old training descriptors ...");
+    //boost::filesystem::remove( train_desc_fn );
+    SendLog("Descriptor", "\nDescriptor already exists ...");
+  } else {
+    SendLog("Descriptor", "\nComputing training descriptors ...");
+    std::string const trainImagelistFn = GetEngineConfigParam("trainImagelistFn");
+    std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
+
+    int32_t trainNumDescs;
+    std::stringstream s;
+    s << GetEngineConfigParam("trainNumDescs");
+    s >> trainNumDescs;
+
+    bool SIFTscale3 = false;
+    if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
+      SIFTscale3 = true;
+    }
+
+    // source: src/v2/indexing/compute_index_v2.cpp
+    featGetter_standard const featGetter_obj( (
+                                               std::string("hesaff-") +
+                                               "sift" +
+                                               std::string(SIFTscale3 ? "-scale3" : "")
+                                               ).c_str() );
+
+    buildIndex::computeTrainDescs(trainImagelistFn, trainDatabasePath,
+                                  trainDescsFn,
+                                  trainNumDescs,
+                                  featGetter_obj);
   }
-
-  SendStatus("Descriptor", "\nComputing training descriptors ...");
-  std::string const trainImagelistFn = GetEngineConfigParam("trainImagelistFn");
-  std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
-
-  int32_t trainNumDescs;
-  std::stringstream s;
-  s << GetEngineConfigParam("trainNumDescs");
-  s >> trainNumDescs;
-
-  bool SIFTscale3 = false;
-  if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
-    SIFTscale3 = true;
-  }
-
-  // source: src/v2/indexing/compute_index_v2.cpp
-  featGetter_standard const featGetter_obj( (
-                                             std::string("hesaff-") +
-                                             "sift" +
-                                             std::string(SIFTscale3 ? "-scale3" : "")
-                                             ).c_str() );
-
-  buildIndex::computeTrainDescs(trainImagelistFn, trainDatabasePath,
-                                trainDescsFn,
-                                trainNumDescs,
-                                featGetter_obj);
 }
 
 // ensure that you install the dkmeans_relja as follows
@@ -162,9 +173,14 @@ void SearchEngine::Descriptor() {
 // $ python setup.py build
 // $ sudo python setup.py install
 void SearchEngine::Cluster() {
-  SendStatus("Cluster", "\nStarting clustering of descriptors ...");
+  if ( ! ClstFnExists() ) {
+    SendLog("Cluster", "\nStarting clustering of descriptors ...");
 
-  boost::thread t( boost::bind( &SearchEngine::RunClusterCommand, this ) );
+    //boost::thread t( boost::bind( &SearchEngine::RunClusterCommand, this ) );
+    RunClusterCommand();
+  } else {
+    SendLog("Cluster", "\nCluster file already exists");
+  }
 }
 
 void SearchEngine::RunClusterCommand() {
@@ -181,17 +197,17 @@ void SearchEngine::RunClusterCommand() {
     char line[128];
     while ( fgets(line, 64, pipe) ) {
       std::string status_txt(line);
-      SendStatus("Cluster", status_txt);
+      SendLog("Cluster", status_txt);
     }
     pclose( pipe );
   } else {
-    SendStatus("Cluster",
+    SendLog("Cluster",
                "\nFailed to execute python script for clustering: \n\t $" + cmd);
   }
 }
 
-void SearchEngine::Assignment() {
-  SendStatus("Assign", "\nStarting assignment ...");
+void SearchEngine::Assign() {
+  SendLog("Assign", "\nStarting assignment ...");
   bool useRootSIFT = false;
   if ( GetEngineConfigParam("RootSIFT") == "on" ) {
     useRootSIFT = true;
@@ -205,7 +221,7 @@ void SearchEngine::Assignment() {
 }
 
 void SearchEngine::Hamm() {
-  SendStatus("Hamm", "\nComputing hamm ...");
+  SendLog("Hamm", "\nComputing hamm ...");
   uint32_t hammEmbBits;
   std::string hamm_emb_bits = GetEngineConfigParam("hammEmbBits");
   std::istringstream s(hamm_emb_bits);
@@ -226,7 +242,7 @@ void SearchEngine::Hamm() {
 }
 
 void SearchEngine::Index() {
-  SendStatus("Index", "\nStarting indexing ...");
+  SendLog("Index", "\nStarting indexing ...");
   bool SIFTscale3 = false;
   if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
     SIFTscale3 = true;
@@ -287,11 +303,12 @@ bool SearchEngine::EngineConfigExists() {
   }
 }
 
-void SearchEngine::CreateFileList(boost::filesystem::path dir,
-                                  std::vector< std::string > &filelist) {
+void SearchEngine::CreateFileList(boost::filesystem::path dir ) {
 
   //std::cout << "\nShowing directory contents of : " << dir.string() << std::endl;
-  filelist.clear();
+  imglist_.clear();
+  imglist_fn_original_size_.clear();
+  imglist_fn_transformed_size_.clear();
   boost::filesystem::recursive_directory_iterator dir_it( dir ), end_it;
 
   std::string basedir = dir.string();
@@ -309,7 +326,9 @@ void SearchEngine::CreateFileList(boost::filesystem::path dir,
         filelist << rel_fn.string() << std::endl;
       }
       */
-      filelist.push_back( rel_fn.string() );
+      imglist_.push_back( rel_fn.string() );
+      imglist_fn_original_size_.push_back( boost::filesystem::file_size( p ) );
+      imglist_fn_transformed_size_.push_back( 0 );
     }
     ++dir_it;
   }
@@ -331,7 +350,6 @@ void SearchEngine::SetEngineConfig(std::string engine_config) {
 
     engine_config_.insert( std::make_pair<std::string, std::string>(key, val) );
   }
-  update_engine_overview_ = true;
 }
 
 std::string SearchEngine::GetEngineConfigParam(std::string key) {
@@ -370,9 +388,6 @@ void SearchEngine::SetEngineConfigParam(std::string key, std::string value) {
   }
 }
 
-std::string SearchEngine::GetName() {
-  return engine_name_;
-}
 boost::filesystem::path SearchEngine::GetEngineConfigPath() {
   return engine_config_fn_;
 }
@@ -380,20 +395,15 @@ std::string SearchEngine::GetSearchEngineBaseUri() {
   return "/" + engine_name_ + "/";
 }
 
-std::string SearchEngine::GetEngineOverview() {
-  if ( update_engine_overview_ ) {
-    UpdateEngineOverview();
-  }
-  return engine_overview_.str();
-}
-
 void SearchEngine::UpdateEngineOverview() {
   engine_overview_.str("");
   engine_overview_.clear();
 
-  boost::filesystem::path imagePath(GetEngineConfigParam("imagePath"));
-  CreateFileList( imagePath, imglist_);
-
+  if ( imglist_.empty() ) {
+    boost::filesystem::path imagePath(GetEngineConfigParam("imagePath"));
+    CreateFileList( imagePath );
+  }
+  engine_overview_ << "<div id=\"Info_button_proceed\" class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Proceed</div>";
   engine_overview_ << "<h3>Overview of Search Engine</h3>";
   engine_overview_ << "<table id=\"engine_overview\">";
   engine_overview_ << "<tr><td># of images</td><td>" << imglist_.size() << "</td></tr>";
@@ -401,7 +411,6 @@ void SearchEngine::UpdateEngineOverview() {
   engine_overview_ << "<tr><td>Memory required*</td><td>3 GB</td></tr>";
   engine_overview_ << "<tr><td>Disk space required*</td><td>10 GB</td></tr>";
   engine_overview_ << "<tr><td>&nbsp;</td><td>&nbsp;</td></tr>";
-  engine_overview_ << "<tr><td><input type=\"button\" onclick=\"_vise_send_post_request('back')\" value=\"Back\"></td><td><input type=\"button\" onclick=\"_vise_send_post_request('proceed')\" value=\"Proceed\"></td></tr>";
   engine_overview_ << "</table>";
   engine_overview_ << "<p>&nbsp;</p><p>* : todo</p>";
 }
@@ -436,14 +445,101 @@ void SearchEngine::WriteConfigToFile() {
   }
 }
 
-void SearchEngine::SendStatus(std::string sender, std::string message) {
-  SendPacket(sender, "status", message);
+void SearchEngine::SendLog(std::string sender, std::string log) {
+  SendPacket(sender, "log", log);
 }
 
 void SearchEngine::SendPacket(std::string sender, std::string type, std::string message) {
   std::ostringstream s;
   s << sender << " " << type << " " << message;
   vise_message_queue_.Push( s.str() );
+}
+
+//
+// Helper methods
+//
+std::string SearchEngine::GetName() {
+  return engine_name_;
+}
+bool SearchEngine::IsEngineConfigEmpty() {
+  return engine_config_.empty();
+}
+bool SearchEngine::IsImglistEmpty() {
+  return imglist_.empty();
+}
+bool SearchEngine::EngineConfigFnExists() {
+  return boost::filesystem::exists( engine_config_fn_ );
+}
+bool SearchEngine::ImglistFnExists() {
+  return boost::filesystem::exists( imglist_fn_ );
+}
+bool SearchEngine::DescFnExists() {
+  boost::filesystem::path train_desc_fn( GetEngineConfigParam("descFn") );
+  return boost::filesystem::exists( train_desc_fn );
+}
+bool SearchEngine::ClstFnExists() {
+  boost::filesystem::path clst_fn( GetEngineConfigParam("clstFn") );
+  return boost::filesystem::exists( clst_fn );
+}
+bool SearchEngine::AssignFnExists() {
+  boost::filesystem::path assign_fn( GetEngineConfigParam("assignFn") );
+  return boost::filesystem::exists( assign_fn );
+}
+bool SearchEngine::HammFnExists() {
+  boost::filesystem::path hamm_fn( GetEngineConfigParam("hammFn") );
+  return boost::filesystem::exists( hamm_fn );
+}
+bool SearchEngine::IndexFnExists() {
+  boost::filesystem::path dset_fn( GetEngineConfigParam("dsetFn") );
+  boost::filesystem::path fidx_fn( GetEngineConfigParam("fidxFn") );
+  boost::filesystem::path iidx_fn( GetEngineConfigParam("iidxFn") );
+  bool dset_exist = boost::filesystem::exists( dset_fn );
+  bool fidx_exist = boost::filesystem::exists( fidx_fn );
+  bool iidx_exist = boost::filesystem::exists( iidx_fn );
+  return ( dset_exist && fidx_exist && iidx_exist );
+}
+unsigned long SearchEngine::DescFnSize() {
+  boost::filesystem::path train_desc_fn( GetEngineConfigParam("descFn") );
+  return boost::filesystem::file_size( train_desc_fn.string() );
+}
+unsigned long SearchEngine::ClstFnSize() {
+  boost::filesystem::path clst_fn( GetEngineConfigParam("clstFn") );
+  return boost::filesystem::file_size( clst_fn.string() );
+}
+unsigned long SearchEngine::AssignFnSize() {
+  boost::filesystem::path assign_fn( GetEngineConfigParam("assignFn") );
+  return boost::filesystem::file_size( assign_fn.string() );
+}
+unsigned long SearchEngine::HammFnSize() {
+  boost::filesystem::path hamm_fn( GetEngineConfigParam("hammFn") );
+  return boost::filesystem::file_size( hamm_fn.string() );
+}
+unsigned long SearchEngine::IndexFnSize() {
+  boost::filesystem::path dset_fn( GetEngineConfigParam("dsetFn") );
+  boost::filesystem::path fidx_fn( GetEngineConfigParam("fidxFn") );
+  boost::filesystem::path iidx_fn( GetEngineConfigParam("iidxFn") );
+  unsigned long dset_size = boost::filesystem::file_size( dset_fn.string() );
+  unsigned long fidx_size = boost::filesystem::file_size( fidx_fn.string() );
+  unsigned long iidx_size = boost::filesystem::file_size( iidx_fn.string() );
+  return (dset_size + fidx_size + iidx_size);
+}
+unsigned long SearchEngine::GetImglistOriginalSize() {
+  unsigned long total_size = 0;
+  for ( unsigned int i=0; i<imglist_fn_original_size_.size(); i++) {
+    total_size += imglist_fn_original_size_.at(i);
+  }
+  return total_size;
+}
+unsigned long SearchEngine::GetImglistTransformedSize() {
+  unsigned long total_size = 0;
+  for ( unsigned int i=0; i<imglist_fn_transformed_size_.size(); i++) {
+    total_size += imglist_fn_transformed_size_.at(i);
+  }
+  return total_size;
+}
+
+std::string SearchEngine::GetEngineOverview() {
+  return engine_overview_.str();
 }
 
 // for debug

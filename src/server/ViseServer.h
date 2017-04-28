@@ -21,6 +21,7 @@
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
+#include <boost/timer/timer.hpp>
 
 #include "SearchEngine.h"
 #include "ViseMessageQueue.h"
@@ -66,6 +67,7 @@ class ViseServer {
   // resource dir
   boost::filesystem::path vise_datadir_;
   boost::filesystem::path vise_templatedir_;
+  boost::filesystem::path vise_logdir_;
   boost::filesystem::path vise_enginedir_;
 
   boost::system::error_code error_;
@@ -73,8 +75,13 @@ class ViseServer {
   // state maintainanace
   bool UpdateState();
   std::string GetStateJsonData();
-  void ServeStateHtmlPage( int state_id, boost::shared_ptr<tcp::socket> p_socket );
   void GenerateViseIndexHtml();
+  void HandleStateGetRequest( int state_id, boost::shared_ptr<tcp::socket> p_socket );
+  void HandleStatePostData( int state_id, std::string http_post_data, boost::shared_ptr<tcp::socket> p_socket );
+  void SetSearchEngineSetting( std::string setting );
+
+  // search engine training
+  void InitiateSearchEngineTraining();
 
   // HTTP connection handler
   void HandleConnection(boost::shared_ptr<tcp::socket> p_socket);
@@ -84,15 +91,16 @@ class ViseServer {
                          std::string post_data,
                          boost::shared_ptr<tcp::socket> p_socket);
   void SendHttpResponse(std::string html, boost::shared_ptr<tcp::socket> p_socket);
-  void SendHttpNotFound(boost::shared_ptr<tcp::socket> p_socket);
+  void SendHttpPostResponse(std::string http_post_data, std::string result, boost::shared_ptr<tcp::socket> p_socket);
+  void SendHttp404NotFound(boost::shared_ptr<tcp::socket> p_socket);
   void SendHttpRedirect(std::string redirect_uri, boost::shared_ptr<tcp::socket> p_socket);
   void SendErrorResponse(std::string message, std::string backtrace, boost::shared_ptr<tcp::socket> p_socket);
   void SendRawResponse(std::string content_type, std::string content, boost::shared_ptr<tcp::socket> p_socket);
   void SendJsonResponse(std::string json, boost::shared_ptr<tcp::socket> p_socket);
 
   void SendMessage(std::string message);
-  void SendStatus(std::string status);
-  void SendControl(std::string control);
+  void SendLog(std::string log);
+  void SendCommand(std::string command);
   void SendPacket(std::string type, std::string message);
 
   // helper functions
@@ -103,20 +111,26 @@ class ViseServer {
   void SplitString(std::string s, char sep, std::vector<std::string> &tokens);
   bool ReplaceString(std::string &s, std::string old_str, std::string new_str);
 
+  // for logging statistics
+  boost::filesystem::path vise_training_stat_fn_;
+
+  std::ofstream training_stat_f;
+  void AddTrainingStat(std::string dataset_name, std::string state_name, unsigned long time_sec, unsigned long space_bytes);
+
  public:
   static const int STATE_NOT_LOADED =  0;
-  static const int STATE_INIT       =  1;
-  static const int STATE_SETTING    =  2;
-  static const int STATE_INFO       =  3;
-  static const int STATE_PREPROCESS =  4;
-  static const int STATE_DESCRIPTOR =  5;
-  static const int STATE_CLUSTER    =  6;
-  static const int STATE_ASSIGN     =  7;
-  static const int STATE_HAMM       =  8;
-  static const int STATE_INDEX      =  9;
-  static const int STATE_QUERY      = 10;
+  static const int STATE_SETTING    =  1;
+  static const int STATE_INFO       =  2;
+  static const int STATE_PREPROCESS =  3;
+  static const int STATE_DESCRIPTOR =  4;
+  static const int STATE_CLUSTER    =  5;
+  static const int STATE_ASSIGN     =  6;
+  static const int STATE_HAMM       =  7;
+  static const int STATE_INDEX      =  8;
+  static const int STATE_QUERY      =  9;
 
   ViseServer( std::string vise_datadir, std::string vise_templatedir );
+  ~ViseServer();
 
   std::string GetCurrentStateName();
   std::string GetCurrentStateInfo();

@@ -17,8 +17,9 @@ var _vise_current_search_engine_name = "";
 var _vise_search_engine_state;
 
 function _vise_init() {
-  // initially hide footer
+  // initially hide footer and log
   document.getElementById("footer").style.display = "none";
+  document.getElementById("log").style.display = "none";
 
   // request the contents of vise_index.html
   _vise_server.open("GET", VISE_SERVER_ADDRESS + "_vise_index.html");
@@ -43,6 +44,10 @@ function _vise_server_response_listener() {
         _vise_update_state_info(json);
         break;
 
+      case 'http_post_response':
+        // @todo handle post response, current assumption is that it will be OK
+        // json['result'] === "OK"
+        break;
       default:
         console.log("Do not know where to forward the received response!");
         console.log(response_str);
@@ -73,13 +78,76 @@ function _vise_handle_message(packet) {
   var receiver = packet.substr(first_space + 1, second_space - first_space - 1);
   var msg = packet.substr(second_space + 1);
 
-  if ( receiver === "control" ) {
-    switch ( msg ) {
-      case "VISE_STATE_HAS_CHANGED":
+  if ( receiver === "command" ) {
+    _vise_handle_command( sender, msg );
+  } else if ( receiver === "log" ) {
+    _vise_handle_log_message(sender, msg);
+  } else if ( receiver === "message" ) {
+    _vise_show_message(msg, 0);
+  }
+}
+
+function _vise_show_message(msg, t) {
+  if ( _vise_message_clear_timer ) {
+    clearTimeout(_vise_message_clear_timer); // stop any previous timeouts
+  }
+  document.getElementById('message_panel').innerHTML = msg;
+
+  var timeout = t;
+  if ( timeout > 0 || typeof t === 'undefined') {
+    if ( typeof t === 'undefined') {
+      timeout = VISE_THEME_MESSAGE_TIMEOUT_MS;
+    }
+    _vise_message_clear_timer = setTimeout( function() {
+        document.getElementById('message_panel').innerHTML = ' ';
+    }, timeout);
+  }
+}
+
+function _vise_handle_log_message(sender, msg) {
+  var log_panel = document.getElementById( "log" );
+  if ( msg.startsWith("\n") ) {
+    msg = "\n" + sender + " : " + msg.substr(1);
+  }
+  if ( typeof log_panel !== 'undefined' ) {
+    log_panel.innerHTML += msg;
+    log_panel.scrollTop = log_panel.scrollHeight; // automatically scroll
+  } 
+}
+
+function _vise_handle_command(sender, command_str) {
+  var param = command_str.split(' ');
+  var cmd = param[0];
+  param.splice(0, 1);
+
+  switch ( cmd ) {
+    case "_state":
+      if ( param[0] === 'update_now' ) {
         _vise_server_send_get_request("_state");
+      }
       break;
+    case "_log":
+      _vise_handle_log_command(param);
+      break;
+    defaul:
+      console.log("Unknown command : " + command_str);
+  }
+}
+
+function _vise_handle_log_command(command) {
+  for ( var i=0; i < command.length; i++ ) {
+    switch( command[i] ) {
+      case "show":
+        document.getElementById("log").style.display = "block";
+        break;
+      case "hide":
+        document.getElementById("log").style.display = "none";
+        break;
+      case "clear":
+        document.getElementById("log").innerHTML = "";
+        break;
       default:
-        console.log("Received unknown control message: " + packet);
+        console.log("Received unknown log command : " + command[i]);
     }
   }
 }
@@ -88,7 +156,6 @@ function _vise_handle_message(packet) {
 // Maintainer of UI to reflect VISE current state 
 //
 function _vise_update_state_info( json ) {
-  console.log( json );
   var html = [];
   for ( var i=1; i<json['state_name_list'].length; i++ ) {
     html.push('<div class="state_block">');
@@ -144,7 +211,33 @@ function _vise_server_send_post_request(post_data) {
   _vise_server.send(post_data);
 }
 
+function _vise_server_send_state_post_request(state_name, post_data) {
+  _vise_server.open("POST", VISE_SERVER_ADDRESS + state_name);
+  _vise_server.send(post_data);
+}
+
 function _vise_server_send_get_request(resource_name) {
   _vise_server.open("GET", VISE_SERVER_ADDRESS + resource_name);
   _vise_server.send();
 }
+
+
+//
+// State: Setting
+//
+function _vise_send_setting_data() {
+    var postdata = [];
+    var vise_settings = document.getElementById("vise_setting");
+    if ( typeof vise_settings !== 'undefined' && vise_settings !== null ) {
+      var setting_param = vise_settings.getElementsByClassName("vise_setting_param");
+
+      for ( var i = 0; i < setting_param.length; i++) {
+        var param_name  = setting_param[i].name;
+        var param_value = setting_param[i].value;
+        postdata.push( param_name + "=" + param_value );
+      }
+      var postdata_str = postdata.join('\n');
+
+      _vise_server_send_state_post_request( _vise_current_state_name, postdata_str );
+    }
+  }

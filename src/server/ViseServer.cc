@@ -1,7 +1,6 @@
 #include "ViseServer.h"
 
 const int ViseServer::STATE_NOT_LOADED;
-const int ViseServer::STATE_INIT;
 const int ViseServer::STATE_SETTING;
 const int ViseServer::STATE_INFO;
 const int ViseServer::STATE_PREPROCESS;
@@ -33,6 +32,11 @@ ViseServer::ViseServer( std::string vise_datadir, std::string vise_templatedir )
     boost::filesystem::create_directory( vise_enginedir_ );
   }
 
+  vise_logdir_       = vise_datadir_ / "log";
+  if ( ! boost::filesystem::exists( vise_logdir_ ) ) {
+    boost::filesystem::create_directory( vise_logdir_ );
+  }
+
   vise_main_html_fn_ = vise_templatedir_ / "vise_main.html";
   vise_help_html_fn_ = vise_templatedir_ / "vise_help.html";
   vise_css_fn_       = vise_templatedir_ / "vise.css";
@@ -51,11 +55,6 @@ ViseServer::ViseServer( std::string vise_datadir, std::string vise_templatedir )
   state_html_fn_list_.push_back( "404.html" );
   state_info_list_.push_back( "" );
 
-  state_id_list_.push_back( ViseServer::STATE_INIT );
-  state_name_list_.push_back( "Initialize" );
-  state_html_fn_list_.push_back( "Initialize.html" );
-  state_info_list_.push_back( "" );
-
   state_id_list_.push_back( ViseServer::STATE_SETTING );
   state_name_list_.push_back( "Setting" );
   state_html_fn_list_.push_back( "Setting.html" );
@@ -72,7 +71,7 @@ ViseServer::ViseServer( std::string vise_datadir, std::string vise_templatedir )
   state_info_list_.push_back( "(6 min.)" );
 
   state_id_list_.push_back( ViseServer::STATE_DESCRIPTOR );
-  state_name_list_.push_back( "Descriotor" );
+  state_name_list_.push_back( "Descriptor" );
   state_html_fn_list_.push_back( "Descriptor.html" );
   state_info_list_.push_back( "(49 min.)" );
 
@@ -112,6 +111,26 @@ ViseServer::ViseServer( std::string vise_datadir, std::string vise_templatedir )
   }
 
   vise_index_html_reload_ = true;
+
+  // open a log file to save training statistics
+  // for logging statistics
+  vise_training_stat_fn_ = vise_logdir_ / "training_stat.csv";
+
+  bool append_csv_header = false;
+  if ( ! boost::filesystem::exists( vise_training_stat_fn_ ) ) {
+    append_csv_header = true;
+  }
+
+  training_stat_f.open( vise_training_stat_fn_.string().c_str(), std::ofstream::app );
+  if ( append_csv_header ) {
+    training_stat_f << "date,time,dataset_name,state_name,time_sec,space_bytes";
+  }
+  std::cout << "\nvise_training_stat_fn_ = " << vise_training_stat_fn_ << std::flush;
+}
+
+ViseServer::~ViseServer() {
+  // for logging statistics
+  training_stat_f.close();
 }
 
 
@@ -162,9 +181,8 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
   ExtractHttpResource(http_request, http_method_uri);
 
   // for debug
-  std::cout << "\nRequest = " << http_request << std::flush;
-  std::cout << "\nMethod = [" << http_method << "]" << std::flush;
-  std::cout << "\nResource = [" << http_method_uri << "]" << std::flush;
+  //std::cout << "\nRequest = " << http_request << std::flush;
+  std::cout << "\n" << http_method << " " << http_method_uri << std::flush;
 
   if ( http_method == "GET " ) {
     if ( http_method_uri == "/" ) {
@@ -220,12 +238,12 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
     std::string resource_name = http_method_uri.substr(1, std::string::npos); // remove prefix "/"
     int state_id = GetStateId( resource_name );
     if ( state_id != -1 ) {
-      ServeStateHtmlPage( state_id, p_socket );
+      HandleStateGetRequest( state_id, p_socket );
       p_socket->close();
       return;
     }
     // otherwise, say not found
-    SendHttpNotFound( p_socket );
+    SendHttp404NotFound( p_socket );
     p_socket->close();
     return;
   }
@@ -245,7 +263,10 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
           search_engine_.Init( search_engine_name, vise_enginedir_ );
           if ( UpdateState() ) {
             // send control message : state updated
-            SendControl("VISE_STATE_HAS_CHANGED");
+            SendCommand("_state update_now");
+            SendHttpPostResponse( http_post_data, "OK", p_socket );
+          } else {
+            SendHttpPostResponse( http_post_data, "ERR", p_socket );
           }
           p_socket->close();
           return;
@@ -254,19 +275,28 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
           // @todo: load search engine to last saved state
         } else {
           // unknown command
-          SendHttpNotFound( p_socket );
+          SendHttp404NotFound( p_socket );
           p_socket->close();
           return;
         }
       } else {
         // unexpected POST data
-        SendHttpNotFound( p_socket );
+        SendHttp404NotFound( p_socket );
         p_socket->close();
         return;
       }
     } else {
-      // this post data corresponds to a search engine
-      // handle this post data
+      std::string resource_name = http_method_uri.substr(1, std::string::npos); // remove prefix "/"
+      int state_id = GetStateId( resource_name );
+      if ( state_id != -1 ) {
+        HandleStatePostData( state_id, http_post_data, p_socket );
+        p_socket->close();
+        return;
+      }
+      // otherwise, say not found
+      SendHttp404NotFound( p_socket );
+      p_socket->close();
+      return;
     }
   }
 
@@ -294,14 +324,14 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
         // http://localhost:8080/engine_name/StateName
         resource = tokens.at(2);
       } else {
-        SendHttpNotFound( p_socket );
+        SendHttp404NotFound( p_socket );
       }
 
       HandleGetRequest( resource, p_socket);
       p_socket->close();
     } else {
       // we did not recognize the entered uri
-      SendHttpNotFound( p_socket );
+      SendHttp404NotFound( p_socket );
     }
     p_socket->close();
     return;
@@ -334,7 +364,7 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       if ( tokens.size() < 3 ) {
         if ( tokens.at(1) == "favicon.ico" ) {
           // @todo: implement this in the future
-          SendHttpNotFound( p_socket );
+          SendHttp404NotFound( p_socket );
         } else {
           // http://localhost:8080/search_engine_name
           search_engine_name = tokens.at(1);
@@ -351,12 +381,12 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
         HandleGetRequest(resource, p_socket);
       }
     } else {
-      SendHttpNotFound( p_socket );
+      SendHttp404NotFound( p_socket );
     }
   } else if ( http_method == "POST" ) {
     if ( tokens.at(0) == "" && tokens.at(1).length() != 0 ) {
       if ( tokens.size() < 3 ) {
-        SendHttpNotFound( p_socket );
+        SendHttp404NotFound( p_socket );
       } else {
         // http://localhost:8080/search_engine_name
         search_engine_name = tokens.at(1);
@@ -367,13 +397,13 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
 
           HandlePostRequest( search_engine_name, resource, http_post_data, p_socket);
         } else {
-          SendHttpNotFound( p_socket );
+          SendHttp404NotFound( p_socket );
         }
       }
     }
   } else {
     std::cerr << "\nUnknown http_method : " << http_method << std::flush;
-    SendHttpNotFound( p_socket );
+    SendHttp404NotFound( p_socket );
   }
   p_socket->close();
   */
@@ -451,12 +481,12 @@ void ViseServer::SendMessage(std::string message) {
   SendPacket( "message", message);
 }
 
-void ViseServer::SendStatus(std::string status) {
-  SendPacket( "status", status );
+void ViseServer::SendLog(std::string log) {
+  SendPacket( "log", log );
 }
 
-void ViseServer::SendControl(std::string control) {
-  SendPacket("control", control );
+void ViseServer::SendCommand(std::string command) {
+  SendPacket("command", command );
 }
 
 void ViseServer::SendPacket(std::string type, std::string message) {
@@ -465,7 +495,27 @@ void ViseServer::SendPacket(std::string type, std::string message) {
   vise_message_queue_.Push( s.str() );
 }
 
-void ViseServer::SendHttpNotFound(boost::shared_ptr<tcp::socket> p_socket) {
+void ViseServer::SendHttpPostResponse(std::string http_post_data, std::string result, boost::shared_ptr<tcp::socket> p_socket) {
+  std::string response = "{ \"id\": \"http_post_response\",";
+  response += "\"http_post_data\": \"" + http_post_data + "\",";
+  response += "\"result\": \"OK\" }";
+
+  std::ostringstream http_response;
+  http_response << "HTTP/1.1 200 OK\r\n";
+  std::time_t t = std::time(NULL);
+  char date_str[100];
+  std::strftime(date_str, sizeof(date_str), "%a, %d %b %Y %H:%M:%S %Z", std::gmtime(&t));
+  http_response << "Date: " << date_str << "\r\n";
+  http_response << "Connection: Closed\r\n";
+  http_response << "Content-type: application/json\r\n";
+  http_response << "Content-Length: " << response.length() << "\r\n";
+  http_response << "\r\n";
+  http_response << response;
+
+  boost::asio::write( *p_socket, boost::asio::buffer(http_response.str()) );
+}
+
+void ViseServer::SendHttp404NotFound(boost::shared_ptr<tcp::socket> p_socket) {
   std::string html;
   html  = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">";
   html += "<title>VGG Image Search Engine</title></head>";
@@ -584,7 +634,7 @@ void ViseServer::HandleGetRequest( std::string resource_name,
       // serve the state html page
       SendHttpResponse( state_html_list_.at(state_id), p_socket );
     } else {
-      SendHttpNotFound( p_socket );
+      SendHttp404NotFound( p_socket );
     }
   }
 }
@@ -686,6 +736,180 @@ void ViseServer::HandlePostRequest( std::string search_engine_name,
 }
 
 //
+// Handlers of HTTP GET requests for States
+//
+void ViseServer::HandleStateGetRequest( int state_id, boost::shared_ptr<tcp::socket> p_socket ) {
+  switch( state_id ) {
+  case ViseServer::STATE_INFO:
+    search_engine_.UpdateEngineOverview();
+    state_html_list_.at( ViseServer::STATE_INFO ) = search_engine_.GetEngineOverview();
+    break;
+  }
+
+  SendHttpResponse( state_html_list_.at(state_id), p_socket );
+}
+
+
+//
+// Handler of HTTP POST data for States
+//
+void ViseServer::HandleStatePostData( int state_id, std::string http_post_data, boost::shared_ptr<tcp::socket> p_socket ) {
+  if ( state_id == ViseServer::STATE_SETTING ) {
+      search_engine_.SetEngineConfig(http_post_data);
+
+      if ( UpdateState() ) {
+        // send control message : state updated
+        SendCommand("_state update_now");
+      }
+  } else if ( state_id == ViseServer::STATE_INFO ) {
+    if ( http_post_data == "proceed" ) {
+      if ( UpdateState() ) {
+        // send control message : state updated
+        SendCommand("_state update_now");
+        SendHttpPostResponse( http_post_data, "OK", p_socket );
+
+        // initiate the search engine training process
+        boost::thread t( boost::bind( &ViseServer::InitiateSearchEngineTraining, this ) );
+      } else {
+        SendHttpPostResponse( http_post_data, "ERR", p_socket );
+      }
+    }
+  } else {
+    std::cerr << "\nViseServer::HandleStatePostData() : Do not know how to handle this HTTP POST data!" << std::flush;
+  }
+}
+
+void ViseServer::SetSearchEngineSetting( std::string setting ) {
+  search_engine_.SetEngineConfig( setting );
+}
+
+//
+// Search engine training
+//
+void ViseServer::InitiateSearchEngineTraining() {
+  SendCommand("_log clear show");
+
+  // Pre-process
+  if ( state_id_ == ViseServer::STATE_PREPROCESS ) {
+    boost::timer::cpu_timer t_start;
+    search_engine_.Preprocess();
+    boost::timer::cpu_times elapsed = t_start.elapsed();
+
+    AddTrainingStat(search_engine_.GetName(),
+                    GetCurrentStateName(),
+                    elapsed.wall / 1e9,
+                    search_engine_.GetImglistTransformedSize());
+
+    if ( UpdateState() ) {
+      // send control message : state updated
+      SendCommand("_state update_now");
+    } else {
+      SendMessage("\n" + GetCurrentStateName() + " : failed to change to next state");
+      return;
+    }
+  }
+
+  // Descriptor
+  if ( state_id_ == ViseServer::STATE_DESCRIPTOR ) {
+    boost::timer::cpu_timer t_start;
+    search_engine_.Descriptor();
+    boost::timer::cpu_times elapsed = t_start.elapsed();
+
+    AddTrainingStat(search_engine_.GetName(),
+                    GetCurrentStateName(),
+                    elapsed.wall / 1e9,
+                    search_engine_.DescFnSize());
+
+    if ( UpdateState() ) {
+      // send control message : state updated
+      SendCommand("_state update_now");
+    } else {
+      SendMessage("\n" + GetCurrentStateName() + " : failed to change to next state");
+      return;
+    }
+  }
+
+  // Cluster
+  if ( state_id_ == ViseServer::STATE_CLUSTER ) {
+    boost::timer::cpu_timer t_start;
+    search_engine_.Cluster();
+    boost::timer::cpu_times elapsed = t_start.elapsed();
+
+    AddTrainingStat(search_engine_.GetName(),
+                    GetCurrentStateName(),
+                    elapsed.wall / 1e9,
+                    search_engine_.ClstFnSize());
+
+    if ( UpdateState() ) {
+      // send control message : state updated
+      SendCommand("_state update_now");
+    } else {
+      SendMessage("\n" + GetCurrentStateName() + " : failed to change to next state");
+      return;
+    }
+  }
+
+  // Assign
+  if ( state_id_ == ViseServer::STATE_ASSIGN ) {
+    boost::timer::cpu_timer t_start;
+    search_engine_.Assign();
+    boost::timer::cpu_times elapsed = t_start.elapsed();
+
+    AddTrainingStat(search_engine_.GetName(),
+                    GetCurrentStateName(),
+                    elapsed.wall / 1e9,
+                    search_engine_.AssignFnSize());
+
+    if ( UpdateState() ) {
+      // send control message : state updated
+      SendCommand("_state update_now");
+    } else {
+      SendMessage("\n" + GetCurrentStateName() + " : failed to change to next state");
+      return;
+    }
+  }
+
+  // Hamm
+  if ( state_id_ == ViseServer::STATE_HAMM ) {
+    boost::timer::cpu_timer t_start;
+    search_engine_.Hamm();
+    boost::timer::cpu_times elapsed = t_start.elapsed();
+
+    AddTrainingStat(search_engine_.GetName(),
+                    GetCurrentStateName(),
+                    elapsed.wall / 1e9,
+                    search_engine_.HammFnSize());
+
+    if ( UpdateState() ) {
+      // send control message : state updated
+      SendCommand("_state update_now");
+    } else {
+      SendMessage("\n" + GetCurrentStateName() + " : failed to change to next state");
+      return;
+    }
+  }
+
+  // Index
+  if ( state_id_ == ViseServer::STATE_INDEX ) {
+    boost::timer::cpu_timer t_start;
+    search_engine_.Index();
+    boost::timer::cpu_times elapsed = t_start.elapsed();
+
+    AddTrainingStat(search_engine_.GetName(),
+                    GetCurrentStateName(),
+                    elapsed.wall / 1e9,
+                    search_engine_.IndexFnSize());
+
+    if ( UpdateState() ) {
+      // send control message : state updated
+      SendCommand("_state update_now");
+    } else {
+      SendMessage("\n" + GetCurrentStateName() + " : failed to change to next state");
+      return;
+    }
+  }
+}
+
 // State based model
 //
 std::string ViseServer::GetCurrentStateName() {
@@ -716,18 +940,67 @@ std::string ViseServer::GetStateInfo(int state_id) {
 bool ViseServer::UpdateState() {
   if ( state_id_ == ViseServer::STATE_NOT_LOADED ) {
     // check if search engine was initialized properly
-    if ( search_engine_.GetName() != "" ) {
-      state_id_ = ViseServer::STATE_INIT;
+    if ( search_engine_.GetName() == "" ) {
+      return false;
+    } else {
+      state_id_ = ViseServer::STATE_SETTING;
+      return true;
+    }
+  } else if ( state_id_ == ViseServer::STATE_SETTING ) {
+    if ( search_engine_.IsEngineConfigEmpty() ) {
+      return false;
+    } else {
+      state_id_ = ViseServer::STATE_INFO;
+      return true;
+    }
+  } else if ( state_id_ == ViseServer::STATE_INFO ) {
+    state_id_ = ViseServer::STATE_PREPROCESS;
+    return true;
+  } else if ( state_id_ == ViseServer::STATE_PREPROCESS ) {
+    if ( search_engine_.EngineConfigFnExists() &&
+         search_engine_.ImglistFnExists() ) {
+      state_id_ = ViseServer::STATE_DESCRIPTOR;
+      return true;
+    } else {
+      return false;
+    }
+  } else if ( state_id_ == ViseServer::STATE_DESCRIPTOR ) {
+    if ( search_engine_.DescFnExists() ) {
+      state_id_ = ViseServer::STATE_CLUSTER;
+      return true;
+    } else {
+      return false;
+    }
+  } else if ( state_id_ == ViseServer::STATE_CLUSTER ) {
+    if ( search_engine_.ClstFnExists() ) {
+      state_id_ = ViseServer::STATE_ASSIGN;
+      return true;
+    } else {
+      return false;
+    }
+  } else if ( state_id_ == ViseServer::STATE_ASSIGN ) {
+    if ( search_engine_.AssignFnExists() ) {
+      state_id_ = ViseServer::STATE_HAMM;
+      return true;
+    } else {
+      return false;
+    }
+  } else if ( state_id_ == ViseServer::STATE_HAMM ) {
+    if ( search_engine_.HammFnExists() ) {
+      state_id_ = ViseServer::STATE_INDEX;
+      return true;
+    } else {
+      return false;
+    }
+  } else if ( state_id_ == ViseServer::STATE_INDEX ) {
+    if ( search_engine_.IndexFnExists() ) {
+      state_id_ = ViseServer::STATE_QUERY;
       return true;
     } else {
       return false;
     }
   }
   return false;
-}
-
-void ViseServer::ServeStateHtmlPage( int state_id, boost::shared_ptr<tcp::socket> p_socket ) {
-  SendHttpResponse( state_html_list_.at(state_id), p_socket );
 }
 
 //
@@ -739,7 +1012,22 @@ void ViseServer::GenerateViseIndexHtml() {
   s << "<input id=\"vise_search_engine_name\" name=\"vise_search_engine_name\" value=\"ox5k\" onclick=\"document.getElementById('vise_search_engine_name').value=''\" size=\"20\" autocomplete=\"off\">";
   s << "<div class=\"action_button\" onclick=\"_vise_create_search_engine()\">&nbsp;&nbsp;Create</div>";
   s << "</div>";
-  s << "<div id=\"load_engine_panel\">@todo generate a list of saved search engines</div>";
+  s << "<div id=\"load_engine_panel\">";
+
+  // iterate through all directories in vise_enginedir_
+  boost::filesystem::directory_iterator dir_it( vise_enginedir_ ), end_it;
+  while ( dir_it != end_it ) {
+    boost::filesystem::path p = dir_it->path();
+    if ( boost::filesystem::is_directory( p ) ) {
+      std::string name = p.filename().string();
+      s << "<a onclick=\"_vise_load_search_engine('" << name << "')\" title=\"ox5k\">"
+        << "<figure></figure>"
+        << "<p>" << name << "</p>"
+        << "</a>";
+    }
+    ++dir_it;
+  }
+  s << "</div>";
   vise_index_html_ = s.str();
   vise_index_html_reload_ = false;
 }
@@ -763,4 +1051,15 @@ std::string ViseServer::GetStateJsonData() {
   json << "\"search_engine_name\" : \"" << search_engine_.GetName() << "\" }";
 
   return json.str();
+}
+
+//
+// logging statistics
+//
+void ViseServer::AddTrainingStat(std::string dataset_name, std::string state_name, unsigned long time_sec, unsigned long space_bytes) {
+  std::time_t t = std::time(NULL);
+  char date_str[100];
+  std::strftime(date_str, sizeof(date_str), "%F,%T", std::gmtime(&t));
+
+  training_stat_f << "\n" << date_str  << "," << dataset_name << "," << state_name << "," << time_sec << "," << space_bytes << std::flush;
 }

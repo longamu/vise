@@ -92,7 +92,7 @@ trainAssignsManager::compute( uint32_t jobID, trainAssignsResult &result ){
         }
 
         std::ostringstream s;
-        s << "Assignment status \nProcessed " << completed_jobs << " / " << total_jobs;
+        s << "Assignment log \nProcessed " << completed_jobs << " / " << total_jobs;
         vise_message_queue_.Push( s.str() );
     }
 }
@@ -169,19 +169,19 @@ computeTrainAssigns(
     // clusters
     if (rank==0) {
         //std::cout<<"buildIndex::computeTrainAssigns: Loading cluster centres\n";
-        vise_message_queue_.Push( "Assignment status \nLoading cluster centers ..." );
+        vise_message_queue_.Push( "Assignment log \nLoading cluster centers ..." );
     }
     double t0= timing::tic();
     clstCentres clstCentres_obj( clstFn.c_str(), true );
     if (rank==0) {
         //std::cout<<"buildIndex::computeTrainAssigns: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
         std::ostringstream s;
-        s << "Assignment status done (" << timing::toc(t0) << " ms)";
+        s << "Assignment log done (" << timing::toc(t0) << " ms)";
         vise_message_queue_.Push( s.str() );
     }
     if (rank==0) {
       //std::cout<<"buildIndex::computeTrainAssigns: Constructing NN search object\n";
-      vise_message_queue_.Push( "Assignment status \nConstructing NN search object ..." );
+      vise_message_queue_.Push( "Assignment log \nConstructing NN search object ..." );
     }
 
     t0= timing::tic();
@@ -200,7 +200,7 @@ computeTrainAssigns(
     if (rank==0) {
       //std::cout<<"buildIndex::computeTrainAssigns: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
       std::ostringstream s;
-      s << "Assignment status done (" << timing::toc(t0) << " ms)";
+      s << "Assignment log done (" << timing::toc(t0) << " ms)";
       vise_message_queue_.Push( s.str() );
     }
     flatDescsFile const descFile(trainDescsFn, RootSIFT);
@@ -208,7 +208,7 @@ computeTrainAssigns(
     if (rank==0) {
       //std::cout<<"buildIndex::computeTrainAssigns: numTrainDescs= "<<numTrainDescs<<"\n";
       std::ostringstream s;
-      s << "Assignment status \nnumTrainDescs= "<<numTrainDescs;
+      s << "Assignment log \nnumTrainDescs= "<<numTrainDescs;
       vise_message_queue_.Push( s.str() );
     }
     uint32_t const chunkSize=

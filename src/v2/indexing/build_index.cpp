@@ -1050,7 +1050,7 @@ build(
         // clusters
         if (rank==0) {
             //std::cout<<"buildIndex::build: Loading cluster centres\n";
-            vise_message_queue_.Push( "Index status \nLoading cluster centres ... " );
+            vise_message_queue_.Push( "Index log \nLoading cluster centres ... " );
         }
         double t0= timing::tic();
         clstCentres clstCentres_obj( clstFn.c_str(), true );
@@ -1058,12 +1058,12 @@ build(
             //std::cout<<"buildIndex::build: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
             s.str(""); 
             s.clear();
-            s << "Index status done (" << timing::toc(t0) << " ms)";
+            s << "Index log done (" << timing::toc(t0) << " ms)";
             vise_message_queue_.Push( s.str() );
         }
         if (rank==0) {
             //std::cout<<"buildIndex::build: Constructing NN search object\n";
-            vise_message_queue_.Push( "Hamm status \nConstructing NN search object ... " );
+            vise_message_queue_.Push( "Index log \nConstructing NN search object ... " );
         }
         t0= timing::tic();
         
@@ -1083,7 +1083,7 @@ build(
             //std::cout<<"buildIndex::build: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
             s.str(""); 
             s.clear();
-            s << "Index status done (" << timing::toc(t0) << " ms)";
+            s << "Index log done (" << timing::toc(t0) << " ms)";
             vise_message_queue_.Push( s.str() );
         }
         
@@ -1217,7 +1217,7 @@ build(
         if (rank==0){
             //std::cout<<"buildIndex::build: semiSorted\n";
             //std::cout<< "\n" << status.DebugString() <<"\n";
-            vise_message_queue_.Push( "Index status \nindex semi sorted" );
+            vise_message_queue_.Push( "Index log \nindex semi sorted" );
         }
         
         std::vector<std::string> fns;
@@ -1270,7 +1270,7 @@ build(
         if (rank==0){
             //std::cout<<"buildIndex::build: merged\n";
             //std::cout<< "\n" << status.DebugString() <<"\n";
-            vise_message_queue_.Push( "Index status \nindex merged" );
+            vise_message_queue_.Push( "Index log \nindex merged" );
         }
         
         std::vector<std::string> fns;
@@ -1334,7 +1334,7 @@ build(
         //std::cout<< "\n" << status.DebugString() <<"\n";
         s.str(""); 
         s.clear();
-        s << "Index status \nIndexing completed in " << timing::hrminsec(timing::toc(t0)/1000);
+        s << "Index log \nIndexing completed in " << timing::hrminsec(timing::toc(t0)/1000);
         vise_message_queue_.Push( s.str() );
     }
     
