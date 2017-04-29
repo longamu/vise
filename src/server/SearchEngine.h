@@ -22,6 +22,7 @@
 #include <set>
 #include <algorithm>
 #include <unistd.h>
+#include <locale>                // for std::tolower
 
 #include <boost/filesystem.hpp>  // to query/update filesystem
 
@@ -105,6 +106,8 @@ public:
 
   bool update_engine_overview_;
   std::ostringstream engine_overview_;
+
+  std::set< std::string > acceptable_img_ext_;
 
   void CreateEngine( std::string name );
   void LoadEngine( std::string name );

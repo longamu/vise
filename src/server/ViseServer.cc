@@ -1009,7 +1009,7 @@ bool ViseServer::UpdateState() {
 void ViseServer::GenerateViseIndexHtml() {
   std::ostringstream s;
   s << "<div id=\"create_engine_panel\">";
-  s << "<input id=\"vise_search_engine_name\" name=\"vise_search_engine_name\" value=\"ox5k\" onclick=\"document.getElementById('vise_search_engine_name').value=''\" size=\"20\" autocomplete=\"off\">";
+  s << "<input id=\"vise_search_engine_name\" name=\"vise_search_engine_name\" value=\"ballads\" onclick=\"document.getElementById('vise_search_engine_name').value=''\" size=\"20\" autocomplete=\"off\">";
   s << "<div class=\"action_button\" onclick=\"_vise_create_search_engine()\">&nbsp;&nbsp;Create</div>";
   s << "</div>";
   s << "<div id=\"load_engine_panel\">";

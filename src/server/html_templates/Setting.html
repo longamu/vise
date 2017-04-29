@@ -5,7 +5,7 @@
   </tr>
   <tr>
     <td>imagePath</td>
-    <td><input class="vise_setting_param" type="text" name="imagePath" size="60" value="/data/datasets/vise/data/image/ox5k/ox5k_test_100/"></td>
+    <td><input class="vise_setting_param" type="text" name="imagePath" size="60" value="/data/datasets/vise/data/image/Ballads/"></td>
   </tr>
   <tr>
     <td><h3>Advanced Setting</h3></td>
@@ -13,11 +13,7 @@
   </tr>
   <tr>
     <td>projectTitle</td>
-    <td><input class="vise_setting_param" type="text" name="projectTitle" value="Oxford Buildings Search" onchange="update_projectName()"></td>
-  </tr>
-  <tr>
-    <td>projectName</td>
-    <td><input id="projectName" class="vise_setting_param" type="text" name="projectName" value="ox5k"></td>
+    <td><input class="vise_setting_param" type="text" name="projectTitle" value="Bodleian Ballads"></td>
   </tr>
   <tr>
     <td>RootSIFT</td>
@@ -33,15 +29,23 @@
   </tr>
   <tr>
     <td>trainNumDescs</td>
-    <td><input class="vise_setting_param" type="text" name="trainNumDescs" value="800000"></td>
+    <td><input class="vise_setting_param" type="text" name="trainNumDescs" value="18000000"></td>
   </tr>
   <tr>
     <td>vocSize</td>
-    <td><input class="vise_setting_param" type="text" name="vocSize" value="10000"></td>
+    <td><input class="vise_setting_param" type="text" name="vocSize" value="100000"></td>
   </tr>
   <tr>
     <td>Transformed image width</td>
-    <td><input class="vise_setting_param" type="text" name="transformed_img_width" value="original"></td>
+    <td>
+      <select class="vise_setting_param" name="transformed_img_width">
+        <option value="original">Original</option>
+        <option selected="selected" value="1024">1024</option>
+        <option value="800">800</option>
+        <option value="640">640</option>
+        <option value="320">320</option>
+      </select>
+    </td>
   </tr>
   <tr>
     <td>&nbsp;</td>

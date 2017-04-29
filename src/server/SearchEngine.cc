@@ -3,6 +3,13 @@
 SearchEngine::SearchEngine() {
   engine_name_ = "";
   engine_config_.clear();
+
+  acceptable_img_ext_.insert( ".jpg" );
+  acceptable_img_ext_.insert( ".jpeg" );
+  acceptable_img_ext_.insert( ".png" );
+  acceptable_img_ext_.insert( ".pgm" );
+  acceptable_img_ext_.insert( ".pnm" );
+  acceptable_img_ext_.insert( ".ppm" );
 }
 
 void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
@@ -57,9 +64,13 @@ void SearchEngine::Preprocess() {
     CreateFileList( imagePath );
   }
 
-  // scale and copy image to transformed_imgdir_
-  SendLog("Preprocess", "\nSaving transformed images to [" + transformed_imgdir_.string() + "] ");
-
+  std::string transformed_img_width = GetEngineConfigParam("transformed_img_width");
+  if (transformed_img_width != "original") {
+    // scale and copy image to transformed_imgdir_
+    SendLog("Preprocess", "\nSaving transformed images to [" + transformed_imgdir_.string() + "] ");
+  } else {
+    SendLog("Preprocess", "\nCopying original images to [" + transformed_imgdir_.string() + "] ");
+  }
   for ( unsigned int i=0; i<imglist_.size(); i++ ) {
     boost::filesystem::path img_rel_path = imglist_.at(i);
     boost::filesystem::path src_fn  = original_imgdir_ / img_rel_path;
@@ -67,14 +78,18 @@ void SearchEngine::Preprocess() {
 
     if ( !boost::filesystem::exists( dest_fn ) ) {
       try {
-        Magick::Image im;
-        im.read( src_fn.string() );
-        Magick::Geometry size = im.size();
+        // check if image path exists
+        if ( ! boost::filesystem::is_directory( dest_fn.parent_path() ) ) {
+          boost::filesystem::create_directories( dest_fn.parent_path() );
+        }
 
-        double aspect_ratio =  ((double) size.height()) / ((double) size.width());
-
-        std::string transformed_img_width = GetEngineConfigParam("transformed_img_width");
         if (transformed_img_width != "original") {
+          Magick::Image im;
+          im.read( src_fn.string() );
+          Magick::Geometry size = im.size();
+
+          double aspect_ratio =  ((double) size.height()) / ((double) size.width());
+
           std::stringstream s;
           s << transformed_img_width;
           unsigned int new_width;
@@ -82,20 +97,18 @@ void SearchEngine::Preprocess() {
           unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
 
           Magick::Geometry resize = Magick::Geometry(new_width, new_height);
-
-          std::ostringstream info;
-          info << std::string(size) << " -> " << std::string(resize);
-          std::cout << "\nResized = " << info.str() << std::flush;
           im.zoom( resize );
-        }
 
-        // check if image path exists
-        if ( ! boost::filesystem::is_directory( dest_fn.parent_path() ) ) {
-          boost::filesystem::create_directories( dest_fn.parent_path() );
+          im.write( dest_fn.string() );
+          imglist_fn_transformed_size_.at(i) = boost::filesystem::file_size(dest_fn.string().c_str());
+        } else {
+          // just copy the files
+          boost::filesystem::copy_file( src_fn, dest_fn );
+          imglist_fn_transformed_size_.at(i) = imglist_fn_original_size_.at(i);
         }
-        im.write( dest_fn.string() );
-        imglist_fn_transformed_size_.at(i) = boost::filesystem::file_size(dest_fn.string().c_str());
-        SendLog("Preprocess", ".");
+        if ( (i % 50) == 0 ) {
+          SendLog("Preprocess", ".");
+        }
       } catch (std::exception &error) {
         SendLog("Preprocess", "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
       }
@@ -312,23 +325,26 @@ void SearchEngine::CreateFileList(boost::filesystem::path dir ) {
   boost::filesystem::recursive_directory_iterator dir_it( dir ), end_it;
 
   std::string basedir = dir.string();
+  std::locale locale;
   while ( dir_it != end_it ) {
     boost::filesystem::path p = dir_it->path();
     std::string fn_dir = p.parent_path().string();
     std::string rel_path = fn_dir.replace(0, basedir.length(), "");
     boost::filesystem::path rel_fn = boost::filesystem::path(rel_path) / p.filename();
     if ( boost::filesystem::is_regular_file(p) ) {
-      /*
-      // todo : add only image files which can be read by VISE
+      // add only image files which can be read by VISE
       std::string fn_ext = p.extension().string();
-      if ( acceptable_types.count(fn_ext) == 1 ) {
-        std::cout << rel_fn << std::endl;
-        filelist << rel_fn.string() << std::endl;
+
+      // convert fn_ext to lower case
+      for ( unsigned int i=0; i<fn_ext.length(); i++) {
+        std::tolower( fn_ext.at(i), locale );
       }
-      */
-      imglist_.push_back( rel_fn.string() );
-      imglist_fn_original_size_.push_back( boost::filesystem::file_size( p ) );
-      imglist_fn_transformed_size_.push_back( 0 );
+
+      if ( acceptable_img_ext_.count( fn_ext ) == 1 ) {
+        imglist_.push_back( rel_fn.string() );
+        imglist_fn_original_size_.push_back( boost::filesystem::file_size( p ) );
+        imglist_fn_transformed_size_.push_back( 0 );
+      }
     }
     ++dir_it;
   }

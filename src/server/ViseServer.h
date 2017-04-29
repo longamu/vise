@@ -110,6 +110,7 @@ class ViseServer {
   void WriteFile(std::string filename, std::string &file_contents);
   void SplitString(std::string s, char sep, std::vector<std::string> &tokens);
   bool ReplaceString(std::string &s, std::string old_str, std::string new_str);
+  void ToLowerCase(std::string &s);
 
   // for logging statistics
   boost::filesystem::path vise_training_stat_fn_;
