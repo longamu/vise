@@ -54,6 +54,7 @@ public:
   void Assign();
   void Hamm();
   void Index();
+  void Query();
 
   // helper functions to query state of search engine
   std::string GetName();

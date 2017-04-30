@@ -305,6 +305,10 @@ void SearchEngine::Index() {
   delete embFactory;
 }
 
+void SearchEngine::Query() {
+  // @todo-query implement image query
+}
+
 //
 // Helper functions
 //

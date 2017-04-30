@@ -16,6 +16,7 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <map>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
@@ -76,7 +77,11 @@ class ViseServer {
   bool UpdateState();
   std::string GetStateJsonData();
   void GenerateViseIndexHtml();
-  void HandleStateGetRequest( int state_id, boost::shared_ptr<tcp::socket> p_socket );
+  void HandleStateGetRequest( int state_id,
+                              std::map< std::string, std::string > args,
+                              boost::shared_ptr<tcp::socket> p_socket );
+  void ServeStaticResource(std::map< std::string, std::string > resource_args,
+                            boost::shared_ptr<tcp::socket> p_socket);
   void HandleStatePostData( int state_id, std::string http_post_data, boost::shared_ptr<tcp::socket> p_socket );
   void SetSearchEngineSetting( std::string setting );
 
@@ -106,11 +111,13 @@ class ViseServer {
   // helper functions
   void ExtractHttpResource(std::string http_request, std::string &http_resource);
   void ExtractHttpContent(std::string http_request, std::string &http_content);
+  void ParseHttpMethodUri(const std::string http_method_uri,
+                          std::string &resource_name,
+                          std::map< std::string, std::string > &resource_args);
   int  LoadFile(std::string filename, std::string &file_contents);
   void WriteFile(std::string filename, std::string &file_contents);
-  void SplitString(std::string s, char sep, std::vector<std::string> &tokens);
+  void SplitString(const std::string s, char sep, std::vector<std::string> &tokens);
   bool ReplaceString(std::string &s, std::string old_str, std::string new_str);
-  void ToLowerCase(std::string &s);
 
   // for logging statistics
   boost::filesystem::path vise_training_stat_fn_;
