@@ -101,6 +101,7 @@ namespace buildIndex {
         trainDescsResult const &res= it->second;
         if (allDescs_) {
           progressPrint_.inc();
+          processed_numDescs_ += 1;
         }
 
         if (res.first>0) {
