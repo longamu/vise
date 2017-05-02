@@ -243,6 +243,7 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
 
     std::string resource_name;
     std::map< std::string, std::string > resource_args;
+    std::cout << "\nhttp_method_uri = " << http_method_uri << std::flush;
     ParseHttpMethodUri( http_method_uri, resource_name, resource_args);
 
     if ( resource_name == "_static" ) {
@@ -824,8 +825,8 @@ void ViseServer::ParseHttpMethodUri(const std::string http_method_uri,
   // assert( tokens.size() == 2 );
 
   resource_name = tokens.at(0);
-  if ( resource_name.at(0) == '\\' ) {
-    resource_name.substr( 1, std::string::npos ); // remove prefix "/"
+  if ( resource_name.at(0) == '/' ) {
+    resource_name = resource_name.substr( 1, std::string::npos ); // remove prefix "/"
   }
 
   if ( tokens.size() == 1 ) {
