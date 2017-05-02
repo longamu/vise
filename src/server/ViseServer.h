@@ -49,6 +49,9 @@ class ViseServer {
   std::vector< std::string > state_html_fn_list_;
   std::vector< std::string > state_html_list_;
 
+  // threads
+  boost::thread *vise_training_thread_;
+
   // html content
   std::string vise_main_html_;
   std::string vise_help_html_;
@@ -118,6 +121,7 @@ class ViseServer {
   bool ReplaceString(std::string &s, std::string old_str, std::string new_str);
   bool StringStartsWith( const std::string &s, const std::string &prefix );
   std::string GetHttpContentType(boost::filesystem::path fn);
+  bool SearchEngineExists( std::string search_engine_name );
 
   // for logging statistics
   boost::filesystem::path vise_training_stat_fn_;

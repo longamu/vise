@@ -181,7 +181,7 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
   ExtractHttpResource(http_request, http_method_uri);
 
   // for debug
-  //std::cout << "\nRequest = " << http_request << std::flush;
+  std::cout << "\nRequest = " << http_request << std::flush;
   std::cout << "\n" << http_method << " " << http_method_uri << std::flush;
 
   if ( http_method == "GET " ) {
@@ -279,13 +279,19 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
 
     if ( http_method_uri == "/" ) {
       // the http_post_data can be one of these:
-      //  * create_search_engine _NAME_OF_SEARCH_ENGINE_
-      //  * load_search_engine   _NAME_OF_SEARCH_ENGINE_
+      //  * create_search_engine  _NAME_OF_SEARCH_ENGINE_
+      //  * load_search_engine    _NAME_OF_SEARCH_ENGINE_
+      //  * stop_training_process _NAME_OF_SEARCH_ENGINE_
       std::vector< std::string > tokens;
       SplitString( http_post_data, ' ', tokens);
       if ( tokens.size() == 2 ) {
         std::string search_engine_name = tokens.at(1);
         if ( tokens.at(0) == "create_search_engine" ) {
+          if ( SearchEngineExists( search_engine_name ) ) {
+            SendMessage("Search engine by that name already exists!");
+            p_socket->close();
+            return;
+          }
           search_engine_.Init( search_engine_name, vise_enginedir_ );
           if ( UpdateState() ) {
             // send control message : state updated
@@ -303,6 +309,13 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
           SendHttpPostResponse( http_post_data, "OK", p_socket );
           p_socket->close();
           return;
+        } else if ( tokens.at(0) == "msg_to_training_process" ) {
+          std::string msg = tokens.at(1);
+          if ( msg == "stop" ) {
+            vise_training_thread_->interrupt();
+          } else if ( msg == "continue" ) {
+            vise_training_thread_ = new boost::thread( boost::bind( &ViseServer::InitiateSearchEngineTraining, this ) );
+          }
         } else {
           // unknown command
           SendHttp404NotFound( p_socket );
@@ -515,11 +528,16 @@ void ViseServer::SendHttpRedirect( std::string redirect_uri,
 void ViseServer::HandleStateGetRequest( int state_id,
                                         boost::shared_ptr<tcp::socket> p_socket ) {
   switch( state_id ) {
+  case ViseServer::STATE_SETTING:
+    SendCommand("_state show");
+    break;
   case ViseServer::STATE_INFO:
     search_engine_.UpdateEngineOverview();
     state_html_list_.at( ViseServer::STATE_INFO ) = search_engine_.GetEngineOverview();
+    SendCommand("_control_panel add <div id=\"Info_button_proceed\" class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Proceed</div>");
     break;
   case ViseServer::STATE_QUERY:
+    SendCommand("_state hide");
     // @todo-query
     // dynamically prepare a html page to show the results of query
     break;
@@ -577,7 +595,7 @@ void ViseServer::HandleStatePostData( int state_id, std::string http_post_data, 
         SendHttpPostResponse( http_post_data, "OK", p_socket );
 
         // initiate the search engine training process
-        boost::thread t( boost::bind( &ViseServer::InitiateSearchEngineTraining, this ) );
+        vise_training_thread_ = new boost::thread( boost::bind( &ViseServer::InitiateSearchEngineTraining, this ) );
       } else {
         SendHttpPostResponse( http_post_data, "ERR", p_socket );
       }
@@ -592,6 +610,8 @@ void ViseServer::HandleStatePostData( int state_id, std::string http_post_data, 
 //
 void ViseServer::InitiateSearchEngineTraining() {
   SendCommand("_log clear show");
+  SendCommand("_control_panel clear all");
+  SendCommand("_control_panel add <div id=\"Training_button_stop\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('stop')\">Stop</div>");
 
   // Pre-process
   if ( state_id_ == ViseServer::STATE_PREPROCESS ) {
@@ -611,6 +631,12 @@ void ViseServer::InitiateSearchEngineTraining() {
       SendMessage("\n" + GetCurrentStateName() + " : failed to change to next state");
       return;
     }
+  }
+  if ( vise_training_thread_->interruption_requested() ) {
+    SendLog("\nStopped training process on user request");
+    SendCommand("_control_panel clear all");
+    SendCommand("_control_panel add <div id=\"Training_button_continue\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('continue')\">Continue</div>");
+    return;
   }
 
   // Descriptor
@@ -632,6 +658,12 @@ void ViseServer::InitiateSearchEngineTraining() {
       return;
     }
   }
+  if ( vise_training_thread_->interruption_requested() ) {
+    SendLog("\nStopped training process on user request");
+    SendCommand("_control_panel clear all");
+    SendCommand("_control_panel add <div id=\"Training_button_continue\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('continue')\">Continue</div>");
+    return;
+  }
 
   // Cluster
   if ( state_id_ == ViseServer::STATE_CLUSTER ) {
@@ -651,6 +683,12 @@ void ViseServer::InitiateSearchEngineTraining() {
       SendMessage("\n" + GetCurrentStateName() + " : failed to change to next state");
       return;
     }
+  }
+  if ( vise_training_thread_->interruption_requested() ) {
+    SendLog("\nStopped training process on user request");
+    SendCommand("_control_panel clear all");
+    SendCommand("_control_panel add <div id=\"Training_button_continue\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('continue')\">Continue</div>");
+    return;
   }
 
   // Assign
@@ -672,6 +710,12 @@ void ViseServer::InitiateSearchEngineTraining() {
       return;
     }
   }
+  if ( vise_training_thread_->interruption_requested() ) {
+    SendLog("\nStopped training process on user request");
+    SendCommand("_control_panel clear all");
+    SendCommand("_control_panel add <div id=\"Training_button_continue\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('continue')\">Continue</div>");
+    return;
+  }
 
   // Hamm
   if ( state_id_ == ViseServer::STATE_HAMM ) {
@@ -692,6 +736,12 @@ void ViseServer::InitiateSearchEngineTraining() {
       return;
     }
   }
+  if ( vise_training_thread_->interruption_requested() ) {
+    SendLog("\nStopped training process on user request");
+    SendCommand("_control_panel clear all");
+    SendCommand("_control_panel add <div id=\"Training_button_continue\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('continue')\">Continue</div>");
+    return;
+  }
 
   // Index
   if ( state_id_ == ViseServer::STATE_INDEX ) {
@@ -707,11 +757,19 @@ void ViseServer::InitiateSearchEngineTraining() {
     if ( UpdateState() ) {
       // send control message : state updated
       SendCommand("_state update_now");
+
     } else {
       SendMessage("\n" + GetCurrentStateName() + " : failed to change to next state");
       return;
     }
   }
+  if ( vise_training_thread_->interruption_requested() ) {
+    SendLog("\nStopped training process on user request");
+    SendCommand("_control_panel clear all");
+    SendCommand("_control_panel add <div id=\"Training_button_continue\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('continue')\">Continue</div>");
+    return;
+  }
+
 }
 
 // State based model
@@ -813,7 +871,13 @@ bool ViseServer::UpdateState() {
 
 void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
   SendCommand("_log clear show");
+  SendCommand("_control_panel clear all");
+  SendCommand("_control_panel add <div id=\"LoadSearchEngine_button_continue\" class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Continue</div>");
   search_engine_.Init( search_engine_name, vise_enginedir_ );
+  if ( !UpdateState() ) {
+    return;
+  }
+  assert( GetCurrentStateId() == ViseServer::STATE_SETTING );
 
   std::string engine_config;
   LoadFile( search_engine_.GetEngineConfigFn().string(), engine_config );
@@ -821,48 +885,48 @@ void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
   if ( !UpdateState() ) {
     return;
   }
-  assert( GetCurrentStateId() == ViseServer::STATE_SETTING );
-
-  if ( !UpdateState() ) {
-    return;
-  }
   assert( GetCurrentStateId() == ViseServer::STATE_INFO );
 
-  search_engine_.Preprocess();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_PREPROCESS );
 
-  search_engine_.Descriptor();
+  search_engine_.Preprocess();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_DESCRIPTOR );
 
-  search_engine_.Cluster();
+  search_engine_.Descriptor();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_CLUSTER );
 
-  search_engine_.Assign();
+  search_engine_.Cluster();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_ASSIGN );
 
-  search_engine_.Hamm();
+  search_engine_.Assign();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_HAMM );
 
-  search_engine_.Index();
+  search_engine_.Hamm();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_INDEX );
+
+  search_engine_.Index();
+  if ( !UpdateState() ) {
+    return;
+  }
+  assert( GetCurrentStateId() == ViseServer::STATE_QUERY );
 
   SendCommand("_state update_now");
 }
@@ -873,7 +937,7 @@ void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
 void ViseServer::GenerateViseIndexHtml() {
   std::ostringstream s;
   s << "<div id=\"create_engine_panel\">";
-  s << "<input id=\"vise_search_engine_name\" name=\"vise_search_engine_name\" value=\"ballads\" onclick=\"document.getElementById('vise_search_engine_name').value=''\" size=\"20\" autocomplete=\"off\">";
+  s << "<input id=\"vise_search_engine_name\" name=\"vise_search_engine_name\" value=\"test\" onclick=\"document.getElementById('vise_search_engine_name').value=''\" size=\"20\" autocomplete=\"off\">";
   s << "<div class=\"action_button\" onclick=\"_vise_create_search_engine()\">&nbsp;&nbsp;Create</div>";
   s << "</div>";
   s << "<div id=\"load_engine_panel\">";
@@ -1035,6 +1099,20 @@ bool ViseServer::StringStartsWith( const std::string &s, const std::string &pref
   } else {
     return false;
   }
+}
+bool ViseServer::SearchEngineExists( std::string search_engine_name ) {
+  // iterate through all directories in vise_enginedir_
+  boost::filesystem::directory_iterator dir_it( vise_enginedir_ ), end_it;
+  while ( dir_it != end_it ) {
+    boost::filesystem::path p = dir_it->path();
+    if ( boost::filesystem::is_directory( p ) ) {
+      if ( search_engine_name == p.filename().string() ) {
+        return true;
+      }
+    }
+    ++dir_it;
+  }
+  return false;
 }
 
 std::string ViseServer::GetHttpContentType( boost::filesystem::path fn) {

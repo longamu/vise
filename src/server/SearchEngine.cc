@@ -434,7 +434,6 @@ void SearchEngine::UpdateEngineOverview() {
     boost::filesystem::path imagePath(GetEngineConfigParam("imagePath"));
     CreateFileList( imagePath );
   }
-  engine_overview_ << "<div id=\"Info_button_proceed\" class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Proceed</div>";
   engine_overview_ << "<h3>Overview of Search Engine</h3>";
   engine_overview_ << "<table id=\"engine_overview\">";
   engine_overview_ << "<tr><td># of images</td><td>" << imglist_.size() << "</td></tr>";

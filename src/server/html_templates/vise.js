@@ -83,7 +83,7 @@ function _vise_handle_message(packet) {
   } else if ( receiver === "log" ) {
     _vise_handle_log_message(sender, msg);
   } else if ( receiver === "message" ) {
-    _vise_show_message(msg, 0);
+    _vise_show_message(msg, VISE_THEME_MESSAGE_TIMEOUT_MS);
   }
 }
 
@@ -116,25 +116,39 @@ function _vise_handle_log_message(sender, msg) {
 }
 
 function _vise_handle_command(sender, command_str) {
-  var param = command_str.split(' ');
-  var cmd = param[0];
-  param.splice(0, 1);
+  // command_str = "_state update_now"
+  // command_str = "_control_panel remove Info_proceed_button"
+  var first_spc = command_str.indexOf(' ', 0);
+  var cmd = command_str.substr(0, first_spc);
+  var param = command_str.substr(first_spc+1);
 
   switch ( cmd ) {
     case "_state":
-      if ( param[0] === 'update_now' ) {
-        _vise_server_send_get_request("_state");
+      switch( param ) {
+        case 'update_now':
+          _vise_server_send_get_request("_state");
+          break;
+        case "show":
+          document.getElementById("footer").style.display = "block";
+          break;
+        case "hide":
+          document.getElementById("footer").style.display = "none";
+          break;
       }
       break;
     case "_log":
       _vise_handle_log_command(param);
+      break;
+    case "_control_panel":
+      _vise_handle_control_panel_command(param);
       break;
     defaul:
       console.log("Unknown command : " + command_str);
   }
 }
 
-function _vise_handle_log_command(command) {
+function _vise_handle_log_command(command_str) {
+  var command = command_str.split(' ');
   for ( var i=0; i < command.length; i++ ) {
     switch( command[i] ) {
       case "show":
@@ -144,11 +158,34 @@ function _vise_handle_log_command(command) {
         document.getElementById("log").style.display = "none";
         break;
       case "clear":
-        document.getElementById("log").innerHTML = "";
+        document.getElementById("log").innerHTML = "&nbsp;";
         break;
       default:
         console.log("Received unknown log command : " + command[i]);
     }
+  }
+}
+
+function _vise_handle_control_panel_command(command) {
+  // command_str = "remove Info_proceed_button"
+  var first_spc = command.indexOf(' ', 0);
+  var cmd = command.substr(0, first_spc);
+  var param = command.substr(first_spc+1);
+
+  switch ( cmd ) {
+    case "add":
+      var cpanel = document.getElementById("control_panel");
+      cpanel.innerHTML += param;
+      break;
+    case "remove":
+      document.getElementById(param).remove();
+      break;
+    case "clear":
+      if ( param === "all" ) {
+        var cpanel = document.getElementById("control_panel");
+        cpanel.innerHTML = "";
+      }
+      break;
   }
 }
 
@@ -174,7 +211,6 @@ function _vise_update_state_info( json ) {
   }
   // remove the last arrow
   html.splice(html.length - 1, 1);
-  document.getElementById("footer").style.display = "block";
   document.getElementById("footer").innerHTML = html.join('');
 
   if ( _vise_current_state_id !== json['current_state_id'] ) {
@@ -221,6 +257,9 @@ function _vise_server_send_get_request(resource_name) {
   _vise_server.send();
 }
 
+function _vise_send_msg_to_training_process(msg) {
+  _vise_server_send_post_request("msg_to_training_process " + msg);
+}
 
 //
 // State: Setting
