@@ -57,91 +57,72 @@ void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
 // Workers for each state
 //
 void SearchEngine::Preprocess() {
-  SendLog("Preprocess", "\nPreprocessing started ...");
-
   if ( imglist_.empty() ) {
     boost::filesystem::path imagePath(GetEngineConfigParam("imagePath"));
     CreateFileList( imagePath );
   }
 
-  std::string transformed_img_width = GetEngineConfigParam("transformed_img_width");
-  if (transformed_img_width != "original") {
-    // scale and copy image to transformed_imgdir_
-    SendLog("Preprocess", "\nSaving transformed images to [" + transformed_imgdir_.string() + "] ");
+  if ( boost::filesystem::exists( imglist_fn_ ) ) {
+    SendLog("Preprocess", "\nLoaded");
   } else {
-    SendLog("Preprocess", "\nCopying original images to [" + transformed_imgdir_.string() + "] ");
-  }
-  for ( unsigned int i=0; i<imglist_.size(); i++ ) {
-    boost::filesystem::path img_rel_path = imglist_.at(i);
-    boost::filesystem::path src_fn  = original_imgdir_ / img_rel_path;
-    boost::filesystem::path dest_fn = transformed_imgdir_ / img_rel_path;
+    SendLog("Preprocess", "\nPreprocessing started ...");
+    std::string transformed_img_width = GetEngineConfigParam("transformed_img_width");
+    if (transformed_img_width != "original") {
+      // scale and copy image to transformed_imgdir_
+      SendLog("Preprocess", "\nSaving transformed images to [" + transformed_imgdir_.string() + "] ");
+    } else {
+      SendLog("Preprocess", "\nCopying original images to [" + transformed_imgdir_.string() + "] ");
+    }
+    for ( unsigned int i=0; i<imglist_.size(); i++ ) {
+      boost::filesystem::path img_rel_path = imglist_.at(i);
+      boost::filesystem::path src_fn  = original_imgdir_ / img_rel_path;
+      boost::filesystem::path dest_fn = transformed_imgdir_ / img_rel_path;
 
-    if ( !boost::filesystem::exists( dest_fn ) ) {
-      try {
-        // check if image path exists
-        if ( ! boost::filesystem::is_directory( dest_fn.parent_path() ) ) {
-          boost::filesystem::create_directories( dest_fn.parent_path() );
+      if ( !boost::filesystem::exists( dest_fn ) ) {
+        try {
+          // check if image path exists
+          if ( ! boost::filesystem::is_directory( dest_fn.parent_path() ) ) {
+            boost::filesystem::create_directories( dest_fn.parent_path() );
+          }
+
+          if (transformed_img_width != "original") {
+            Magick::Image im;
+            im.read( src_fn.string() );
+            Magick::Geometry size = im.size();
+
+            double aspect_ratio =  ((double) size.height()) / ((double) size.width());
+
+            std::stringstream s;
+            s << transformed_img_width;
+            unsigned int new_width;
+            s >> new_width;
+            unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
+
+            Magick::Geometry resize = Magick::Geometry(new_width, new_height);
+            im.zoom( resize );
+
+            im.write( dest_fn.string() );
+            imglist_fn_transformed_size_.at(i) = boost::filesystem::file_size(dest_fn.string().c_str());
+          } else {
+            // just copy the files
+            boost::filesystem::copy_file( src_fn, dest_fn );
+            imglist_fn_transformed_size_.at(i) = imglist_fn_original_size_.at(i);
+          }
+          if ( (i % 50) == 0 ) {
+            SendLog("Preprocess", ".");
+          }
+        } catch (std::exception &error) {
+          SendLog("Preprocess", "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
         }
-
-        if (transformed_img_width != "original") {
-          Magick::Image im;
-          im.read( src_fn.string() );
-          Magick::Geometry size = im.size();
-
-          double aspect_ratio =  ((double) size.height()) / ((double) size.width());
-
-          std::stringstream s;
-          s << transformed_img_width;
-          unsigned int new_width;
-          s >> new_width;
-          unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
-
-          Magick::Geometry resize = Magick::Geometry(new_width, new_height);
-          im.zoom( resize );
-
-          im.write( dest_fn.string() );
-          imglist_fn_transformed_size_.at(i) = boost::filesystem::file_size(dest_fn.string().c_str());
-        } else {
-          // just copy the files
-          boost::filesystem::copy_file( src_fn, dest_fn );
-          imglist_fn_transformed_size_.at(i) = imglist_fn_original_size_.at(i);
-        }
-        if ( (i % 50) == 0 ) {
-          SendLog("Preprocess", ".");
-        }
-      } catch (std::exception &error) {
-        SendLog("Preprocess", "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
       }
     }
+    SendLog("Preprocess", "[Done]");
+
+    //if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
+    WriteImageListToFile( imglist_fn_.string(), imglist_ );
+    SendLog("Preprocess",
+            "\nWritten image list to : [" + imglist_fn_.string() + "]" );
   }
-  SendLog("Preprocess", "[Done]");
-
-  //if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
-  WriteImageListToFile( imglist_fn_.string(), imglist_ );
-  SendLog("Preprocess",
-             "\nWritten image list to : [" + imglist_fn_.string() + "]" );
-
-  // save full configuration file to training_datadir_
-  SetEngineConfigParam("trainDatabasePath", transformed_imgdir_.string());
-  SetEngineConfigParam("databasePath", transformed_imgdir_.string());
-  SetEngineConfigParam("trainImagelistFn",  imglist_fn_.string());
-  SetEngineConfigParam("imagelistFn",  imglist_fn_.string());
-  boost::filesystem::path train_file_prefix = training_datadir_ / "train_";
-  SetEngineConfigParam("trainFilesPrefix", train_file_prefix.string() );
-  SetEngineConfigParam("pathManHide", transformed_imgdir_.string() );
-  SetEngineConfigParam("descFn", train_file_prefix.string() + "descs.e3bin" );
-  SetEngineConfigParam("assignFn", train_file_prefix.string() + "assign.bin" );
-  SetEngineConfigParam("hammFn", train_file_prefix.string() + "hamm.v2bin" );
-  SetEngineConfigParam("dsetFn", train_file_prefix.string() + "dset.v2bin" );
-  SetEngineConfigParam("clstFn", train_file_prefix.string() + "clst.e3bin" );
-  SetEngineConfigParam("iidxFn", train_file_prefix.string() + "iidx.e3bin" );
-  SetEngineConfigParam("fidxFn", train_file_prefix.string() + "fidx.e3bin" );
-  SetEngineConfigParam("wghtFn", train_file_prefix.string() + "wght.e3bin" );
-  SetEngineConfigParam("tmpDir", tmp_datadir_.string());
-
-  WriteConfigToFile();
-  SendLog("Preprocess",
-             "\nWritten search engine configuration to : [" + engine_config_fn_.string() + "]" );
 }
 
 void SearchEngine::Descriptor() {
@@ -151,7 +132,7 @@ void SearchEngine::Descriptor() {
   if ( boost::filesystem::exists( train_desc_fn ) ) {
     // delete file
     //boost::filesystem::remove( train_desc_fn );
-    SendLog("Descriptor", "\nDescriptor already exists ...");
+    SendLog("Descriptor", "\nLoaded");
   } else {
     SendLog("Descriptor", "\nComputing training descriptors ...");
     std::string const trainImagelistFn = GetEngineConfigParam("trainImagelistFn");
@@ -192,7 +173,7 @@ void SearchEngine::Cluster() {
     //boost::thread t( boost::bind( &SearchEngine::RunClusterCommand, this ) );
     RunClusterCommand();
   } else {
-    SendLog("Cluster", "\nCluster file already exists");
+    SendLog("Cluster", "\nLoaded");
   }
 }
 
@@ -220,89 +201,99 @@ void SearchEngine::RunClusterCommand() {
 }
 
 void SearchEngine::Assign() {
-  SendLog("Assign", "\nStarting assignment ...");
-  bool useRootSIFT = false;
-  if ( GetEngineConfigParam("RootSIFT") == "on" ) {
-    useRootSIFT = true;
+  if ( ! AssignFnExists() ) {
+    SendLog("Assign", "\nStarting assignment ...");
+    bool useRootSIFT = false;
+    if ( GetEngineConfigParam("RootSIFT") == "on" ) {
+      useRootSIFT = true;
+    }
+
+    buildIndex::computeTrainAssigns( GetEngineConfigParam("clstFn"),
+                                     useRootSIFT,
+                                     GetEngineConfigParam("descFn"),
+                                     GetEngineConfigParam("assignFn"));
+  } else {
+    SendLog("Assign", "\nLoaded");
   }
-
-  buildIndex::computeTrainAssigns( GetEngineConfigParam("clstFn"),
-                                   useRootSIFT,
-                                   GetEngineConfigParam("descFn"),
-                                   GetEngineConfigParam("assignFn"));
-
 }
 
 void SearchEngine::Hamm() {
-  SendLog("Hamm", "\nComputing hamm ...");
-  uint32_t hammEmbBits;
-  std::string hamm_emb_bits = GetEngineConfigParam("hammEmbBits");
-  std::istringstream s(hamm_emb_bits);
-  s >> hammEmbBits;
+  if ( ! HammFnExists() ) {
+    SendLog("Hamm", "\nComputing hamm ...");
+    uint32_t hammEmbBits;
+    std::string hamm_emb_bits = GetEngineConfigParam("hammEmbBits");
+    std::istringstream s(hamm_emb_bits);
+    s >> hammEmbBits;
 
-  bool useRootSIFT = false;
-  if ( GetEngineConfigParam("RootSIFT") == "on" ) {
-    useRootSIFT = true;
+    bool useRootSIFT = false;
+    if ( GetEngineConfigParam("RootSIFT") == "on" ) {
+      useRootSIFT = true;
+    }
+
+    buildIndex::computeHamming(GetEngineConfigParam("clstFn"),
+                               useRootSIFT,
+                               GetEngineConfigParam("descFn"),
+                               GetEngineConfigParam("assignFn"),
+                               GetEngineConfigParam("hammFn"),
+                               hammEmbBits);
+  } else {
+    SendLog("Hamm", "\nLoaded");
   }
-
-  buildIndex::computeHamming(GetEngineConfigParam("clstFn"),
-                             useRootSIFT,
-                             GetEngineConfigParam("descFn"),
-                             GetEngineConfigParam("assignFn"),
-                             GetEngineConfigParam("hammFn"),
-                             hammEmbBits);
-
 }
 
 void SearchEngine::Index() {
-  SendLog("Index", "\nStarting indexing ...");
-  bool SIFTscale3 = false;
-  if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
-    SIFTscale3 = true;
-  }
+  if ( ! IndexFnExists() ) {
+    SendLog("Index", "\nStarting indexing ...");
+    bool SIFTscale3 = false;
+    if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
+      SIFTscale3 = true;
+    }
 
-  bool useRootSIFT = false;
-  if ( GetEngineConfigParam("RootSIFT") == "on" ) {
-    useRootSIFT = true;
-  }
+    bool useRootSIFT = false;
+    if ( GetEngineConfigParam("RootSIFT") == "on" ) {
+      useRootSIFT = true;
+    }
 
-  // source: src/v2/indexing/compute_index_v2.cpp
-  std::ostringstream feat_getter_config;
-  feat_getter_config << "hesaff-";
-  if (useRootSIFT) {
-    feat_getter_config << "rootsift";
+    // source: src/v2/indexing/compute_index_v2.cpp
+    std::ostringstream feat_getter_config;
+    feat_getter_config << "hesaff-";
+    if (useRootSIFT) {
+      feat_getter_config << "rootsift";
+    } else {
+      feat_getter_config << "sift";
+    }
+    if (SIFTscale3) {
+      feat_getter_config << "-scale3";
+    }
+    featGetter_standard const featGetter_obj( feat_getter_config.str().c_str() );
+
+    // embedder
+    uint32_t hammEmbBits;
+    std::string hamm_emb_bits = GetEngineConfigParam("hammEmbBits");
+    std::istringstream s(hamm_emb_bits);
+    s >> hammEmbBits;
+
+    embedderFactory *embFactory= NULL;
+    if ( EngineConfigParamExists("hammEmbBits") ) {
+      embFactory= new hammingEmbedderFactory(GetEngineConfigParam("hammFn"), hammEmbBits);
+    } else {
+      embFactory= new noEmbedderFactory;
+    }
+
+    buildIndex::build(GetEngineConfigParam("imagelistFn"),
+                      GetEngineConfigParam("databasePath"),
+                      GetEngineConfigParam("dsetFn"),
+                      GetEngineConfigParam("iidxFn"),
+                      GetEngineConfigParam("fidxFn"),
+                      GetEngineConfigParam("tmpDir"),
+                      featGetter_obj,
+                      GetEngineConfigParam("clstFn"),
+                      embFactory);
+
+    delete embFactory;
   } else {
-    feat_getter_config << "sift";
+    SendLog("Index", "\nLoaded");
   }
-  if (SIFTscale3) {
-    feat_getter_config << "-scale3";
-  }
-  featGetter_standard const featGetter_obj( feat_getter_config.str().c_str() );
-
-  // embedder
-  uint32_t hammEmbBits;
-  std::string hamm_emb_bits = GetEngineConfigParam("hammEmbBits");
-  std::istringstream s(hamm_emb_bits);
-  s >> hammEmbBits;
-
-  embedderFactory *embFactory= NULL;
-  if ( EngineConfigParamExists("hammEmbBits") ) {
-    embFactory= new hammingEmbedderFactory(GetEngineConfigParam("hammFn"), hammEmbBits);
-  } else {
-    embFactory= new noEmbedderFactory;
-  }
-
-  buildIndex::build(GetEngineConfigParam("imagelistFn"),
-                    GetEngineConfigParam("databasePath"),
-                    GetEngineConfigParam("dsetFn"),
-                    GetEngineConfigParam("iidxFn"),
-                    GetEngineConfigParam("fidxFn"),
-                    GetEngineConfigParam("tmpDir"),
-                    featGetter_obj,
-                    GetEngineConfigParam("clstFn"),
-                    embFactory);
-
-  delete embFactory;
 }
 
 void SearchEngine::Query() {
@@ -370,6 +361,26 @@ void SearchEngine::SetEngineConfig(std::string engine_config) {
 
     engine_config_.insert( std::make_pair<std::string, std::string>(key, val) );
   }
+
+    // save full configuration file to training_datadir_
+  SetEngineConfigParam("trainDatabasePath", transformed_imgdir_.string());
+  SetEngineConfigParam("databasePath", transformed_imgdir_.string());
+  SetEngineConfigParam("trainImagelistFn",  imglist_fn_.string());
+  SetEngineConfigParam("imagelistFn",  imglist_fn_.string());
+  boost::filesystem::path train_file_prefix = training_datadir_ / "train_";
+  SetEngineConfigParam("trainFilesPrefix", train_file_prefix.string() );
+  SetEngineConfigParam("pathManHide", transformed_imgdir_.string() );
+  SetEngineConfigParam("descFn", train_file_prefix.string() + "descs.e3bin" );
+  SetEngineConfigParam("assignFn", train_file_prefix.string() + "assign.bin" );
+  SetEngineConfigParam("hammFn", train_file_prefix.string() + "hamm.v2bin" );
+  SetEngineConfigParam("dsetFn", train_file_prefix.string() + "dset.v2bin" );
+  SetEngineConfigParam("clstFn", train_file_prefix.string() + "clst.e3bin" );
+  SetEngineConfigParam("iidxFn", train_file_prefix.string() + "iidx.e3bin" );
+  SetEngineConfigParam("fidxFn", train_file_prefix.string() + "fidx.e3bin" );
+  SetEngineConfigParam("wghtFn", train_file_prefix.string() + "wght.e3bin" );
+  SetEngineConfigParam("tmpDir", tmp_datadir_.string());
+
+  WriteConfigToFile();
 }
 
 std::string SearchEngine::GetEngineConfigParam(std::string key) {
@@ -408,7 +419,7 @@ void SearchEngine::SetEngineConfigParam(std::string key, std::string value) {
   }
 }
 
-boost::filesystem::path SearchEngine::GetEngineConfigPath() {
+boost::filesystem::path SearchEngine::GetEngineConfigFn() {
   return engine_config_fn_;
 }
 std::string SearchEngine::GetSearchEngineBaseUri() {
@@ -461,6 +472,32 @@ void SearchEngine::WriteConfigToFile() {
     f.close();
   } catch( std::exception &e) {
     std::cerr << "\nSearchEngine::WriteConfigToFile() : error writing configuration to [" << engine_config_fn_ << "]" << std::flush;
+    std::cerr << e.what() << std::flush;
+  }
+}
+
+void SearchEngine::ReadConfigFromFile() {
+  try {
+    engine_config_.clear();
+    std::ifstream f( engine_config_fn_.c_str() );
+    char line[1024];
+    f.getline(line, 1024, '\n');
+    std::string search_engine_name(line);
+    assert( engine_name_ == search_engine_name );
+
+    while ( !f.eof() ) {
+      f.getline(line, 1024, '\n');
+      std::string param( line );
+      std::size_t eq_pos = param.find('=');
+      if ( eq_pos != std::string::npos ) {
+        std::string key   = param.substr(0, eq_pos);
+        std::string value = param.substr(eq_pos+1, std::string::npos);
+        SetEngineConfigParam(key, value);
+      }
+    }
+    f.close();
+  } catch( std::exception &e) {
+    std::cerr << "\nSearchEngine::ReadConfigFromFile() : error reading configuration from [" << engine_config_fn_ << "]" << std::flush;
     std::cerr << e.what() << std::flush;
   }
 }
@@ -560,6 +597,12 @@ unsigned long SearchEngine::GetImglistTransformedSize() {
 
 std::string SearchEngine::GetEngineOverview() {
   return engine_overview_.str();
+}
+boost::filesystem::path SearchEngine::GetOriginalImageDir() {
+  return original_imgdir_;
+}
+boost::filesystem::path SearchEngine::GetTransformedImageDir() {
+  return transformed_imgdir_;
 }
 
 // for debug

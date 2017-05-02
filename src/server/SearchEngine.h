@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <unistd.h>
 #include <locale>                // for std::tolower
-
+#include <cassert>               // for assert()
 #include <boost/filesystem.hpp>  // to query/update filesystem
 
 #include <Magick++.h>            // to transform images
@@ -76,9 +76,11 @@ public:
   unsigned long HammFnSize();
   unsigned long IndexFnSize();
 
-  boost::filesystem::path GetEngineConfigPath();
+  boost::filesystem::path GetEngineConfigFn();
   std::string GetResourceUri(std::string resource_name);
   std::string GetSearchEngineBaseUri();
+  boost::filesystem::path GetOriginalImageDir();
+  boost::filesystem::path GetTransformedImageDir();
 
   void SetEngineConfig(std::string engine_config);
   void SetEngineConfigParam(std::string key, std::string value);
@@ -123,6 +125,7 @@ public:
   void CreateFileList(boost::filesystem::path dir);
 
   void WriteConfigToFile();
+  void ReadConfigFromFile();
   void InitEngineResources( std::string name );
   void RunClusterCommand();
 };

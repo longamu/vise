@@ -17,6 +17,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <map>
+#include <cassert>                // for assert()
 
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
@@ -77,24 +78,20 @@ class ViseServer {
   bool UpdateState();
   std::string GetStateJsonData();
   void GenerateViseIndexHtml();
-  void HandleStateGetRequest( int state_id,
-                              std::map< std::string, std::string > args,
-                              boost::shared_ptr<tcp::socket> p_socket );
-  void ServeStaticResource(std::map< std::string, std::string > resource_args,
-                            boost::shared_ptr<tcp::socket> p_socket);
-  void HandleStatePostData( int state_id, std::string http_post_data, boost::shared_ptr<tcp::socket> p_socket );
-  void SetSearchEngineSetting( std::string setting );
+  void ServeStaticResource(const std::string resource_uri,
+                           const std::string resource_arg,
+                           boost::shared_ptr<tcp::socket> p_socket);
+  void LoadSearchEngine(std::string search_engine_name);
 
   // search engine training
   void InitiateSearchEngineTraining();
 
   // HTTP connection handler
   void HandleConnection(boost::shared_ptr<tcp::socket> p_socket);
-  void HandleGetRequest(std::string resource, boost::shared_ptr<tcp::socket> p_socket);
-  void HandlePostRequest(std::string search_engine_name,
-                         std::string resource,
-                         std::string post_data,
-                         boost::shared_ptr<tcp::socket> p_socket);
+  void HandleStatePostData( int state_id, std::string http_post_data, boost::shared_ptr<tcp::socket> p_socket );
+  void HandleStateGetRequest( int state_id,
+                              boost::shared_ptr<tcp::socket> p_socket );
+
   void SendHttpResponse(std::string html, boost::shared_ptr<tcp::socket> p_socket);
   void SendHttpPostResponse(std::string http_post_data, std::string result, boost::shared_ptr<tcp::socket> p_socket);
   void SendHttp404NotFound(boost::shared_ptr<tcp::socket> p_socket);
@@ -102,6 +99,7 @@ class ViseServer {
   void SendErrorResponse(std::string message, std::string backtrace, boost::shared_ptr<tcp::socket> p_socket);
   void SendRawResponse(std::string content_type, std::string content, boost::shared_ptr<tcp::socket> p_socket);
   void SendJsonResponse(std::string json, boost::shared_ptr<tcp::socket> p_socket);
+  void SendImageResponse(boost::filesystem::path im_fn, boost::shared_ptr<tcp::socket> p_socket);
 
   void SendMessage(std::string message);
   void SendLog(std::string log);
@@ -114,10 +112,12 @@ class ViseServer {
   void ParseHttpMethodUri(const std::string http_method_uri,
                           std::string &resource_name,
                           std::map< std::string, std::string > &resource_args);
-  int  LoadFile(std::string filename, std::string &file_contents);
+  int  LoadFile(const std::string filename, std::string &file_contents);
   void WriteFile(std::string filename, std::string &file_contents);
   void SplitString(const std::string s, char sep, std::vector<std::string> &tokens);
   bool ReplaceString(std::string &s, std::string old_str, std::string new_str);
+  bool StringStartsWith( const std::string &s, const std::string &prefix );
+  std::string GetHttpContentType(boost::filesystem::path fn);
 
   // for logging statistics
   boost::filesystem::path vise_training_stat_fn_;
@@ -145,6 +145,7 @@ class ViseServer {
   std::string GetStateName( int state_id );
   std::string GetStateInfo( int state_id );
   int GetStateId( std::string );
+  int GetCurrentStateId();
 
   //void InitResources( std::string vise_datadir, std::string vise_templatedir );
   void Start(unsigned int port);

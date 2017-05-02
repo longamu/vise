@@ -235,27 +235,39 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       return;
     }
 
-    // @todo-query
-    // if http_method_uri contains request for image file in the form:
-    //   GET /_static?type=image&id=284&variant=original
-    //   GET /_static?type=image&name=dir1/dir2/all_souls_000022.jpg&variant=transformed
-    // return the image as binary data in HTTP response
+    // if http_method_uri contains request for static resource in the form:
+    //   GET /_static/ox5k/img/dir1/dir2/all_souls_000022.jpg?original
+    // return the static resource as binary data in HTTP response
+    const std::string static_resource_prefix = "/_static";
+    if ( StringStartsWith(http_method_uri, static_resource_prefix) ) {
+      std::string resource_uri = http_method_uri.substr( static_resource_prefix.size(), std::string::npos);
+      std::string resource_arg = "";
 
-    std::string resource_name;
-    std::map< std::string, std::string > resource_args;
-    std::cout << "\nhttp_method_uri = " << http_method_uri << std::flush;
-    ParseHttpMethodUri( http_method_uri, resource_name, resource_args);
-
-    if ( resource_name == "_static" ) {
-      ServeStaticResource( resource_args, p_socket);
-    }
-
-    int state_id = GetStateId( resource_name );
-    if ( state_id != -1 ) {
-      HandleStateGetRequest( state_id, resource_args, p_socket );
+      std::size_t qmark_pos = http_method_uri.find('?');
+      if ( qmark_pos != std::string::npos ) {
+        std::string temp = resource_uri;
+        resource_uri = resource_uri.substr(0, qmark_pos);
+        resource_arg =resource_uri.substr(qmark_pos+1, std::string::npos);
+      }
+      ServeStaticResource( resource_uri, resource_arg, p_socket );
       p_socket->close();
       return;
     }
+
+    // request for state html
+    // Get /Cluster
+    std::vector< std::string > tokens;
+    SplitString( http_method_uri, '/', tokens);
+    if ( tokens.at(0) == "" && tokens.size() == 2 ) {
+      const std::string resource_name = tokens.at(1);
+      int state_id = GetStateId( resource_name );
+      if ( state_id != -1 ) {
+        HandleStateGetRequest( state_id, p_socket );
+        p_socket->close();
+        return;
+      }
+    }
+
     // otherwise, say not found
     SendHttp404NotFound( p_socket );
     p_socket->close();
@@ -286,7 +298,11 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
           return;
           // send control message to set loaded engine name
         } else if ( tokens.at(0) == "load_search_engine" ) {
-          // @todo: load search engine to last saved state
+          std::cout << "\nLoading engine: " << search_engine_name << std::flush;
+          LoadSearchEngine( search_engine_name );
+          SendHttpPostResponse( http_post_data, "OK", p_socket );
+          p_socket->close();
+          return;
         } else {
           // unknown command
           SendHttp404NotFound( p_socket );
@@ -383,6 +399,46 @@ void ViseServer::SendHttpResponse(std::string response, boost::shared_ptr<tcp::s
   //std::cout << "\nSent http html response of length : " << response.length() << std::flush;
 }
 
+void ViseServer::SendImageResponse(boost::filesystem::path im_fn, boost::shared_ptr<tcp::socket> p_socket) {
+  std::string content_type = GetHttpContentType(im_fn);
+  std::stringstream http_response;
+  http_response << "HTTP/1.1 200 OK\r\n";
+  std::time_t t = std::time(NULL);
+  char date_str[100];
+  std::strftime(date_str, sizeof(date_str), "%a, %d %b %Y %H:%M:%S %Z", std::gmtime(&t));
+  http_response << "Date: " << date_str << "\r\n";
+  http_response << "Content-Language: en\r\n";
+  http_response << "Connection: close\r\n";
+
+  http_response << "Content-type: " << content_type << "\r\n";
+  http_response << "Content-Encoding: utf-8\r\n";
+  http_response << "Content-Length: " << boost::filesystem::file_size( im_fn ) << "\r\n";
+  http_response << "\r\n";
+  boost::asio::write( *p_socket, boost::asio::buffer(http_response.str()) );
+
+  // write the image file contents to socket
+  try {
+    std::ifstream im( im_fn.string().c_str(), std::ios::binary );
+    if ( im.is_open() ) {
+      const unsigned int BUF_SIZE = 1024 * 1024; // 1024 KB
+      char* im_buf = new char[BUF_SIZE];
+      while ( !im.eof() ) {
+        memset(im_buf, 0, BUF_SIZE);
+        im.read(im_buf, BUF_SIZE);
+        unsigned int bytes_read = im.gcount();
+        boost::asio::write( *p_socket,
+                            boost::asio::buffer(im_buf, bytes_read),
+                            boost::asio::transfer_all());
+      }
+      im.close();
+      delete( im_buf);
+    }
+  } catch( std::exception &e) {
+    std::cerr << "\nViseServer::SendImageResponse() : exception " << e.what() << std::flush;
+  }
+
+}
+
 void ViseServer::SendMessage(std::string message) {
   SendPacket( "message", message);
 }
@@ -454,31 +510,9 @@ void ViseServer::SendHttpRedirect( std::string redirect_uri,
 }
 
 //
-// Update engine state
-//
-void ViseServer::HandlePostRequest( std::string search_engine_name,
-                                    std::string resource_name,
-                                    std::string post_data,
-                                    boost::shared_ptr<tcp::socket> p_socket)
-{
-  std::cout << "\nReceived post data : resource=" << resource_name
-            << ", post_data=" << post_data << std::flush;
-
-    if ( resource_name == "Initialize" ) {
-      if ( post_data == "initialize_search_engine" ) {
-        if ( UpdateState() ) {
-        } else {
-          SendMessage("Failed to initialize search engine!");
-        }
-      }
-    }
-}
-
-//
 // Handle HTTP Get requests (used to query search engine)
 //
 void ViseServer::HandleStateGetRequest( int state_id,
-                                        std::map< std::string, std::string > args,
                                         boost::shared_ptr<tcp::socket> p_socket ) {
   switch( state_id ) {
   case ViseServer::STATE_INFO:
@@ -494,10 +528,34 @@ void ViseServer::HandleStateGetRequest( int state_id,
   SendHttpResponse( state_html_list_.at(state_id), p_socket );
 }
 
-void ViseServer::ServeStaticResource(std::map< std::string, std::string > resource_args,
-                                      boost::shared_ptr<tcp::socket> p_socket) {
-  // @todo-query
+void ViseServer::ServeStaticResource(const std::string resource_uri,
+                                     const std::string resource_arg,
+                                     boost::shared_ptr<tcp::socket> p_socket) {
+  // resource uri format:
+  // SEARCH_ENGINE_NAME/...path...
+  std::cout << "\nViseServer::ServeStaticResource() : " << resource_uri << ", " << resource_arg << std::flush;
+  std::size_t slash_pos = resource_uri.find('/');
+  if ( slash_pos != std::string::npos ) {
+    std::string search_engine_name = resource_uri.substr(0, slash_pos);
+    if ( search_engine_.GetName() == search_engine_name ) {
+      std::string res_rel_path = resource_uri.substr(slash_pos+1, std::string::npos);
+      boost::filesystem::path res_fn = search_engine_.GetTransformedImageDir() / res_rel_path;
+      if ( resource_arg == "original" ) {
+        res_fn = search_engine_.GetOriginalImageDir() / res_rel_path;
+      }
+      std::cout << "\nViseServer::ServeStaticResource() : Serving static resource : " << res_fn.string() << std::flush;
+      if ( boost::filesystem::exists(res_fn) ) {
+        SendImageResponse( res_fn, p_socket );
+      }
+    }
+  }
 
+  // somethign was wrong
+  std::ostringstream s;
+  s << "\nViseServer::ServeStaticResource() : cannot serve static resource ";
+  s << "[" << resource_uri << "," << resource_arg << "]";
+  SendHttpResponse( s.str(), p_socket);
+  return;
 }
 
 //
@@ -505,12 +563,12 @@ void ViseServer::ServeStaticResource(std::map< std::string, std::string > resour
 //
 void ViseServer::HandleStatePostData( int state_id, std::string http_post_data, boost::shared_ptr<tcp::socket> p_socket ) {
   if ( state_id == ViseServer::STATE_SETTING ) {
-      search_engine_.SetEngineConfig(http_post_data);
+    search_engine_.SetEngineConfig(http_post_data);
 
-      if ( UpdateState() ) {
-        // send control message : state updated
-        SendCommand("_state update_now");
-      }
+    if ( UpdateState() ) {
+      // send control message : state updated
+      SendCommand("_state update_now");
+    }
   } else if ( state_id == ViseServer::STATE_INFO ) {
     if ( http_post_data == "proceed" ) {
       if ( UpdateState() ) {
@@ -527,10 +585,6 @@ void ViseServer::HandleStatePostData( int state_id, std::string http_post_data, 
   } else {
     std::cerr << "\nViseServer::HandleStatePostData() : Do not know how to handle this HTTP POST data!" << std::flush;
   }
-}
-
-void ViseServer::SetSearchEngineSetting( std::string setting ) {
-  search_engine_.SetEngineConfig( setting );
 }
 
 //
@@ -687,6 +741,10 @@ std::string ViseServer::GetStateInfo(int state_id) {
   return state_info_list_.at( state_id );
 }
 
+int ViseServer::GetCurrentStateId() {
+  return state_id_;
+}
+
 bool ViseServer::UpdateState() {
   if ( state_id_ == ViseServer::STATE_NOT_LOADED ) {
     // check if search engine was initialized properly
@@ -751,6 +809,62 @@ bool ViseServer::UpdateState() {
     }
   }
   return false;
+}
+
+void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
+  SendCommand("_log clear show");
+  search_engine_.Init( search_engine_name, vise_enginedir_ );
+
+  std::string engine_config;
+  LoadFile( search_engine_.GetEngineConfigFn().string(), engine_config );
+  search_engine_.SetEngineConfig( engine_config );
+  if ( !UpdateState() ) {
+    return;
+  }
+  assert( GetCurrentStateId() == ViseServer::STATE_SETTING );
+
+  if ( !UpdateState() ) {
+    return;
+  }
+  assert( GetCurrentStateId() == ViseServer::STATE_INFO );
+
+  search_engine_.Preprocess();
+  if ( !UpdateState() ) {
+    return;
+  }
+  assert( GetCurrentStateId() == ViseServer::STATE_PREPROCESS );
+
+  search_engine_.Descriptor();
+  if ( !UpdateState() ) {
+    return;
+  }
+  assert( GetCurrentStateId() == ViseServer::STATE_DESCRIPTOR );
+
+  search_engine_.Cluster();
+  if ( !UpdateState() ) {
+    return;
+  }
+  assert( GetCurrentStateId() == ViseServer::STATE_CLUSTER );
+
+  search_engine_.Assign();
+  if ( !UpdateState() ) {
+    return;
+  }
+  assert( GetCurrentStateId() == ViseServer::STATE_ASSIGN );
+
+  search_engine_.Hamm();
+  if ( !UpdateState() ) {
+    return;
+  }
+  assert( GetCurrentStateId() == ViseServer::STATE_HAMM );
+
+  search_engine_.Index();
+  if ( !UpdateState() ) {
+    return;
+  }
+  assert( GetCurrentStateId() == ViseServer::STATE_INDEX );
+
+  SendCommand("_state update_now");
 }
 
 //
@@ -858,7 +972,7 @@ void ViseServer::ExtractHttpContent(std::string http_request, std::string &http_
   http_content = http_request.substr( start + http_content_start_flag.length() );
 }
 
-int ViseServer::LoadFile(std::string filename, std::string &file_contents) {
+int ViseServer::LoadFile(const std::string filename, std::string &file_contents) {
   try {
     std::ifstream f;
     f.open(filename.c_str());
@@ -913,6 +1027,25 @@ void ViseServer::SplitString( const std::string s, char sep, std::vector<std::st
     }
   }
   tokens.push_back( s.substr(start, s.length()) );
+}
+
+bool ViseServer::StringStartsWith( const std::string &s, const std::string &prefix ) {
+  if ( s.substr(0, prefix.length()) == prefix ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+std::string ViseServer::GetHttpContentType( boost::filesystem::path fn) {
+  std::string ext = fn.extension().string();
+  std::string http_content_type = "unknown";
+  if ( ext == ".jpg" ) {
+    http_content_type = "image/jpeg";
+  } else if ( ext == ".png" ) {
+    http_content_type = "image/png";
+  }
+  return http_content_type;
 }
 
 //
