@@ -131,6 +131,38 @@ ViseServer::ViseServer( std::string vise_datadir, std::string vise_templatedir )
 ViseServer::~ViseServer() {
   // for logging statistics
   training_stat_f.close();
+
+  // cleanup
+  delete cons_queue_;
+
+  if ( hamming_emb_ != NULL ) {
+    delete hamming_emb_;
+    delete multi_query_max_;
+  }
+  if ( multi_query_ != NULL ) {
+    delete multi_query_;
+  }
+  delete emb_factory_;
+
+  if ( !useHamm ) {
+    delete soft_assigner_;
+  }
+
+  delete nn_;
+  delete clst_centres_;
+  delete feat_getter_;
+
+  delete fidx_;
+  delete iidx_;
+
+  delete tfidf_;
+
+  delete dataset_;
+
+  delete spatial_verif_v2_;
+
+  delete dbFidx_;
+  delete dbIidx_;
 }
 
 
@@ -159,6 +191,7 @@ void ViseServer::Start(unsigned int port) {
     std::cerr << "\nCannot listen for http request!\n" << e.what() << std::flush;
     return;
   }
+
 }
 
 bool ViseServer::Stop() {
@@ -181,13 +214,16 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
   ExtractHttpResource(http_request, http_method_uri);
 
   // for debug
-  std::cout << "\nRequest = " << http_request << std::flush;
+  //std::cout << "\nRequest = " << http_request << std::flush;
   std::cout << "\n" << http_method << " " << http_method_uri << std::flush;
 
   if ( http_method == "GET " ) {
     if ( http_method_uri == "/" ) {
       // show help page when user enteres http://localhost:8080
       SendHttpResponse( vise_main_html_, p_socket);
+      if ( GetCurrentStateId() != ViseServer::STATE_NOT_LOADED ) {
+        SendCommand("_state update_now");
+      }
       p_socket->close();
       return;
     }
@@ -222,8 +258,8 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       return;
     }
 
-    if ( http_method_uri.length() > 8 &&
-         http_method_uri.substr( http_method_uri.length() - 8 ) == "_message" ) {
+    const std::string message_prefix = "/_message";
+    if ( StringStartsWith(http_method_uri, message_prefix) ) {
       // since HTTP server always requires a request in order to send responses,
       // we always create this _message channel which keeps waiting for messages
       // to be pushed to vise_message_queue_, sends this message to the client
@@ -235,10 +271,17 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       return;
     }
 
+    const std::string query_prefix = "/_query";
+    if ( StringStartsWith(http_method_uri, query_prefix) ) {
+      HandleQueryGetRequest( http_method_uri, p_socket );
+      p_socket->close();
+      return;
+    }
+
     // if http_method_uri contains request for static resource in the form:
-    //   GET /_static/ox5k/img/dir1/dir2/all_souls_000022.jpg?original
+    //   GET /_static/ox5k/dir1/dir2/all_souls_000022.jpg?original
     // return the static resource as binary data in HTTP response
-    const std::string static_resource_prefix = "/_static";
+    const std::string static_resource_prefix = "/_static/";
     if ( StringStartsWith(http_method_uri, static_resource_prefix) ) {
       std::string resource_uri = http_method_uri.substr( static_resource_prefix.size(), std::string::npos);
       std::string resource_arg = "";
@@ -247,7 +290,7 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       if ( qmark_pos != std::string::npos ) {
         std::string temp = resource_uri;
         resource_uri = resource_uri.substr(0, qmark_pos);
-        resource_arg =resource_uri.substr(qmark_pos+1, std::string::npos);
+        resource_arg = resource_uri.substr(qmark_pos+1, std::string::npos);
       }
       ServeStaticResource( resource_uri, resource_arg, p_socket );
       p_socket->close();
@@ -259,13 +302,20 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
     std::vector< std::string > tokens;
     SplitString( http_method_uri, '/', tokens);
     if ( tokens.at(0) == "" && tokens.size() == 2 ) {
-      const std::string resource_name = tokens.at(1);
-      int state_id = GetStateId( resource_name );
-      if ( state_id != -1 ) {
-        HandleStateGetRequest( state_id, p_socket );
-        p_socket->close();
-        return;
+      std::string resource_name;
+      std::map< std::string, std::string > resource_args;
+
+      // check if the GET request contains parameters of the form
+      // /Query?cmd=show_img_list&collection=all
+      std::size_t qmark_pos = http_method_uri.find('?');
+      if ( qmark_pos != std::string::npos ) {
+        ParseHttpMethodUri( http_method_uri, resource_name, resource_args );
+      } else {
+        resource_name = tokens.at(1);
       }
+      HandleStateGetRequest( resource_name, resource_args, p_socket );
+      p_socket->close();
+      return;
     }
 
     // otherwise, say not found
@@ -336,11 +386,11 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
         p_socket->close();
         return;
       }
-      // otherwise, say not found
-      SendHttp404NotFound( p_socket );
-      p_socket->close();
-      return;
     }
+    // otherwise, say not found
+    SendHttp404NotFound( p_socket );
+    p_socket->close();
+    return;
   }
 }
 
@@ -525,25 +575,69 @@ void ViseServer::SendHttpRedirect( std::string redirect_uri,
 //
 // Handle HTTP Get requests (used to query search engine)
 //
-void ViseServer::HandleStateGetRequest( int state_id,
+void ViseServer::HandleStateGetRequest( std::string resource_name,
+                                        std::map< std::string, std::string> resource_args,
                                         boost::shared_ptr<tcp::socket> p_socket ) {
-  switch( state_id ) {
-  case ViseServer::STATE_SETTING:
-    SendCommand("_state show");
-    break;
-  case ViseServer::STATE_INFO:
-    search_engine_.UpdateEngineOverview();
-    state_html_list_.at( ViseServer::STATE_INFO ) = search_engine_.GetEngineOverview();
-    SendCommand("_control_panel add <div id=\"Info_button_proceed\" class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Proceed</div>");
-    break;
-  case ViseServer::STATE_QUERY:
-    SendCommand("_state hide");
-    // @todo-query
-    // dynamically prepare a html page to show the results of query
-    break;
+  std::cout << "\nViseServer::HandleStateGetRequest() : resource_name = " << resource_name << std::flush;
+  std::map< std::string, std::string >::iterator it;
+
+  for ( it=resource_args.begin(); it != resource_args.end(); it++) {
+    std::cout << "\n\t" << it->first << " = " << it->second << std::flush;
   }
 
-  SendHttpResponse( state_html_list_.at(state_id), p_socket );
+  int state_id = GetStateId( resource_name );
+  if ( state_id != -1 ) {
+    if ( state_id == ViseServer::STATE_QUERY &&
+         GetCurrentStateId() == ViseServer::STATE_QUERY ) {
+      if ( resource_args.empty() ) {
+        SendCommand("_state hide");
+        QueryServeImgList( 0, 20, p_socket );
+        return;
+      }
+    } else {
+      switch( state_id ) {
+      case ViseServer::STATE_SETTING:
+        SendCommand("_state show");
+        break;
+      case ViseServer::STATE_INFO:
+        search_engine_.UpdateEngineOverview();
+        state_html_list_.at( ViseServer::STATE_INFO ) = search_engine_.GetEngineOverview();
+        SendCommand("_control_panel add <div id=\"Info_button_proceed\" class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Proceed</div>");
+        break;
+      }
+      SendHttpResponse( state_html_list_.at(state_id), p_socket );
+      return;
+    }
+  }
+  SendHttp404NotFound( p_socket );
+}
+
+void ViseServer::HandleQueryGetRequest(std::string http_method_uri, boost::shared_ptr<tcp::socket> p_socket) {
+  std::string resource_name;
+  std::map < std::string, std::string> args;
+  ParseHttpMethodUri( http_method_uri, resource_name, args );
+
+  std::string cmd = args.find("cmd")->second;
+
+  if ( cmd == "show_img_list" ) {
+    std::string page = args.find( "page" )->second;
+    std::string imcount = args.find( "imcount" )->second;
+    unsigned int page_i, imcount_i;
+
+    std::istringstream s(page);
+    s >> page_i;
+    s.clear();
+    s.str("");
+    s.str(imcount);
+    s >> imcount_i;
+
+    std::cout << "\npage = " << page_i << ", page_count=" << imcount_i << std::flush;
+    QueryServeImgList(page_i, imcount_i, p_socket);
+    return;
+  } else if ( cmd == "") {
+    // @todo
+  }
+  SendHttp404NotFound( p_socket );
 }
 
 void ViseServer::ServeStaticResource(const std::string resource_uri,
@@ -551,8 +645,8 @@ void ViseServer::ServeStaticResource(const std::string resource_uri,
                                      boost::shared_ptr<tcp::socket> p_socket) {
   // resource uri format:
   // SEARCH_ENGINE_NAME/...path...
-  std::cout << "\nViseServer::ServeStaticResource() : " << resource_uri << ", " << resource_arg << std::flush;
-  std::size_t slash_pos = resource_uri.find('/');
+  //std::cout << "\nViseServer::ServeStaticResource() : " << resource_uri << ", " << resource_arg << std::flush;
+  std::size_t slash_pos = resource_uri.find('/', 1); // ignore the first /
   if ( slash_pos != std::string::npos ) {
     std::string search_engine_name = resource_uri.substr(0, slash_pos);
     if ( search_engine_.GetName() == search_engine_name ) {
@@ -561,7 +655,7 @@ void ViseServer::ServeStaticResource(const std::string resource_uri,
       if ( resource_arg == "original" ) {
         res_fn = search_engine_.GetOriginalImageDir() / res_rel_path;
       }
-      std::cout << "\nViseServer::ServeStaticResource() : Serving static resource : " << res_fn.string() << std::flush;
+      //std::cout << "\nViseServer::ServeStaticResource() : Serving static resource : " << res_fn.string() << std::flush;
       if ( boost::filesystem::exists(res_fn) ) {
         SendImageResponse( res_fn, p_socket );
       }
@@ -772,6 +866,202 @@ void ViseServer::InitiateSearchEngineTraining() {
 
 }
 
+//
+// Search engine query
+//
+void ViseServer::QueryServeImgList( unsigned int page_no,
+                                    unsigned int per_page_im_count,
+                                    boost::shared_ptr<tcp::socket> p_socket ) {
+  std::ostringstream s;
+  uint32_t start_doc_id = page_no * per_page_im_count;
+  if ( start_doc_id > dataset_->getNumDoc() ) {
+    start_doc_id = dataset_->getNumDoc() - per_page_im_count;
+  }
+
+  uint32_t end_doc_id   = start_doc_id + per_page_im_count;
+  if ( end_doc_id > dataset_->getNumDoc() ) {
+    end_doc_id = dataset_->getNumDoc();
+  }
+
+  s << "<ul class=\"img_list columns-4\">";
+
+  for ( uint32_t doc_id=start_doc_id; doc_id < end_doc_id; doc_id++) {
+    std::string im_fn  = dataset_->getInternalFn( doc_id );
+    std::string im_uri = "/_static/" + search_engine_.GetName() + "/" + im_fn;
+    std::pair<uint32_t, uint32_t> im_dim = dataset_->getWidthHeight( doc_id );
+
+    s << "<li><img src=\"" << im_uri << "\" />";
+    s << "<h3>( " << doc_id << " of " << dataset_->getNumDoc() <<" ) " << im_fn << "</h3>";
+    s << "<p>" << im_dim.first << " x " << im_dim.second << " px</p></li>";
+  }
+  s << "</ul";
+  SendHttpResponse( s.str(), p_socket );
+
+  SendCommand("_control_panel clear all");
+  std::ostringstream cs;
+
+  if ( start_doc_id == 0 ) {
+    cs << "_control_panel add Previous";
+  } else {
+    cs << "_control_panel add <div class=\"action_button\" onclick=\"q('cmd=show_img_list&page="
+       << (page_no-1)
+       << "&imcount=20')\">Previous</a>";
+  }
+  SendCommand( cs.str() );
+  cs.str("");
+
+  if ( end_doc_id == dataset_->getNumDoc() ) {
+    cs << "_control_panel add &nbsp;&nbsp;Next";
+  } else {
+    cs << "_control_panel add &nbsp;&nbsp;<div class=\"action_button\" onclick=\"q('cmd=show_img_list&page="
+       << (page_no+1)
+       << "&imcount=20')\">Next</a>";
+  }
+  SendCommand( cs.str() );
+}
+
+void ViseServer::QueryInit() {
+  // construct dataset
+  dataset_ = new datasetV2( search_engine_.GetEngineConfigParam("dsetFn"),
+                            search_engine_.GetEngineConfigParam("databasePath"),
+                            search_engine_.GetEngineConfigParam("docMapFindPath") );
+
+  // needed to setup forward and inverted index
+  cons_queue_ = new sequentialConstructions();
+
+  // setup forward index
+  dbFidx_file_ = new protoDbFile( search_engine_.GetEngineConfigParam("fidxFn") );
+  boost::function<protoDb*()> fidxInRamConstructor= boost::lambda::bind(boost::lambda::new_ptr<protoDbInRam>(),
+                                                                        boost::cref(*dbFidx_file_) );
+  dbFidx_ = new protoDbInRamStartDisk( *dbFidx_file_, fidxInRamConstructor, true, cons_queue_ );
+  fidx_ = new protoIndex(*dbFidx_, false);
+
+  // setup inverted index
+  dbIidx_file_ = new protoDbFile( search_engine_.GetEngineConfigParam("iidxFn") );
+  boost::function<protoDb*()> iidxInRamConstructor= boost::lambda::bind(boost::lambda::new_ptr<protoDbInRam>(),
+                                                                        boost::cref(*dbIidx_file_) );
+  dbIidx_ = new protoDbInRamStartDisk( *dbIidx_file_, iidxInRamConstructor, true, cons_queue_ );
+  iidx_ = new protoIndex(*dbIidx_, false);
+  cons_queue_->start(); // start the construction of in-RAM stuff
+
+  // feature getter and assigner
+  bool SIFTscale3  = false;
+  if ( search_engine_.GetEngineConfigParam("SIFTscale3") == "true" ) {
+    SIFTscale3 = true;
+  }
+
+  bool useRootSIFT = false;
+  if ( search_engine_.GetEngineConfigParam("useRootSIFT") == "true" ) {
+    useRootSIFT = true;
+  }
+
+  feat_getter_ = new featGetter_standard( (
+                                           std::string("hesaff-") +
+                                           std::string((useRootSIFT ? "rootsift" : "sift")) +
+                                           std::string(SIFTscale3 ? "-scale3" : "")
+                                           ).c_str() );
+
+  // clusters
+  clst_centres_ = new clstCentres( search_engine_.GetEngineConfigParam("clstFn").c_str(), true );
+
+  nn_ = fastann::nn_obj_build_kdtree(clst_centres_->clstC_flat,
+                                     clst_centres_->numClst,
+                                     clst_centres_->numDims, 8, 1024);
+  // soft assigner
+  useHamm = false;
+  uint32_t hammEmbBits;
+  std::string hamm_emb_bits = search_engine_.GetEngineConfigParam("hammEmbBits");
+  std::istringstream s(hamm_emb_bits);
+  s >> hammEmbBits;
+  if ( hamm_emb_bits != "" ) {
+    useHamm = true;
+  }
+
+  if ( !useHamm ) {
+    if ( useRootSIFT ) {
+      soft_assigner_ = new SA_exp( 0.02 );
+    } else {
+      soft_assigner_ = new SA_exp( 6250 );
+    }
+  }
+  if (useHamm){
+    emb_factory_ = new hammingEmbedderFactory(search_engine_.GetEngineConfigParam("hammFn"), hammEmbBits);
+  }
+  else {
+    emb_factory_ = new noEmbedderFactory;
+  }
+  // create retriever
+  tfidf_ = new tfidfV2(iidx_,
+                       fidx_,
+                       search_engine_.GetEngineConfigParam("wghtFn"),
+                       feat_getter_,
+                       nn_,
+                       soft_assigner_);
+
+  if (useHamm) {
+    hamming_emb_ = new hamming(*tfidf_,
+                               iidx_,
+                               *dynamic_cast<hammingEmbedderFactory const *>(emb_factory_),
+                               fidx_,
+                               feat_getter_, nn_, clst_centres_);
+    base_retriever_ = hamming_emb_;
+  } else {
+    base_retriever_ = tfidf_;
+  }
+
+  // spatial verifier
+  spatial_verif_v2_ = new spatialVerifV2(*base_retriever_, iidx_, fidx_, true, feat_getter_, nn_, clst_centres_);
+  spatial_retriever_ = spatial_verif_v2_;
+
+  // multiple queries
+  multi_query_max_ = new multiQueryMax( *spatial_verif_v2_ );
+  if (hamming_emb_ != NULL){
+    multi_query_= new mqFilterOutliers(*multi_query_max_,
+                                       *spatial_verif_v2_,
+                                       *dynamic_cast<hammingEmbedderFactory const *>(emb_factory_) );
+  } else {
+    multi_query_ = multi_query_max_;
+  }
+}
+
+void ViseServer::QueryTest() {
+  // http://localhost:9669/dosearch?docID=0&xl=410&yl=100&xu=640&yu=460
+  // 0    = 573.002600
+  // 844  = 38.000000
+  // 3458 = 37.000100
+  // 503  = 7.000100
+  // 2838 = 36.000100
+  // 4976 = 34.000100
+  // 2439 = 33.000100
+  uint32_t docID = 0;
+  query query_obj(docID,
+                  true,
+                  "",
+                  410,
+                  640,
+                  100,
+                  460);
+  std::cout << "\nG" << std::flush;
+
+  std::vector<indScorePair> queryRes;
+  std::map<uint32_t,homography> Hs;
+
+
+  spatial_retriever_->spatialQuery( query_obj, queryRes, Hs, 4 );
+  std::cout << "\nH" << std::flush;
+
+  std::cout << "\nNumber of docs = " << dataset_->getNumDoc();
+  std::cout << "\nQuery result: queryRes.size() = " << queryRes.size() << std::flush;
+
+  for (uint32_t iRes= 0; (iRes < queryRes.size()) && (iRes < 4); ++iRes){
+    uint32_t doc_id = queryRes[iRes].first;
+    std::cout << "\n\trank=" << iRes << ", docId=" << doc_id << ", score=" << queryRes[iRes].second << ", fn=" << dataset_->getInternalFn(doc_id) << std::flush;
+  }
+
+  std::cout << "\nDONE" << std::flush;
+}
+
+//
 // State based model
 //
 std::string ViseServer::GetCurrentStateName() {
@@ -870,6 +1160,8 @@ bool ViseServer::UpdateState() {
 }
 
 void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
+  SendMessage("Loading search engine " + search_engine_name + " ...");
+
   SendCommand("_log clear show");
   SendCommand("_control_panel clear all");
   SendCommand("_control_panel add <div id=\"LoadSearchEngine_button_continue\" class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Continue</div>");
@@ -878,6 +1170,7 @@ void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_SETTING );
+  SendMessage("[" + search_engine_name + "] Loading settings ...");
 
   std::string engine_config;
   LoadFile( search_engine_.GetEngineConfigFn().string(), engine_config );
@@ -891,42 +1184,53 @@ void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_PREPROCESS );
+  SendMessage("[" + search_engine_name + "] Loading pre-processed data ...");
 
   search_engine_.Preprocess();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_DESCRIPTOR );
+  SendMessage("[" + search_engine_name + "] Loading descriptors ...");
 
   search_engine_.Descriptor();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_CLUSTER );
+  SendMessage("[" + search_engine_name + "] Loading clusters ...");
 
   search_engine_.Cluster();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_ASSIGN );
+  SendMessage("[" + search_engine_name + "] Loading assign ...");
 
   search_engine_.Assign();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_HAMM );
+  SendMessage("[" + search_engine_name + "] Loading hamm ...");
 
   search_engine_.Hamm();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_INDEX );
+  SendMessage("[" + search_engine_name + "] Loading index ...");
 
   search_engine_.Index();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_QUERY );
+  SendMessage("[" + search_engine_name + "] Loading complete :-)");
+  QueryInit();
+
+  SendCommand("_log clear hide");
+  SendCommand("_control_panel clear all");
 
   SendCommand("_state update_now");
 }
@@ -988,8 +1292,6 @@ std::string ViseServer::GetStateJsonData() {
 // extract parts of the HTTP get resource name uri
 // for example:
 //   GET /Query?docId=526&x0=40&y0=20&x1=300&y1=400&results=20
-// state_name = ox5k
-// sta
 //
 void ViseServer::ParseHttpMethodUri(const std::string http_method_uri,
                                     std::string &resource_name,
@@ -1011,9 +1313,13 @@ void ViseServer::ParseHttpMethodUri(const std::string http_method_uri,
     return;
   }
 
-  for ( unsigned int i=1; i<tokens.size(); i++ ) {
+  std::string args = tokens.at(1);
+  std::vector< std::string > args_tokens;
+  SplitString( args, '&', args_tokens );
+
+  for ( unsigned int i=0; i<args_tokens.size(); i++ ) {
     std::vector< std::string > argi;
-    SplitString( tokens.at(i), '=', argi );
+    SplitString( args_tokens.at(i), '=', argi );
     // assert( argi.size() == 2 );
 
     std::string key   = argi.at(0);

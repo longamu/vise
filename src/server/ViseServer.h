@@ -24,9 +24,41 @@
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/timer/timer.hpp>
+#include <boost/lambda/construct.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
 
 #include "SearchEngine.h"
 #include "ViseMessageQueue.h"
+
+// search engine query
+#include <fastann.hpp>
+
+#include "retriever.h"
+#include "spatial_retriever.h"
+#include "dataset_abs.h"
+#include "query.h"
+#include "multi_query.h"
+
+#include "clst_centres.h"
+#include "dataset_v2.h"
+#include "feat_getter.h"
+#include "feat_standard.h"
+#include "hamming.h"
+#include "hamming_embedder.h"
+#include "index_entry.pb.h"
+#include "macros.h"
+#include "mq_filter_outliers.h"
+#include "par_queue.h"
+#include "proto_db.h"
+#include "proto_db_file.h"
+#include "proto_index.h"
+#include "slow_construction.h"
+#include "soft_assigner.h"
+#include "spatial_verif_v2.h"
+#include "tfidf_data.pb.h"
+#include "tfidf_v2.h"
+#include "util.h"
 
 using boost::asio::ip::tcp;
 
@@ -75,6 +107,29 @@ class ViseServer {
   boost::filesystem::path vise_logdir_;
   boost::filesystem::path vise_enginedir_;
 
+  // search engine query
+  spatialVerifV2 *spatial_verif_v2_;
+  spatialRetriever *spatial_retriever_;
+  multiQuery *multi_query_;
+  multiQueryMax *multi_query_max_;
+  datasetAbs *dataset_;
+  sequentialConstructions *cons_queue_;
+  hamming *hamming_emb_;
+  embedderFactory *emb_factory_;
+  clstCentres *clst_centres_;
+  fastann::nn_obj<float> *nn_;
+  featGetter *feat_getter_;
+  softAssigner *soft_assigner_;
+  retrieverFromIter *base_retriever_;
+  protoDbFile *dbFidx_file_;
+  protoDbFile *dbIidx_file_;
+  protoDbInRamStartDisk *dbFidx_;
+  protoDbInRamStartDisk *dbIidx_;
+  protoIndex *fidx_;
+  protoIndex *iidx_;
+  tfidfV2 *tfidf_;
+  bool useHamm;
+
   boost::system::error_code error_;
 
   // state maintainanace
@@ -89,11 +144,20 @@ class ViseServer {
   // search engine training
   void InitiateSearchEngineTraining();
 
+  // search engine query
+  void HandleQueryGetRequest(std::string http_method_uri, boost::shared_ptr<tcp::socket> p_socket);
+  void QueryServeImgList( unsigned int page_no,
+                          unsigned int per_page_im_count,
+                          boost::shared_ptr<tcp::socket> p_socket );
+  void QueryInit();
+  void QueryTest();
+
   // HTTP connection handler
   void HandleConnection(boost::shared_ptr<tcp::socket> p_socket);
   void HandleStatePostData( int state_id, std::string http_post_data, boost::shared_ptr<tcp::socket> p_socket );
-  void HandleStateGetRequest( int state_id,
-                              boost::shared_ptr<tcp::socket> p_socket );
+  void HandleStateGetRequest( std::string resource_name,
+                              std::map< std::string, std::string> resource_args,
+                              boost::shared_ptr<tcp::socket> p_socket);
 
   void SendHttpResponse(std::string html, boost::shared_ptr<tcp::socket> p_socket);
   void SendHttpPostResponse(std::string http_post_data, std::string result, boost::shared_ptr<tcp::socket> p_socket);

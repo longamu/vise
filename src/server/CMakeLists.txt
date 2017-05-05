@@ -17,6 +17,20 @@ add_library( ViseServer ViseServer.cc)
 target_link_libraries( ViseServer 
   ViseMessageQueue
   SearchEngine
+  clst_centres
+  dataset_v2
+  feat_standard
+  hamming
+  hamming_embedder
+  mq_filter_outliers
+  proto_db
+  proto_db_file
+  proto_index
+  slow_construction
+  spatial_api
+  spatial_verif_v2
+  tfidf_v2
   ${Boost_LIBRARIES} 
-  ${ImageMagick_LIBRARIES})
+  ${ImageMagick_LIBRARIES}
+  ${fastann_LIBRARIES})
 

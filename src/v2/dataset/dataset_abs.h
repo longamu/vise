@@ -33,7 +33,10 @@ class datasetAbs {
         
         virtual std::string
             getFn( uint32_t docID ) const =0;
-        
+
+        virtual std::string
+            getInternalFn( uint32_t docID ) const =0;
+
         virtual std::pair<uint32_t, uint32_t>
             getWidthHeight( uint32_t docID ) const =0;
         

@@ -4,12 +4,15 @@ var _vise_message_clear_timer;
 
 var _vise_server = new XMLHttpRequest();
 var _vise_messenger = new XMLHttpRequest();
+var _vise_query = new XMLHttpRequest();
 
 var VISE_SERVER_ADDRESS    = "http://localhost:8080/";
 var VISE_MESSENGER_ADDRESS = VISE_SERVER_ADDRESS + "_message";
+var VISE_QUERY_ADDRESS     = VISE_SERVER_ADDRESS + "_query";
 
 _vise_server.addEventListener("load", _vise_server_response_listener);
 _vise_messenger.addEventListener("load", _vise_message_listener);
+_vise_query.addEventListener("load", _vise_query_listener);
 
 var _vise_current_state_id = -1;
 var _vise_current_state_name = "";
@@ -265,18 +268,48 @@ function _vise_send_msg_to_training_process(msg) {
 // State: Setting
 //
 function _vise_send_setting_data() {
-    var postdata = [];
-    var vise_settings = document.getElementById("vise_setting");
-    if ( typeof vise_settings !== 'undefined' && vise_settings !== null ) {
-      var setting_param = vise_settings.getElementsByClassName("vise_setting_param");
+  var postdata = [];
+  var vise_settings = document.getElementById("vise_setting");
+  if ( typeof vise_settings !== 'undefined' && vise_settings !== null ) {
+    var setting_param = vise_settings.getElementsByClassName("vise_setting_param");
 
-      for ( var i = 0; i < setting_param.length; i++) {
-        var param_name  = setting_param[i].name;
-        var param_value = setting_param[i].value;
-        postdata.push( param_name + "=" + param_value );
-      }
-      var postdata_str = postdata.join('\n');
-
-      _vise_server_send_state_post_request( _vise_current_state_name, postdata_str );
+    for ( var i = 0; i < setting_param.length; i++) {
+      var param_name  = setting_param[i].name;
+      var param_value = setting_param[i].value;
+      postdata.push( param_name + "=" + param_value );
     }
+    var postdata_str = postdata.join('\n');
+
+    _vise_server_send_state_post_request( _vise_current_state_name, postdata_str );
   }
+}
+
+//
+// State: Query
+//
+function q(s) {
+  // s = "cmd=show_img_list&arg1=value1&arg2=value2"
+  _vise_query.open( "GET", VISE_QUERY_ADDRESS + "?" + s )
+  _vise_query.send();
+}
+
+function _vise_query_listener() {
+  var response_str = this.responseText;
+  var content_type = this.getResponseHeader('Content-Type')
+
+  if ( content_type.includes("text/html") ) {
+    document.getElementById("content").innerHTML = response_str;
+  } else if ( content_type.includes("application/json") ) {
+    var json = JSON.parse(response_str);
+    switch(json.id) {
+      case '':
+        break;
+
+      default:
+        console.log("Do not know where to forward the received query response!");
+        console.log(response_str);
+    }
+  } else {
+    console.log("Received response of unknown content-type : " + content_type);
+  }
+}
