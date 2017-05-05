@@ -2,6 +2,7 @@ var VISE_THEME_MESSAGE_TIMEOUT_MS = 4000;
 
 var _vise_message_clear_timer;
 
+// XHR
 var _vise_server = new XMLHttpRequest();
 var _vise_messenger = new XMLHttpRequest();
 var _vise_query = new XMLHttpRequest();
@@ -24,6 +25,9 @@ function _vise_init() {
   document.getElementById("footer").style.display = "none";
   document.getElementById("log").style.display = "none";
 
+  //_vise_select_img_region( 'https://www.nasa.gov/sites/default/files/thumbnails/image/earthsun20170412.png' );
+
+/**/
   // request the contents of vise_index.html
   _vise_server.open("GET", VISE_SERVER_ADDRESS + "_vise_index.html");
   _vise_server.send();
@@ -312,4 +316,280 @@ function _vise_query_listener() {
   } else {
     console.log("Received response of unknown content-type : " + content_type);
   }
+}
+
+function ImageRegion() {
+    this.is_user_selected  = false;
+    this.shape_attributes  = new Map(); // region shape attributes
+}
+
+// image canvas
+var _vise_img_canvas;
+var _vise_img_ctx;
+var _vise_canvas_width, _vise_canvas_height;
+var _vise_current_image_width;
+var _vise_current_image_height;
+var _vise_current_image;
+var _vise_current_img_fn;
+var _vise_canvas_scale = 1.0;
+
+var _vise_click_x0;
+var _vise_click_y0;
+var _vise_click_x1;
+var _vise_click_y1;
+var _vise_current_x;
+var _vise_current_y;
+
+// state
+var _vise_is_user_drawing_region = false;
+
+// theme
+var VISE_THEME_REGION_BOUNDARY_WIDTH = 4;
+var VISE_THEME_BOUNDARY_FILL_COLOR   = "#aaeeff";
+var VISE_THEME_BOUNDARY_LINE_COLOR   = "#1a1a1a";
+
+// html elements
+var header = document.getElementById('header');
+var control_panel = document.getElementById('control_panel');
+var canvas_panel;
+
+// image region
+var original_img_region = new ImageRegion();
+var canvas_img_region = new ImageRegion();
+
+function _vise_select_img_region(img_uri) {
+  _vise_current_img_fn = img_uri;
+  document.getElementById("content").innerHTML = '<div id="vise_canvas_panel"><canvas id="_vise_img_canvas"></canvas>';
+  _vise_img_canvas = document.getElementById('_vise_img_canvas');
+  _vise_img_ctx = _vise_img_canvas.getContext('2d');
+
+  canvas_panel = document.getElementById('vise_canvas_panel');
+  _vise_load_canvas_img( _vise_current_img_fn );
+
+  // add search button to control panel
+  control_panel.innerHTML = '<div class="action_button" onclick="vise_search_img_region()">Search</div>';
+
+  _vise_img_canvas.addEventListener('mousedown', _vise_canvas_mousedown_listener);
+  _vise_img_canvas.addEventListener('mouseup'  , _vise_canvas_mouseup_listener);
+  _vise_img_canvas.addEventListener('mousemove'  , _vise_canvas_mousemove_listener);
+}
+
+function vise_search_img_region() {
+  console.log(original_img_region.shape_attributes);
+  console.log(canvas_img_region.shape_attributes);
+
+  var attr = original_img_region.shape_attributes;
+  if ( attr.size !== 0 ) {
+    var query = [];
+    query.push( "cmd=search_img_region" );
+    query.push( "img_fn=" + _vise_current_img_fn );
+    query.push( "x=" + attr.get('x') );
+    query.push( "y=" + attr.get('y') );
+    query.push( "width=" + attr.get('width') );
+    query.push( "height=" + attr.get('height') );
+    console.log('Sending query ' + query.join('&') );
+    q( query.join('&') );
+  } else {
+    console.log('Draw region first!' );
+  }
+}
+
+function _vise_load_canvas_img(img_uri) {
+  _vise_current_image = new Image();
+
+  _vise_current_image.addEventListener( "error", function() {
+      _vise_is_loading_current_image = false;
+      show_message("Error loading image ]" + img_uri + "] !");
+  }, false);
+
+  _vise_current_image.addEventListener( "abort", function() {
+      _vise_is_loading_current_image = false;
+      show_message("Aborted loading image [" + img_uri + "] !");
+  }, false);
+
+  _vise_current_image.addEventListener( "load", function() {
+      // update the current state of application
+      _vise_current_image_loaded = true;
+      _vise_is_loading_current_image = false;
+
+      _vise_current_image_width = _vise_current_image.naturalWidth;
+      _vise_current_image_height = _vise_current_image.naturalHeight;
+
+      // set the size of canvas
+      // based on the current dimension of browser window
+      var de = document.documentElement;
+      canvas_panel_width = de.clientWidth - 230;
+      canvas_panel_height = de.clientHeight - 2*header.offsetHeight;
+      _vise_canvas_width = _vise_current_image_width;
+      _vise_canvas_height = _vise_current_image_height;
+      var scale_width, scale_height;
+      if ( _vise_canvas_width > canvas_panel_width ) {
+          // resize image to match the panel width
+          var scale_width = canvas_panel_width / _vise_current_image.naturalWidth;
+          _vise_canvas_width = canvas_panel_width;
+          _vise_canvas_height = _vise_current_image.naturalHeight * scale_width;
+      }
+      if ( _vise_canvas_height > canvas_panel_height ) {
+          // resize further image if its height is larger than the image panel
+          var scale_height = canvas_panel_height / _vise_canvas_height;
+          _vise_canvas_height = canvas_panel_height;
+          _vise_canvas_width = _vise_canvas_width * scale_height;
+      }
+      _vise_canvas_width = Math.round(_vise_canvas_width);
+      _vise_canvas_height = Math.round(_vise_canvas_height);
+      _vise_canvas_scale = _vise_current_image.naturalWidth / _vise_canvas_width;
+      _vise_canvas_scale_without_zoom = _vise_canvas_scale;
+      set_all_canvas_size(_vise_canvas_width, _vise_canvas_height);
+      //set_all_canvas_scale(_vise_canvas_scale_without_zoom);
+
+      // we only need to draw the image once in the image_canvas
+      _vise_img_ctx.clearRect(0, 0, _vise_canvas_width, _vise_canvas_height);
+      _vise_img_ctx.drawImage(_vise_current_image, 0, 0,
+                             _vise_canvas_width, _vise_canvas_height);
+  });
+  _vise_current_image.src = img_uri;
+}
+
+
+function set_all_canvas_size(w, h) {
+    _vise_img_canvas.height = h;
+    _vise_img_canvas.width  = w;
+
+    canvas_panel.style.height = h + 'px';
+    canvas_panel.style.width  = w + 'px';
+}
+
+//
+// mouse handling for drawing regions
+//
+
+// user clicks on the canvas
+function _vise_canvas_mousedown_listener(e) {
+    _vise_click_x0 = e.offsetX; _vise_click_y0 = e.offsetY;
+    _vise_is_user_drawing_region = true;
+    e.preventDefault();
+}
+
+function _vise_canvas_mouseup_listener(e) {
+  _vise_click_x1 = e.offsetX; _vise_click_y1 = e.offsetY;
+
+  var click_dx = Math.abs(_vise_click_x1 - _vise_click_x0);
+  var click_dy = Math.abs(_vise_click_y1 - _vise_click_y0);
+  if ( _vise_is_user_drawing_region ) {
+    _vise_is_user_drawing_region = false;
+
+    var region_x0, region_y0, region_x1, region_y1;
+    // ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
+    if ( _vise_click_x0 < _vise_click_x1 ) {
+        region_x0 = _vise_click_x0;
+        region_x1 = _vise_click_x1;
+    } else {
+        region_x0 = _vise_click_x1;
+        region_x1 = _vise_click_x0;
+    }
+
+    if ( _vise_click_y0 < _vise_click_y1 ) {
+        region_y0 = _vise_click_y0;
+        region_y1 = _vise_click_y1;
+    } else {
+        region_y0 = _vise_click_y1;
+        region_y1 = _vise_click_y0;
+    }
+
+    var region_dx = Math.abs(region_x1 - region_x0);
+    var region_dy = Math.abs(region_y1 - region_y0);
+
+    original_img_region.shape_attributes.set('name', 'rect');
+    original_img_region.shape_attributes.set('x', Math.round(region_x0 * _vise_canvas_scale));
+    original_img_region.shape_attributes.set('y', Math.round(region_y0 * _vise_canvas_scale));
+    original_img_region.shape_attributes.set('width', Math.round(region_dx * _vise_canvas_scale));
+    original_img_region.shape_attributes.set('height', Math.round(region_dy * _vise_canvas_scale));
+
+    canvas_img_region.shape_attributes.set('name', 'rect');
+    canvas_img_region.shape_attributes.set('x', Math.round(region_x0));
+    canvas_img_region.shape_attributes.set('y', Math.round(region_y0));
+    canvas_img_region.shape_attributes.set('width', Math.round(region_dx));
+    canvas_img_region.shape_attributes.set('height', Math.round(region_dy));
+
+    _vise_draw_region();
+  }
+  e.preventDefault();
+}
+
+function _vise_canvas_mousemove_listener(e) {
+  if ( _vise_is_user_drawing_region ) {
+    _vise_current_x = e.offsetX; _vise_current_y = e.offsetY;
+    var region_x0, region_y0;
+
+    if ( _vise_click_x0 < _vise_current_x ) {
+        if ( _vise_click_y0 < _vise_current_y ) {
+            region_x0 = _vise_click_x0;
+            region_y0 = _vise_click_y0;
+        } else {
+            region_x0 = _vise_click_x0;
+            region_y0 = _vise_current_y;
+        }
+    } else {
+        if ( _vise_click_y0 < _vise_current_y ) {
+            region_x0 = _vise_current_x;
+            region_y0 = _vise_click_y0;
+        } else {
+            region_x0 = _vise_current_x;
+            region_y0 = _vise_current_y;
+        }
+    }
+    var dx = Math.round(Math.abs(_vise_current_x - _vise_click_x0));
+    var dy = Math.round(Math.abs(_vise_current_y - _vise_click_y0));
+
+    _vise_draw_region();
+    _vise_draw_rect_region(region_x0, region_y0, dx, dy);
+  }
+}
+
+function _vise_draw_region() {
+  var attr = canvas_img_region.shape_attributes;
+
+  _vise_img_ctx.clearRect(0, 0, _vise_canvas_width, _vise_canvas_height);
+  _vise_img_ctx.drawImage(_vise_current_image, 0, 0,
+                         _vise_canvas_width, _vise_canvas_height);
+
+  _vise_draw_rect_region(attr.get('x'),
+                         attr.get('y'),
+                         attr.get('width'),
+                         attr.get('height'));
+}
+
+function _vise_draw_rect_region(x, y, w, h) {
+  // draw a fill line
+  _vise_img_ctx.strokeStyle = VISE_THEME_BOUNDARY_FILL_COLOR;
+  _vise_img_ctx.lineWidth   = VISE_THEME_REGION_BOUNDARY_WIDTH/2;
+  _vise_draw_rect(x, y, w, h);
+  _vise_img_ctx.stroke();
+
+  if ( w > VISE_THEME_REGION_BOUNDARY_WIDTH &&
+       h > VISE_THEME_REGION_BOUNDARY_WIDTH ) {
+      // draw a boundary line on both sides of the fill line
+      _vise_img_ctx.strokeStyle = VISE_THEME_BOUNDARY_LINE_COLOR;
+      _vise_img_ctx.lineWidth   = VISE_THEME_REGION_BOUNDARY_WIDTH/4;
+      _vise_draw_rect(x - VISE_THEME_REGION_BOUNDARY_WIDTH/2,
+                     y - VISE_THEME_REGION_BOUNDARY_WIDTH/2,
+                     w + VISE_THEME_REGION_BOUNDARY_WIDTH,
+                     h + VISE_THEME_REGION_BOUNDARY_WIDTH);
+      _vise_img_ctx.stroke();
+
+      _vise_draw_rect(x + VISE_THEME_REGION_BOUNDARY_WIDTH/2,
+                     y + VISE_THEME_REGION_BOUNDARY_WIDTH/2,
+                     w - VISE_THEME_REGION_BOUNDARY_WIDTH,
+                     h - VISE_THEME_REGION_BOUNDARY_WIDTH);
+      _vise_img_ctx.stroke();
+  }
+}
+
+function _vise_draw_rect(x, y, w, h) {
+    _vise_img_ctx.beginPath();
+    _vise_img_ctx.moveTo(x  , y);
+    _vise_img_ctx.lineTo(x+w, y);
+    _vise_img_ctx.lineTo(x+w, y+h);
+    _vise_img_ctx.lineTo(x  , y+h);
+    _vise_img_ctx.closePath();
 }

@@ -602,7 +602,7 @@ void ViseServer::HandleStateGetRequest( std::string resource_name,
       case ViseServer::STATE_INFO:
         search_engine_.UpdateEngineOverview();
         state_html_list_.at( ViseServer::STATE_INFO ) = search_engine_.GetEngineOverview();
-        SendCommand("_control_panel add <div id=\"Info_button_proceed\" class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Proceed</div>");
+        SendCommand("_control_panel add <div class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Proceed</div>");
         break;
       }
       SendHttpResponse( state_html_list_.at(state_id), p_socket );
@@ -634,8 +634,35 @@ void ViseServer::HandleQueryGetRequest(std::string http_method_uri, boost::share
     std::cout << "\npage = " << page_i << ", page_count=" << imcount_i << std::flush;
     QueryServeImgList(page_i, imcount_i, p_socket);
     return;
-  } else if ( cmd == "") {
-    // @todo
+  } else if ( cmd == "search_img_region") {
+    std::string img_uri = args.find( "img_fn" )->second;
+    std::string x_str   = args.find( "x" )->second;
+    std::string y_str   = args.find( "y" )->second;
+    std::string w_str   = args.find( "width" )->second;
+    std::string h_str   = args.find( "height" )->second;
+
+    unsigned int x,y,w,h;
+    std::istringstream s(x_str);
+    s >> x;
+
+    s.clear();
+    s.str("");
+    s.str(y_str);
+    s >> y;
+
+    s.clear();
+    s.str("");
+    s.str(w_str);
+    s >> w;
+
+    s.clear();
+    s.str("");
+    s.str(h_str);
+    s >> h;
+
+    std::string img_uri_prefix = "/_static/" + search_engine_.GetName() + "/";
+    std::string img_fn = img_uri.substr(img_uri_prefix.length(), std::string::npos);
+    QuerySearchImageRegion(img_fn, x, y, w, h, p_socket);
   }
   SendHttp404NotFound( p_socket );
 }
@@ -890,9 +917,11 @@ void ViseServer::QueryServeImgList( unsigned int page_no,
     std::string im_uri = "/_static/" + search_engine_.GetName() + "/" + im_fn;
     std::pair<uint32_t, uint32_t> im_dim = dataset_->getWidthHeight( doc_id );
 
-    s << "<li><img src=\"" << im_uri << "\" />";
-    s << "<h3>( " << doc_id << " of " << dataset_->getNumDoc() <<" ) " << im_fn << "</h3>";
-    s << "<p>" << im_dim.first << " x " << im_dim.second << " px</p></li>";
+    s << "<li><img class=\"action_img\" "
+      << "onclick=\"_vise_select_img_region('" << im_uri << "')\" "
+      << "src=\"" << im_uri << "\" />"
+      << "<h3>( " << doc_id << " of " << dataset_->getNumDoc() <<" ) " << im_fn << "</h3>"
+      << "<p>" << im_dim.first << " x " << im_dim.second << " px</p></li>";
   }
   s << "</ul";
   SendHttpResponse( s.str(), p_socket );
@@ -919,6 +948,50 @@ void ViseServer::QueryServeImgList( unsigned int page_no,
   }
   SendCommand( cs.str() );
 }
+
+void ViseServer::QuerySearchImageRegion(std::string img_fn,
+                                        unsigned int x,
+                                        unsigned int y,
+                                        unsigned int width,
+                                        unsigned int height,
+                                        boost::shared_ptr<tcp::socket> p_socket) {
+
+  SendCommand("_control_panel clear all");
+
+  uint32_t doc_id = dataset_->getDocID( img_fn );
+  query query_obj(doc_id, true, "",
+                  x,          // xl
+                  x + width,  // xu
+                  y + height, // yl
+                  y           // yu
+                  );
+
+  std::vector<indScorePair> queryRes;
+  std::map<uint32_t,homography> Hs;
+
+
+  spatial_retriever_->spatialQuery( query_obj, queryRes, Hs, 20 );
+
+  std::ostringstream s;
+  s << "<ul class=\"img_list columns-4\">";
+
+  for (uint32_t iRes= 0; (iRes < queryRes.size()) && (iRes < 20); ++iRes){
+    uint32_t doc_id = queryRes[iRes].first;
+
+    std::string im_fn  = dataset_->getInternalFn( doc_id );
+    std::string im_uri = "/_static/" + search_engine_.GetName() + "/" + im_fn;
+    std::pair<uint32_t, uint32_t> im_dim = dataset_->getWidthHeight( doc_id );
+
+    s << "<li><img "
+      << "src=\"" << im_uri << "\" />"
+      << "<h3>( " << iRes << " of " << queryRes.size() <<" ) " << im_fn << "</h3>"
+      << "<p>Score = " << queryRes[iRes].second << "<br/>"
+      <<    "Size  = " << im_dim.first << " x " << im_dim.second << " px</p></li>";
+  }
+  s << "</ul";
+  SendHttpResponse( s.str(), p_socket );
+}
+
 
 void ViseServer::QueryInit() {
   // construct dataset

@@ -149,6 +149,12 @@ class ViseServer {
   void QueryServeImgList( unsigned int page_no,
                           unsigned int per_page_im_count,
                           boost::shared_ptr<tcp::socket> p_socket );
+  void QuerySearchImageRegion(std::string img_fn,
+                              unsigned int x,
+                              unsigned int y,
+                              unsigned int width,
+                              unsigned int height,
+                              boost::shared_ptr<tcp::socket> p_socket);
   void QueryInit();
   void QueryTest();
 

@@ -121,7 +121,7 @@ body {
   padding: 0 1em;
   margin: 0.5em 0;
   font-size: medium;
-  text-align: left;
+  text-align: center;
 }
 .action_button {
   display: inline-block;
@@ -132,6 +132,10 @@ body {
   cursor: pointer;
 }
 
+.action_img:hover {
+  cursor: pointer;
+}
+
 /* State: Setting */
 #vise_setting {
   padding: 1em 2em;
@@ -139,6 +143,10 @@ body {
 
 /* State: Query */
 /* source: http://alijafarian.com/responsive-image-grids-using-css/ */
+#vise_canvas_panel {
+  margin: auto;
+}
+
 ul.img_list {
   list-style: none;
   font-size: 0px;
@@ -164,7 +172,6 @@ ul.img_list li img {
   margin: 0 0 10px;
 }
 ul.img_list li h3 {
-  font-weight: none;
   font-size: 0.8em;
   margin: 0 0 5px;
 }
