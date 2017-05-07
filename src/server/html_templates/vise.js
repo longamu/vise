@@ -297,6 +297,137 @@ function q(s) {
   _vise_query.send();
 }
 
+function imcomp(im1fn, im2fn, region, H) {
+  /*
+  var query = [];
+  query.push('cmd=image_compare');
+  query.push('im1fn=' + im1fn);
+  query.push('im2fn=' + im2fn);
+  query.push(region);
+  query.push(H);
+
+  _vise_query.open( "GET", VISE_QUERY_ADDRESS + "?" + query.join('&') );
+  _vise_query.send();
+  */
+  var control_panel = document.getElementById('control_panel');
+  control_panel.innerHTML = '';
+
+  var content = document.getElementById('content');
+  var html = [];
+  html.push( '<ul class="img_list columns-3">' );
+
+  var im1_uri = [];
+  im1_uri.push( "/_static/" + _vise_current_search_engine_name + "/" + im1fn );
+  im1_uri.push( "?crop=false" );
+  im1_uri.push( "&scale=false");
+  im1_uri.push( "&draw_region=true");
+  im1_uri.push( "&" + region);
+  html.push( '<li><h3>Query Image</h3><img src="' + im1_uri.join('') + '" /><p>' + im1fn + '</p></li>');
+
+  html.push( '<li><canvas id="img_comp_canvas"></canvas><p>Hover mouse to compare</p></li>');
+
+  var im2_uri = [];
+  im2_uri.push( "/_static/" + _vise_current_search_engine_name + "/" + im2fn );
+  im2_uri.push( "?crop=false" );
+  im2_uri.push( "&scale=false");
+  im2_uri.push( "&draw_region=true");
+  im2_uri.push( "&" + region);
+  im2_uri.push( "&" + H);
+  html.push( '<li><h3>Search result</h3><img src="' + im2_uri.join('') + '" /><p>' + im2fn + '</p></li>');
+
+  content.innerHTML = html.join('');
+
+  var crop_im1_uri = [];
+  crop_im1_uri.push( "/_static/" + _vise_current_search_engine_name + "/" + im1fn );
+  crop_im1_uri.push( "?crop=true" );
+  crop_im1_uri.push( "&scale=true");
+  crop_im1_uri.push( "&draw_region=false");
+  crop_im1_uri.push( "&" + region);
+  crop_im1_uri.push( "&sw=500&sh=500");
+
+  var crop_im2_uri = [];
+  crop_im2_uri.push( "/_static/" + _vise_current_search_engine_name + "/" + im2fn );
+  crop_im2_uri.push( "?crop=true" );
+  crop_im2_uri.push( "&scale=true");
+  crop_im2_uri.push( "&draw_region=false");
+  crop_im2_uri.push( "&" + region);
+  crop_im2_uri.push( "&" + H);
+  crop_im2_uri.push( "&sw=500&sh=500");
+
+  var imcomp_canvas = document.getElementById('img_comp_canvas');
+  imcomp_canvas.addEventListener('mouseenter', img_comp_canvas_mousemove_listener);
+  imcomp_canvas.width = 500;
+  imcomp_canvas.height = 500;
+
+  _vise_load_imcomp_img( crop_im1_uri.join(''), 'im1' );
+  _vise_load_imcomp_img( crop_im2_uri.join(''), 'im2' );
+}
+
+var imcomp_im1;
+var imcomp_im2;
+var imcomp_current_image = true;
+var imcomp_drawing_image = false;
+var im1_loaded = false;
+var im2_loaded = false;
+
+function _vise_load_imcomp_img(img_uri, name) {
+  var imcomp_img = new Image();
+
+  imcomp_img.addEventListener( "error", function() {
+      show_message("Error loading image ]" + img_uri + "] !");
+  }, false);
+
+  imcomp_img.addEventListener( "abort", function() {
+      show_message("Aborted loading image [" + img_uri + "] !");
+  }, false);
+
+  imcomp_img.addEventListener( "load", function() {
+    console.log(name);
+    switch( name ) {
+      case "im1":
+        imcomp_im1 = imcomp_img;
+        im1_loaded = true;
+        break;
+      case "im2":
+        imcomp_im2 = imcomp_img;
+        im2_loaded = true;
+        break;
+    } 
+    console.log('Finished loading image : ' + img_uri);
+    console.log(imcomp_img);
+  });
+  console.log('Loading image : ' + img_uri);
+  imcomp_img.src = img_uri;
+}
+
+function img_comp_canvas_mousemove_listener(e) {
+  console.log(im1_loaded + "," + im2_loaded + "," + imcomp_drawing_image + "," + imcomp_current_image);
+
+  if ( !im1_loaded && !im2_loaded ) {
+    return;
+  }
+  if ( imcomp_drawing_image ) {
+    return;
+  } else {
+    imcomp_drawing_image = true;
+    // change image
+    var imcomp_canvas = document.getElementById('img_comp_canvas');
+    var imcomp_ctx = imcomp_canvas.getContext('2d');
+
+    // we only need to draw the image once in the image_canvas
+    imcomp_ctx.clearRect(0, 0, 500, 500);
+    if ( imcomp_current_image ) {
+      imcomp_ctx.drawImage(imcomp_im1, 0, 0, 500, 500);
+      imcomp_current_image = false;
+    } else {
+      imcomp_ctx.drawImage(imcomp_im2, 0, 0, 500, 500);
+      imcomp_current_image = true;
+    }
+    imcomp_drawing_image = false;
+  }  
+}
+
+
 function _vise_query_listener() {
   var response_str = this.responseText;
   var content_type = this.getResponseHeader('Content-Type')
@@ -380,13 +511,17 @@ function vise_search_img_region() {
 
   var attr = original_img_region.shape_attributes;
   if ( attr.size !== 0 ) {
+    var x0 = parseInt( attr.get('x') );
+    var y0 = parseInt( attr.get('y') );
+    var width = parseInt( attr.get('width') );
+    var height = parseInt( attr.get('height') );
+    var x1 = x0 + width;
+    var y1 = y0 + height;
+
     var query = [];
     query.push( "cmd=search_img_region" );
     query.push( "img_fn=" + _vise_current_img_fn );
-    query.push( "x=" + attr.get('x') );
-    query.push( "y=" + attr.get('y') );
-    query.push( "width=" + attr.get('width') );
-    query.push( "height=" + attr.get('height') );
+    query.push( "x0y0x1y1=" + x0 + "," + y0 + "," + x1 + "," + y1 );
     console.log('Sending query ' + query.join('&') );
     q( query.join('&') );
   } else {

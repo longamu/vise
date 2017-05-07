@@ -677,34 +677,27 @@ void ViseServer::HandleQueryGetRequest(std::string http_method_uri, boost::share
     QueryServeImgList(page_i, imcount_i, p_socket);
     return;
   } else if ( cmd == "search_img_region") {
-    std::string img_uri = args.find( "img_fn" )->second;
-    std::string x_str   = args.find( "x" )->second;
-    std::string y_str   = args.find( "y" )->second;
-    std::string w_str   = args.find( "width" )->second;
-    std::string h_str   = args.find( "height" )->second;
+    std::string img_uri  = args.find( "img_fn" )->second;
+    std::string x0y0x1y1_str = args.find( "x0y0x1y1" )->second;
 
-    unsigned int x,y,w,h;
-    std::istringstream s(x_str);
-    s >> x;
-
-    s.clear();
-    s.str("");
-    s.str(y_str);
-    s >> y;
-
-    s.clear();
-    s.str("");
-    s.str(w_str);
-    s >> w;
-
-    s.clear();
-    s.str("");
-    s.str(h_str);
-    s >> h;
+    unsigned int x0,y0,x1,y1;
+    char comma;
+    std::istringstream csv( x0y0x1y1_str );
+    csv >> x0 >> comma
+        >> y0 >> comma
+        >> x1 >> comma >> y1;
 
     std::string img_uri_prefix = "/_static/" + search_engine_.GetName() + "/";
     std::string img_fn = img_uri.substr(img_uri_prefix.length(), std::string::npos);
-    QuerySearchImageRegion(img_fn, x, y, w, h, p_socket);
+    QuerySearchImageRegion(img_fn, x0, y0, x1, y1, p_socket);
+
+  } else if ( cmd == "image_compare") {
+    std::string im1fn    = args.find( "im1fn" )->second;
+    std::string im2fn    = args.find( "im2fn" )->second;
+    std::string H_str    = args.find( "H" )->second;
+    std::string x0y0x1y1_str = args.find( "x0y0x1y1" )->second;
+
+    QueryCompareImage(im1fn, im2fn, x0y0x1y1_str, H_str, p_socket);
   }
   SendHttp404NotFound( p_socket );
 }
@@ -764,28 +757,14 @@ void ViseServer::QueryTransformImage(Magick::Image &im,
   bool draw_region = false;
   bool scale = false;
 
-  unsigned int x, y, w, h;
+  unsigned int x0, y0, x1, y1;
+  char comma;
   unsigned int sw, sh;
   std::stringstream s;
 
   if ( resource_args.count("crop") == 1 ) {
     if ( resource_args.find("crop")->second == "true" ) {
       crop = true;
-      s.clear(); s.str("");
-      s.str( resource_args.find("x")->second );
-      s >> x;
-
-      s.clear(); s.str("");
-      s.str( resource_args.find("y")->second );
-      s >> y;
-
-      s.clear(); s.str("");
-      s.str( resource_args.find("width")->second );
-      s >> w;
-
-      s.clear(); s.str("");
-      s.str( resource_args.find("height")->second );
-      s >> h;
     }
   }
 
@@ -809,21 +788,48 @@ void ViseServer::QueryTransformImage(Magick::Image &im,
     }
   }
 
+  if ( resource_args.count("x0y0x1y1") == 1 ) {
+    std::string x0y0x1y1_str = resource_args.find("x0y0x1y1")->second;
+    std::istringstream csv( x0y0x1y1_str );
+    csv >> x0 >> comma
+        >> y0 >> comma
+        >> x1 >> comma >> y1;
+    //std::cout << "\nViseServer::QueryTransformImage() : x0=" << x0 << ",y0=" << y0 << ",x1=" << x1 << ",y1=" << y1 << std::flush;
+  }
+
+  unsigned int tx0, ty0, tx1, ty1;
   std::string Hstr;
   double H[9];
-  char comma;
   if ( resource_args.count("H") == 1 ) {
     Hstr = resource_args.find("H")->second;
     std::istringstream csv( Hstr );
     csv >> H[0] >> comma >> H[1] >> comma >> H[2] >> comma;
     csv >> H[3] >> comma >> H[4] >> comma >> H[5] >> comma;
     csv >> H[6] >> comma >> H[7] >> comma >> H[8];
+    HomographyTransform( H,
+                         x0,  y0,  x1,  y1,
+                         tx0, ty0, tx1, ty1);
   }
 
-  Magick::Geometry s0 = Magick::Geometry(w, h, x, y);
-  Magick::Geometry s0_tx;
+  if ( crop == true ) {
+    if ( Hstr == "" ) {
+      im.chop( Magick::Geometry( x0    , y0    ) );
+      im.crop( Magick::Geometry( x1-x0 , y1-y0 ) );
 
-  HomographyTransform( H, s0, s0_tx );
+      if ( scale ) {
+        im.resize( Magick::Geometry( sw, sh ) );
+      }
+      return;
+    } else {
+      im.chop( Magick::Geometry( tx0     , ty0    ) );
+      im.crop( Magick::Geometry( tx1-tx0 , ty1-ty0 ) );
+
+      if ( scale ) {
+        im.resize( Magick::Geometry( sw, sh ) );
+      }
+      return;
+    }
+  }
 
   if ( draw_region ) {
     im.strokeColor("yellow");
@@ -831,49 +837,39 @@ void ViseServer::QueryTransformImage(Magick::Image &im,
     im.fillColor( "transparent" );
     im.strokeWidth( 2.0 );
 
-    unsigned int rx = s0_tx.xOff();
-    unsigned int ry = s0_tx.yOff();
-    unsigned int rw = s0_tx.width()  + s0_tx.xOff();
-    unsigned int rh = s0_tx.height()  + s0_tx.yOff();
-
-    im.draw( Magick::DrawableRectangle(rx, ry, rw, rh) );
-    /*
-    std::cout << "\nViseServer::QueryTransformImage() : Drawn rect. at [(" << rx << "," << ry << ") : " << rw << "x" << rh << "], H = " << std::flush;
-    for ( unsigned int i=0; i<9; i++ ) {
-      std::cout << H[i] << "," << std::flush;
+    if ( Hstr != "" ) {
+      im.draw( Magick::DrawableRectangle(tx0, ty0, tx1, ty1) );
+    } else {
+      im.draw( Magick::DrawableRectangle(x0, y0, x1, y1) );
     }
+    /*
+      std::cout << "\nViseServer::QueryTransformImage() : Drawn rect. at [(" << tx0 << "," << ty0 << ") : (" << tx1 << "," << ty1 << ")], H = " << std::flush;
+      for ( unsigned int i=0; i<9; i++ ) {
+      std::cout << H[i] << "," << std::flush;
+      }
     */
   }
   //std::cout << "\nViseServer::QueryTransformImage() : s = " << s << std::flush;
   //std::cout << "\nViseServer::QueryTransformImage() : s_tx = " << s_tx << std::flush;
 }
 
-void ViseServer::HomographyTransform( double H[], Magick::Geometry &s, Magick::Geometry &s_tx ) {
+void ViseServer::HomographyTransform( double H[],
+                                      double   x0, double   y0, double   x1, double   y1,
+                                      unsigned int &tx0, unsigned int &ty0, unsigned int &tx1, unsigned int &ty1) {
 
-  unsigned int x, y, w, h;
-  x = s.xOff();
-  y = s.yOff();
-  w = s.width();
-  h = s.height();
+  double x_H_tx[4] = {0.0, 0.0, 0.0, 0.0};
+  double y_H_tx[4] = {0.0, 0.0, 0.0, 0.0};
 
-  double xt0, xt1, xt2, xt3;
-  double yt0, yt1, yt2, yt3;
+  HomographyPointTransform( H, x0   , y0   , x_H_tx[0], y_H_tx[0] );
+  HomographyPointTransform( H, x1   , y0   , x_H_tx[1], y_H_tx[1] );
+  HomographyPointTransform( H, x1   , y1   , x_H_tx[2], y_H_tx[2] );
+  HomographyPointTransform( H, x0   , y1   , x_H_tx[3], y_H_tx[3] );
 
-  HomographyPointTransform( H, x   , y   , xt0, yt0 );
-  HomographyPointTransform( H, x+w , y   , xt1, yt1 );
-  HomographyPointTransform( H, x+w , y+h , xt2, yt2 );
-  HomographyPointTransform( H, x   , y+h , xt3, yt3 );
-
-  double xt[] = {xt0, xt1, xt2, xt3};
-  double yt[] = {yt0, yt1, yt2, yt3};
-
-  unsigned int x0 = (unsigned int) *std::min_element( xt, xt+3 );
-  unsigned int y0 = (unsigned int) *std::min_element( yt, yt+3 );
-  unsigned int x1 = (unsigned int) *std::max_element( xt, xt+3 );
-  unsigned int y1 = (unsigned int) *std::max_element( yt, yt+3 );
-  //std::cout << "\nViseServer::HomographyTransform() : x0=" << x0 << ", y0=" << y0 << ", x1=" << x1 << ", y1=" << y1 << std::flush;
-
-  s_tx = Magick::Geometry(x1 - x0, y1 - y0, x0, y0);
+  tx0 = (unsigned int) *std::min_element( x_H_tx, x_H_tx+3 );
+  ty0 = (unsigned int) *std::min_element( y_H_tx, y_H_tx+3 );
+  tx1 = (unsigned int) *std::max_element( x_H_tx, x_H_tx+3 );
+  ty1 = (unsigned int) *std::max_element( y_H_tx, y_H_tx+3 );
+  //std::cout << "\nViseServer::HomographyTransform() : tx0=" << tx0 << ", ty0=" << ty0 << ", tx1=" << tx1 << ", ty1=" << ty1 << std::flush;
 }
 
 void ViseServer::HomographyPointTransform( double H[], const double x, const double y, double &xt, double &yt ) {
@@ -882,6 +878,7 @@ void ViseServer::HomographyPointTransform( double H[], const double x, const dou
   double h = H[6]*x + H[7]*y + H[8];
   xt = xt / h;
   yt = yt / h;
+  //std::cout << "\n\tx=" << x << ", y=" << y << " : xt=" << xt << ", yt=" << yt << std::flush;
 }
 
 //
@@ -1136,21 +1133,21 @@ void ViseServer::QueryServeImgList( unsigned int page_no,
   SendCommand( cs.str() );
 }
 
-void ViseServer::QuerySearchImageRegion(std::string img_fn,
-                                        unsigned int x,
-                                        unsigned int y,
-                                        unsigned int width,
-                                        unsigned int height,
+void ViseServer::QuerySearchImageRegion(std::string query_img_fn,
+                                        unsigned int x0,
+                                        unsigned int y0,
+                                        unsigned int x1,
+                                        unsigned int y1,
                                         boost::shared_ptr<tcp::socket> p_socket) {
 
   SendCommand("_control_panel clear all");
 
-  uint32_t doc_id = dataset_->getDocID( img_fn );
+  uint32_t doc_id = dataset_->getDocID( query_img_fn );
   query query_obj(doc_id, true, "",
-                  x,          // xl
-                  x + width,  // xu
-                  y + height, // yl
-                  y           // yu
+                  x0, // xl
+                  x1, // xu
+                  y1, // yl
+                  y0  // yu
                   );
 
   std::vector<indScorePair> queryRes;
@@ -1171,23 +1168,109 @@ void ViseServer::QuerySearchImageRegion(std::string img_fn,
     Hs.find( doc_id )->second.exportToDoubleArray( H );
 
     std::ostringstream hcsv;
-    hcsv << H[0] << "," << H[1] << "," << H[2] << ","
+    hcsv << "H="
+         << H[0] << "," << H[1] << "," << H[2] << ","
          << H[3] << "," << H[4] << "," << H[5] << ","
          << H[6] << "," << H[7] << "," << H[8];
 
-    std::ostringstream r;
-    r << "x=" << x << "&y=" << y << "&width=" << width << "&height=" << height;
+    std::ostringstream region;
+    region << "x0y0x1y1=" << x0 << "," << y0 << "," << x1 << "," << y1;
 
-    s << "<li><a href=\"" << im_uri << "?crop=true&draw_region=true&" << r.str() << "&H=" << hcsv.str() << "\">"
-      << "<img src=\"" << im_uri << "?crop=true&draw_region=true&" << r.str() << "&H=" << hcsv.str() << "\" /></a>"
+    std::ostringstream onclick;
+    onclick << "imcomp("
+            << "'" << query_img_fn << "',"
+            << "'" << im_fn << "',"
+            << "'" << region.str() << "',"
+            << "'" << hcsv.str() << "')";
+
+    s << "<li>"
+      << "<img class=\"action_img\" onclick=\"" << onclick.str() << "\" "
+      << "src=\"" << im_uri << "?crop=false&scale=false&draw_region=true&" << region.str() << "&" << hcsv.str() << "\" />"
       << "<h3>( " << iRes << " of " << queryRes.size() <<" ) " << im_fn << "</h3>"
       << "<p>Score = " << queryRes[iRes].second << "<br/>"
-      <<    "Size  = " << im_dim.first << " x " << im_dim.second << " px</p></a></li>";
+      <<    "Size  = " << im_dim.first << " x " << im_dim.second << " px</p></li>";
   }
   s << "</ul";
   SendHttpResponse( s.str(), p_socket );
 }
 
+void ViseServer::QueryCompareImage(std::string im1fn,
+                                   std::string im2fn,
+                                   std::string x0y0x1y1_str,
+                                   std::string H_str,
+                                   boost::shared_ptr<tcp::socket> p_socket) {
+
+  std::ostringstream s;
+  s << "<ul class=\"img_list columns-3\">";
+
+  // image 1: left
+  std::ostringstream im1_uri;
+  im1_uri << "/_static/" << search_engine_.GetName() << "/" << im1fn;
+  im1_uri << "?crop=false"
+          << "&scale=false"
+          << "&draw_region=true"
+          << "&x0y0x1y1=" << x0y0x1y1_str;
+
+  s << "<li>"
+    << "<h3>Query Image</h3>"
+    << "<img "
+    << "src=\"" << im1_uri.str() << "\" />"
+    << "<p>" << im1fn << "</p></li>";
+
+  // image 1: crop
+  std::ostringstream crop_im1_uri;
+  crop_im1_uri << "/_static/" << search_engine_.GetName() << "/" << im1fn;
+  crop_im1_uri << "?crop=true"
+               << "&scale=false"
+               << "&draw_region=false"
+               << "&x0y0x1y1=" << x0y0x1y1_str;
+  s << "<li>"
+    << "<h3>Cropped query image</h3>"
+    << "<img "
+    << "src=\"" << crop_im1_uri.str() << "\" />"
+    << "<p>Hover to show difference</p></li>";
+
+  // image 2: crop
+  unsigned int x0,y0,x1,y1;
+  char comma;
+  std::istringstream csv( x0y0x1y1_str );
+  csv >> x0 >> comma
+      >> y0 >> comma
+      >> x1 >> comma >> y1;
+
+  std::ostringstream crop_im2_uri;
+  crop_im2_uri << "/_static/" << search_engine_.GetName() << "/" << im2fn;
+  crop_im2_uri << "?crop=true"
+               << "&scale=true"
+               << "&draw_region=false"
+               << "&x0y0x1y1=" << x0y0x1y1_str
+               << "&H=" << H_str
+               << "&sw=" << (x1-x0)
+               << "&sh=" << (y1-y0);
+  s << "<li>"
+    << "<h3>Cropped search result</h3>"
+    << "<img "
+    << "src=\"" << crop_im2_uri.str() << "\" />"
+    << "<p>Hover to show difference</p></li>";
+
+
+  // image 2: right
+  std::ostringstream im2_uri;
+  im2_uri << "/_static/" << search_engine_.GetName() << "/" << im2fn;
+  im2_uri << "?crop=false"
+          << "&scale=false"
+          << "&draw_region=true"
+          << "&x0y0x1y1=" << x0y0x1y1_str
+          << "&H=" << H_str;
+  s << "<li>"
+    << "<h3>Search result</h3>"
+    << "<img "
+    << "src=\"" << im2_uri.str() << "\" />"
+    << "<p>" << im2fn << "</p></li>";
+
+  s << "</ul>";
+  SendHttpResponse( s.str(), p_socket );
+}
 
 void ViseServer::QueryInit() {
   // construct dataset
