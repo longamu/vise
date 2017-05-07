@@ -63,7 +63,7 @@ void SearchEngine::Preprocess() {
   }
 
   if ( boost::filesystem::exists( imglist_fn_ ) ) {
-    SendLog("Preprocess", "\nLoaded");
+    //SendLog("Preprocess", "\nLoaded");
   } else {
     SendLog("Preprocess", "\nPreprocessing started ...");
     std::string transformed_img_width = GetEngineConfigParam("transformed_img_width");
@@ -120,8 +120,7 @@ void SearchEngine::Preprocess() {
 
     //if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
     WriteImageListToFile( imglist_fn_.string(), imglist_ );
-    SendLog("Preprocess",
-            "\nWritten image list to : [" + imglist_fn_.string() + "]" );
+    SendLog("Preprocess", "\nWritten image list to : [" + imglist_fn_.string() + "]" );
   }
 }
 
@@ -132,7 +131,7 @@ void SearchEngine::Descriptor() {
   if ( boost::filesystem::exists( train_desc_fn ) ) {
     // delete file
     //boost::filesystem::remove( train_desc_fn );
-    SendLog("Descriptor", "\nLoaded");
+    //SendLog("Descriptor", "\nLoaded");
   } else {
     SendLog("Descriptor", "\nComputing training descriptors ...");
     std::string const trainImagelistFn = GetEngineConfigParam("trainImagelistFn");
@@ -173,7 +172,7 @@ void SearchEngine::Cluster() {
     //boost::thread t( boost::bind( &SearchEngine::RunClusterCommand, this ) );
     RunClusterCommand();
   } else {
-    SendLog("Cluster", "\nLoaded");
+    //SendLog("Cluster", "\nLoaded");
   }
 }
 
@@ -195,8 +194,7 @@ void SearchEngine::RunClusterCommand() {
     }
     pclose( pipe );
   } else {
-    SendLog("Cluster",
-               "\nFailed to execute python script for clustering: \n\t $" + cmd);
+    //SendLog("Cluster", "\nFailed to execute python script for clustering: \n\t $" + cmd);
   }
 }
 
@@ -213,7 +211,7 @@ void SearchEngine::Assign() {
                                      GetEngineConfigParam("descFn"),
                                      GetEngineConfigParam("assignFn"));
   } else {
-    SendLog("Assign", "\nLoaded");
+    //SendLog("Assign", "\nLoaded");
   }
 }
 
@@ -237,7 +235,7 @@ void SearchEngine::Hamm() {
                                GetEngineConfigParam("hammFn"),
                                hammEmbBits);
   } else {
-    SendLog("Hamm", "\nLoaded");
+    //SendLog("Hamm", "\nLoaded");
   }
 }
 
@@ -292,7 +290,7 @@ void SearchEngine::Index() {
 
     delete embFactory;
   } else {
-    SendLog("Index", "\nLoaded");
+    //SendLog("Index", "\nLoaded");
   }
 }
 

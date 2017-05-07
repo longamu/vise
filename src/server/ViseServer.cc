@@ -181,6 +181,11 @@ void ViseServer::Start(unsigned int port) {
 
   std::cout << "\nServer started on port " << port << " :-)" << std::flush;
 
+  LoadSearchEngine( "ox5k" );
+  /*
+  QueryTest();
+  */
+
   try {
     while ( 1 ) {
       boost::shared_ptr<tcp::socket> p_socket( new tcp::socket(io_service) );
@@ -218,13 +223,17 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
   std::cout << "\n" << http_method << " " << http_method_uri << std::flush;
 
   if ( http_method == "GET " ) {
+    if ( http_method_uri == "" ) {
+      p_socket->close();
+      return;
+    }
     if ( http_method_uri == "/" ) {
       // show help page when user enteres http://localhost:8080
       SendHttpResponse( vise_main_html_, p_socket);
-      if ( GetCurrentStateId() != ViseServer::STATE_NOT_LOADED ) {
+      p_socket->close();
+      if ( GetCurrentStateId() == ViseServer::STATE_QUERY ) {
         SendCommand("_state update_now");
       }
-      p_socket->close();
       return;
     }
 
@@ -284,15 +293,10 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
     const std::string static_resource_prefix = "/_static/";
     if ( StringStartsWith(http_method_uri, static_resource_prefix) ) {
       std::string resource_uri = http_method_uri.substr( static_resource_prefix.size(), std::string::npos);
-      std::string resource_arg = "";
-
-      std::size_t qmark_pos = http_method_uri.find('?');
-      if ( qmark_pos != std::string::npos ) {
-        std::string temp = resource_uri;
-        resource_uri = resource_uri.substr(0, qmark_pos);
-        resource_arg = resource_uri.substr(qmark_pos+1, std::string::npos);
-      }
-      ServeStaticResource( resource_uri, resource_arg, p_socket );
+      std::string resource_name;
+      std::map< std::string, std::string > resource_args;
+      ParseHttpMethodUri( resource_uri, resource_name, resource_args);
+      ServeStaticResource( resource_name, resource_args, p_socket );
       p_socket->close();
       return;
     }
@@ -462,7 +466,7 @@ void ViseServer::SendHttpResponse(std::string response, boost::shared_ptr<tcp::s
   //std::cout << "\nSent http html response of length : " << response.length() << std::flush;
 }
 
-void ViseServer::SendImageResponse(boost::filesystem::path im_fn, boost::shared_ptr<tcp::socket> p_socket) {
+void ViseServer::SendStaticImageResponse(boost::filesystem::path im_fn, boost::shared_ptr<tcp::socket> p_socket) {
   std::string content_type = GetHttpContentType(im_fn);
   std::stringstream http_response;
   http_response << "HTTP/1.1 200 OK\r\n";
@@ -497,9 +501,47 @@ void ViseServer::SendImageResponse(boost::filesystem::path im_fn, boost::shared_
       delete( im_buf);
     }
   } catch( std::exception &e) {
+    std::cerr << "\nViseServer::SendStaticImageResponse() : exception " << e.what() << std::flush;
+  }
+}
+
+void ViseServer::SendImageResponse(Magick::Image &im,
+                                   std::string content_type,
+                                   boost::shared_ptr<tcp::socket> p_socket) {
+  Magick::Blob im_blob;
+  try {
+    im.magick("JPEG");
+    im.write( &im_blob );
+  } catch( std::exception &e) {
     std::cerr << "\nViseServer::SendImageResponse() : exception " << e.what() << std::flush;
+    SendHttp404NotFound( p_socket );
   }
 
+  std::stringstream http_response;
+  http_response << "HTTP/1.1 200 OK\r\n";
+  std::time_t t = std::time(NULL);
+  char date_str[100];
+  std::strftime(date_str, sizeof(date_str), "%a, %d %b %Y %H:%M:%S %Z", std::gmtime(&t));
+  http_response << "Date: " << date_str << "\r\n";
+  http_response << "Content-Language: en\r\n";
+  http_response << "Connection: close\r\n";
+
+  http_response << "Content-type: " << content_type << "\r\n";
+  http_response << "Content-Encoding: utf-8\r\n";
+  http_response << "Content-Length: " << im_blob.length() << "\r\n";
+  http_response << "\r\n";
+  boost::asio::write( *p_socket, boost::asio::buffer(http_response.str()) );
+
+  // write the image file contents to socket
+  try {
+    char* im_buf = (char *) im_blob.data();
+    boost::asio::write( *p_socket,
+                        boost::asio::buffer(im_buf, im_blob.length()),
+                        boost::asio::transfer_all());
+  } catch( std::exception &e) {
+    std::cerr << "\nViseServer::SendImageResponse() : exception " << e.what() << std::flush;
+    SendHttp404NotFound( p_socket );
+  }
 }
 
 void ViseServer::SendMessage(std::string message) {
@@ -667,34 +709,179 @@ void ViseServer::HandleQueryGetRequest(std::string http_method_uri, boost::share
   SendHttp404NotFound( p_socket );
 }
 
-void ViseServer::ServeStaticResource(const std::string resource_uri,
-                                     const std::string resource_arg,
+void ViseServer::ServeStaticResource(const std::string resource_name,
+                                     const std::map< std::string, std::string> &resource_args,
                                      boost::shared_ptr<tcp::socket> p_socket) {
   // resource uri format:
   // SEARCH_ENGINE_NAME/...path...
   //std::cout << "\nViseServer::ServeStaticResource() : " << resource_uri << ", " << resource_arg << std::flush;
-  std::size_t slash_pos = resource_uri.find('/', 1); // ignore the first /
-  if ( slash_pos != std::string::npos ) {
-    std::string search_engine_name = resource_uri.substr(0, slash_pos);
+  std::size_t first_slash_pos = resource_name.find('/', 0); // ignore the first /
+  if ( first_slash_pos != std::string::npos ) {
+    std::string search_engine_name = resource_name.substr(0, first_slash_pos);
     if ( search_engine_.GetName() == search_engine_name ) {
-      std::string res_rel_path = resource_uri.substr(slash_pos+1, std::string::npos);
+      std::string res_rel_path = resource_name.substr(first_slash_pos+1, std::string::npos);
       boost::filesystem::path res_fn = search_engine_.GetTransformedImageDir() / res_rel_path;
-      if ( resource_arg == "original" ) {
-        res_fn = search_engine_.GetOriginalImageDir() / res_rel_path;
+      if ( resource_args.empty() ) {
+        if ( boost::filesystem::exists(res_fn) ) {
+          SendStaticImageResponse( res_fn, p_socket );
+        } else {
+          SendHttp404NotFound( p_socket );
+        }
+        return;
       }
-      //std::cout << "\nViseServer::ServeStaticResource() : Serving static resource : " << res_fn.string() << std::flush;
-      if ( boost::filesystem::exists(res_fn) ) {
-        SendImageResponse( res_fn, p_socket );
+
+      if ( resource_args.count("variant") == 1 ) {
+        if ( resource_args.find("variant")->second == "original" ) {
+          res_fn = search_engine_.GetOriginalImageDir() / res_rel_path;
+        }
+      }
+
+      if ( ! boost::filesystem::exists(res_fn) ) {
+        SendHttp404NotFound( p_socket );
+        return;
+      }
+
+      try {
+        Magick::Image im;
+        im.read( res_fn.string() );
+
+        QueryTransformImage( im, resource_args );
+
+        std::string content_type = GetHttpContentType(res_fn);
+        SendImageResponse( im, content_type, p_socket );
+      } catch ( std::exception &error ) {
+        SendHttp404NotFound( p_socket );
       }
     }
   }
-
-  // somethign was wrong
-  std::ostringstream s;
-  s << "\nViseServer::ServeStaticResource() : cannot serve static resource ";
-  s << "[" << resource_uri << "," << resource_arg << "]";
-  SendHttpResponse( s.str(), p_socket);
+  SendHttp404NotFound( p_socket );
   return;
+}
+
+void ViseServer::QueryTransformImage(Magick::Image &im,
+                                     const std::map< std::string, std::string > &resource_args) {
+  bool crop = false;
+  bool draw_region = false;
+  bool scale = false;
+
+  unsigned int x, y, w, h;
+  unsigned int sw, sh;
+  std::stringstream s;
+
+  if ( resource_args.count("crop") == 1 ) {
+    if ( resource_args.find("crop")->second == "true" ) {
+      crop = true;
+      s.clear(); s.str("");
+      s.str( resource_args.find("x")->second );
+      s >> x;
+
+      s.clear(); s.str("");
+      s.str( resource_args.find("y")->second );
+      s >> y;
+
+      s.clear(); s.str("");
+      s.str( resource_args.find("width")->second );
+      s >> w;
+
+      s.clear(); s.str("");
+      s.str( resource_args.find("height")->second );
+      s >> h;
+    }
+  }
+
+  if ( resource_args.count("scale") == 1 ) {
+    if ( resource_args.find("scale")->second == "true" ) {
+      scale = true;
+
+      s.clear(); s.str("");
+      s.str( resource_args.find("sw")->second );
+      s >> sw;
+
+      s.clear(); s.str("");
+      s.str( resource_args.find("sh")->second );
+      s >> sh;
+    }
+  }
+
+  if ( resource_args.count("draw_region") == 1 ) {
+    if ( resource_args.find("draw_region")->second == "true" ) {
+      draw_region = true;
+    }
+  }
+
+  std::string Hstr;
+  double H[9];
+  char comma;
+  if ( resource_args.count("H") == 1 ) {
+    Hstr = resource_args.find("H")->second;
+    std::istringstream csv( Hstr );
+    csv >> H[0] >> comma >> H[1] >> comma >> H[2] >> comma;
+    csv >> H[3] >> comma >> H[4] >> comma >> H[5] >> comma;
+    csv >> H[6] >> comma >> H[7] >> comma >> H[8];
+  }
+
+  Magick::Geometry s0 = Magick::Geometry(w, h, x, y);
+  Magick::Geometry s0_tx;
+
+  HomographyTransform( H, s0, s0_tx );
+
+  if ( draw_region ) {
+    im.strokeColor("yellow");
+    im.strokeAntiAlias(false);
+    im.fillColor( "transparent" );
+    im.strokeWidth( 2.0 );
+
+    unsigned int rx = s0_tx.xOff();
+    unsigned int ry = s0_tx.yOff();
+    unsigned int rw = s0_tx.width()  + s0_tx.xOff();
+    unsigned int rh = s0_tx.height()  + s0_tx.yOff();
+
+    im.draw( Magick::DrawableRectangle(rx, ry, rw, rh) );
+    /*
+    std::cout << "\nViseServer::QueryTransformImage() : Drawn rect. at [(" << rx << "," << ry << ") : " << rw << "x" << rh << "], H = " << std::flush;
+    for ( unsigned int i=0; i<9; i++ ) {
+      std::cout << H[i] << "," << std::flush;
+    }
+    */
+  }
+  //std::cout << "\nViseServer::QueryTransformImage() : s = " << s << std::flush;
+  //std::cout << "\nViseServer::QueryTransformImage() : s_tx = " << s_tx << std::flush;
+}
+
+void ViseServer::HomographyTransform( double H[], Magick::Geometry &s, Magick::Geometry &s_tx ) {
+
+  unsigned int x, y, w, h;
+  x = s.xOff();
+  y = s.yOff();
+  w = s.width();
+  h = s.height();
+
+  double xt0, xt1, xt2, xt3;
+  double yt0, yt1, yt2, yt3;
+
+  HomographyPointTransform( H, x   , y   , xt0, yt0 );
+  HomographyPointTransform( H, x+w , y   , xt1, yt1 );
+  HomographyPointTransform( H, x+w , y+h , xt2, yt2 );
+  HomographyPointTransform( H, x   , y+h , xt3, yt3 );
+
+  double xt[] = {xt0, xt1, xt2, xt3};
+  double yt[] = {yt0, yt1, yt2, yt3};
+
+  unsigned int x0 = (unsigned int) *std::min_element( xt, xt+3 );
+  unsigned int y0 = (unsigned int) *std::min_element( yt, yt+3 );
+  unsigned int x1 = (unsigned int) *std::max_element( xt, xt+3 );
+  unsigned int y1 = (unsigned int) *std::max_element( yt, yt+3 );
+  //std::cout << "\nViseServer::HomographyTransform() : x0=" << x0 << ", y0=" << y0 << ", x1=" << x1 << ", y1=" << y1 << std::flush;
+
+  s_tx = Magick::Geometry(x1 - x0, y1 - y0, x0, y0);
+}
+
+void ViseServer::HomographyPointTransform( double H[], const double x, const double y, double &xt, double &yt ) {
+  xt = H[0]*x + H[1]*y + H[2];
+  yt = H[3]*x + H[4]*y + H[5];
+  double h = H[6]*x + H[7]*y + H[8];
+  xt = xt / h;
+  yt = yt / h;
 }
 
 //
@@ -969,24 +1156,33 @@ void ViseServer::QuerySearchImageRegion(std::string img_fn,
   std::vector<indScorePair> queryRes;
   std::map<uint32_t,homography> Hs;
 
-
   spatial_retriever_->spatialQuery( query_obj, queryRes, Hs, 20 );
 
   std::ostringstream s;
   s << "<ul class=\"img_list columns-4\">";
 
+  double H[9];
   for (uint32_t iRes= 0; (iRes < queryRes.size()) && (iRes < 20); ++iRes){
     uint32_t doc_id = queryRes[iRes].first;
 
     std::string im_fn  = dataset_->getInternalFn( doc_id );
     std::string im_uri = "/_static/" + search_engine_.GetName() + "/" + im_fn;
     std::pair<uint32_t, uint32_t> im_dim = dataset_->getWidthHeight( doc_id );
+    Hs.find( doc_id )->second.exportToDoubleArray( H );
 
-    s << "<li><img "
-      << "src=\"" << im_uri << "\" />"
+    std::ostringstream hcsv;
+    hcsv << H[0] << "," << H[1] << "," << H[2] << ","
+         << H[3] << "," << H[4] << "," << H[5] << ","
+         << H[6] << "," << H[7] << "," << H[8];
+
+    std::ostringstream r;
+    r << "x=" << x << "&y=" << y << "&width=" << width << "&height=" << height;
+
+    s << "<li><a href=\"" << im_uri << "?crop=true&draw_region=true&" << r.str() << "&H=" << hcsv.str() << "\">"
+      << "<img src=\"" << im_uri << "?crop=true&draw_region=true&" << r.str() << "&H=" << hcsv.str() << "\" /></a>"
       << "<h3>( " << iRes << " of " << queryRes.size() <<" ) " << im_fn << "</h3>"
       << "<p>Score = " << queryRes[iRes].second << "<br/>"
-      <<    "Size  = " << im_dim.first << " x " << im_dim.second << " px</p></li>";
+      <<    "Size  = " << im_dim.first << " x " << im_dim.second << " px</p></a></li>";
   }
   s << "</ul";
   SendHttpResponse( s.str(), p_socket );
@@ -1120,15 +1316,26 @@ void ViseServer::QueryTest() {
   std::map<uint32_t,homography> Hs;
 
 
-  spatial_retriever_->spatialQuery( query_obj, queryRes, Hs, 4 );
+  spatial_retriever_->spatialQuery( query_obj, queryRes, Hs, 5 );
   std::cout << "\nH" << std::flush;
 
   std::cout << "\nNumber of docs = " << dataset_->getNumDoc();
   std::cout << "\nQuery result: queryRes.size() = " << queryRes.size() << std::flush;
 
-  for (uint32_t iRes= 0; (iRes < queryRes.size()) && (iRes < 4); ++iRes){
+  double h[9];
+  for (uint32_t iRes= 0; (iRes < queryRes.size()) && (iRes < 5); ++iRes){
     uint32_t doc_id = queryRes[iRes].first;
-    std::cout << "\n\trank=" << iRes << ", docId=" << doc_id << ", score=" << queryRes[iRes].second << ", fn=" << dataset_->getInternalFn(doc_id) << std::flush;
+
+    std::ostringstream s;
+    if ( !Hs.empty() && Hs.count( doc_id ) ) {
+      /*      */
+      Hs.find( doc_id )->second.exportToDoubleArray( h );
+      s << h[0] << "," << h[1] << "," << h[2] << ","
+        << h[3] << "," << h[4] << "," << h[5] << ","
+        << h[6] << "," << h[7] << "," << h[8];
+
+    }
+    std::cout << "\n\trank=" << iRes << ", docId=" << doc_id << ", score=" << queryRes[iRes].second << ", fn=" << dataset_->getInternalFn(doc_id) << ", H=" << s.str() << std::flush;
   }
 
   std::cout << "\nDONE" << std::flush;
@@ -1233,17 +1440,19 @@ bool ViseServer::UpdateState() {
 }
 
 void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
+  /*
   SendMessage("Loading search engine " + search_engine_name + " ...");
 
   SendCommand("_log clear show");
   SendCommand("_control_panel clear all");
   SendCommand("_control_panel add <div id=\"LoadSearchEngine_button_continue\" class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Continue</div>");
+  */
   search_engine_.Init( search_engine_name, vise_enginedir_ );
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_SETTING );
-  SendMessage("[" + search_engine_name + "] Loading settings ...");
+  //SendMessage("[" + search_engine_name + "] Loading settings ...");
 
   std::string engine_config;
   LoadFile( search_engine_.GetEngineConfigFn().string(), engine_config );
@@ -1257,55 +1466,55 @@ void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_PREPROCESS );
-  SendMessage("[" + search_engine_name + "] Loading pre-processed data ...");
+  //SendMessage("[" + search_engine_name + "] Loading pre-processed data ...");
 
   search_engine_.Preprocess();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_DESCRIPTOR );
-  SendMessage("[" + search_engine_name + "] Loading descriptors ...");
+  //SendMessage("[" + search_engine_name + "] Loading descriptors ...");
 
   search_engine_.Descriptor();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_CLUSTER );
-  SendMessage("[" + search_engine_name + "] Loading clusters ...");
+  //SendMessage("[" + search_engine_name + "] Loading clusters ...");
 
   search_engine_.Cluster();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_ASSIGN );
-  SendMessage("[" + search_engine_name + "] Loading assign ...");
+  //SendMessage("[" + search_engine_name + "] Loading assign ...");
 
   search_engine_.Assign();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_HAMM );
-  SendMessage("[" + search_engine_name + "] Loading hamm ...");
+  //SendMessage("[" + search_engine_name + "] Loading hamm ...");
 
   search_engine_.Hamm();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_INDEX );
-  SendMessage("[" + search_engine_name + "] Loading index ...");
+  //SendMessage("[" + search_engine_name + "] Loading index ...");
 
   search_engine_.Index();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_QUERY );
-  SendMessage("[" + search_engine_name + "] Loading complete :-)");
+  //SendMessage("[" + search_engine_name + "] Loading complete :-)");
   QueryInit();
 
-  SendCommand("_log clear hide");
-  SendCommand("_control_panel clear all");
+  //SendCommand("_log clear hide");
+  //SendCommand("_control_panel clear all");
 
-  SendCommand("_state update_now");
+  //SendCommand("_state update_now");
 }
 
 //

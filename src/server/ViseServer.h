@@ -28,6 +28,8 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 
+#include <Magick++.h>            // to transform images
+
 #include "SearchEngine.h"
 #include "ViseMessageQueue.h"
 
@@ -136,8 +138,8 @@ class ViseServer {
   bool UpdateState();
   std::string GetStateJsonData();
   void GenerateViseIndexHtml();
-  void ServeStaticResource(const std::string resource_uri,
-                           const std::string resource_arg,
+  void ServeStaticResource(const std::string resource_name,
+                           const std::map< std::string, std::string> &resource_args,
                            boost::shared_ptr<tcp::socket> p_socket);
   void LoadSearchEngine(std::string search_engine_name);
 
@@ -155,8 +157,16 @@ class ViseServer {
                               unsigned int width,
                               unsigned int height,
                               boost::shared_ptr<tcp::socket> p_socket);
+  void QueryTransformImage(Magick::Image &im, const std::map< std::string, std::string > &resource_args);
+  void SendStaticImageResponse(boost::filesystem::path im_fn, boost::shared_ptr<tcp::socket> p_socket);
+  void SendImageResponse(Magick::Image &im, std::string content_type, boost::shared_ptr<tcp::socket> p_socket);
+
   void QueryInit();
   void QueryTest();
+  void HomographyTransform( double H[],
+                            Magick::Geometry &s,
+                            Magick::Geometry &s_tx );
+  void HomographyPointTransform( double H[], const double x, const double y, double &xt, double &yt );
 
   // HTTP connection handler
   void HandleConnection(boost::shared_ptr<tcp::socket> p_socket);
@@ -172,7 +182,6 @@ class ViseServer {
   void SendErrorResponse(std::string message, std::string backtrace, boost::shared_ptr<tcp::socket> p_socket);
   void SendRawResponse(std::string content_type, std::string content, boost::shared_ptr<tcp::socket> p_socket);
   void SendJsonResponse(std::string json, boost::shared_ptr<tcp::socket> p_socket);
-  void SendImageResponse(boost::filesystem::path im_fn, boost::shared_ptr<tcp::socket> p_socket);
 
   void SendMessage(std::string message);
   void SendLog(std::string log);
