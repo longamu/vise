@@ -643,7 +643,7 @@ function imcomp(im1fn, im2fn, region, H) {
   html.push( '<ul class="img_list columns-3">' );
 
   var im1_uri = [];
-  im1_uri.push( "http://localhost:8080/_static/" + _vise_current_search_engine_name + "/" + im1fn );
+  im1_uri.push( "/_static/" + _vise_current_search_engine_name + "/" + im1fn );
   im1_uri.push( "?crop=false" );
   im1_uri.push( "&scale=false");
   im1_uri.push( "&draw_region=true");
@@ -653,7 +653,7 @@ function imcomp(im1fn, im2fn, region, H) {
   html.push( '<li><h3>Comparison of cropped regions</h3><canvas style="margin: auto;" id="img_compare_canvas"></canvas><p>Click mouse to flip</p></li>');
 
   var im2_uri = [];
-  im2_uri.push( "http://localhost:8080/_static/" + _vise_current_search_engine_name + "/" + im2fn );
+  im2_uri.push( "/_static/" + _vise_current_search_engine_name + "/" + im2fn );
   im2_uri.push( "?crop=false" );
   im2_uri.push( "&scale=false");
   im2_uri.push( "&draw_region=true");
@@ -664,7 +664,7 @@ function imcomp(im1fn, im2fn, region, H) {
   content.innerHTML = html.join('');
 
   var crop_im1_uri = [];
-  crop_im1_uri.push( "http://localhost:8080/_static/" + _vise_current_search_engine_name + "/" + im1fn );
+  crop_im1_uri.push( "/_static/" + _vise_current_search_engine_name + "/" + im1fn );
   crop_im1_uri.push( "?crop=true" );
   crop_im1_uri.push( "&scale=false");
   crop_im1_uri.push( "&draw_region=false");
@@ -672,7 +672,7 @@ function imcomp(im1fn, im2fn, region, H) {
   //crop_im1_uri.push( "&sw=" + _vise_query_width + "&sh=" + _vise_query_height);
 
   var crop_im2_uri = [];
-  crop_im2_uri.push( "http://localhost:8080/_static/" + _vise_current_search_engine_name + "/" + im2fn );
+  crop_im2_uri.push( "/_static/" + _vise_current_search_engine_name + "/" + im2fn );
   crop_im2_uri.push( "?crop=true" );
   crop_im2_uri.push( "&scale=true");
   crop_im2_uri.push( "&draw_region=false");

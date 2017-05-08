@@ -8,6 +8,8 @@
 #include <iostream>
 #include <string>
 
+#include <boost/filesystem.hpp>
+
 #include <Magick++.h>            // to transform images
 
 #include "ViseServer.h"
@@ -23,8 +25,8 @@ int main(int argc, char** argv) {
 
   Magick::InitializeMagick(*argv);
 
-  std::string visedata_dir = "/home/tlm/vise/";
-  std::string template_dir = "/home/tlm/dev/vise/src/server/html_templates/";
+  boost::filesystem::path visedata_dir("/home/tlm/vise/");
+  boost::filesystem::path template_dir("/home/tlm/dev/vise/src/server/html_templates/");
   ViseServer vise_server( visedata_dir, template_dir );
   //vise_server.InitResources( visedata_dir, template_dir );
 

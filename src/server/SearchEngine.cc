@@ -13,9 +13,9 @@ SearchEngine::SearchEngine() {
 }
 
 void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
-  engine_config_.clear();
-  basedir_ = boost::filesystem::path(basedir);
   engine_name_ = name;
+  basedir_ = boost::filesystem::path(basedir);
+  engine_config_.clear();
 
   boost::filesystem::path engine_name( engine_name_ );
   enginedir_ = basedir_ / engine_name;
@@ -524,17 +524,6 @@ void SearchEngine::SendPacket(std::string sender, std::string type, std::string 
 //
 // Helper methods
 //
-bool SearchEngine::EngineExists( std::string name ) {
-  boost::filesystem::path engine_name( name );
-  boost::filesystem::path enginedir = basedir_ / engine_name;
-
-  if ( boost::filesystem::exists( enginedir ) ) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 std::string SearchEngine::GetName() {
   return engine_name_;
 }

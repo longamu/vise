@@ -11,7 +11,7 @@ const int ViseServer::STATE_HAMM;
 const int ViseServer::STATE_INDEX;
 const int ViseServer::STATE_QUERY;
 
-ViseServer::ViseServer( std::string vise_datadir, std::string vise_templatedir ) {
+ViseServer::ViseServer( boost::filesystem::path vise_datadir, boost::filesystem::path vise_templatedir ) {
   // set resource names
   vise_datadir_      = boost::filesystem::path(vise_datadir);
   vise_templatedir_  = boost::filesystem::path(vise_templatedir);
@@ -356,17 +356,16 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
           // send control message to set loaded engine name
         } else if ( tokens.at(0) == "load_search_engine" ) {
             if ( search_engine_.GetName() == search_engine_name ) {
-              // engine already loaded, update your UI
-              SendHttpPostResponse( http_post_data, "OK", p_socket );
+              SendHttpPostResponse( http_post_data, "Search engine already loaded!", p_socket );
               SendCommand(""); // @todo: this is needed to wakeup the messaging system! But why?
               SendCommand("_state update_now");
             } else {
-              if ( search_engine_.EngineExists( search_engine_name ) ) {
+              if ( SearchEngineExists( search_engine_name ) ) {
                 SendMessage("Loading search engine [" + search_engine_name + "] ...");
                 LoadSearchEngine( search_engine_name );
-                SendHttpPostResponse( http_post_data, "OK", p_socket );
+                SendHttpPostResponse( http_post_data, "Loaded search engine", p_socket );
               } else {
-                SendHttpPostResponse( http_post_data, "ERR", p_socket );
+                SendHttpPostResponse( http_post_data, "Search engine does not exist", p_socket );
                 SendMessage("Search engine does not exists!");
               }
             }
@@ -574,7 +573,7 @@ void ViseServer::SendPacket(std::string type, std::string message) {
 void ViseServer::SendHttpPostResponse(std::string http_post_data, std::string result, boost::shared_ptr<tcp::socket> p_socket) {
   std::string response = "{ \"id\": \"http_post_response\",";
   response += "\"http_post_data\": \"" + http_post_data + "\",";
-  response += "\"result\": \"OK\" }";
+  response += "\"result\": \"" + result + "\" }";
 
   std::ostringstream http_response;
   http_response << "HTTP/1.1 200 OK\r\n";
@@ -1645,7 +1644,7 @@ void ViseServer::GenerateViseIndexHtml() {
     boost::filesystem::path p = dir_it->path();
     if ( boost::filesystem::is_directory( p ) ) {
       std::string name = p.filename().string();
-      s << "<a onclick=\"_vise_load_search_engine('" << name << "')\" title=\"ox5k\">"
+      s << "<a onclick=\"_vise_load_search_engine('" << name << "')\" title=\"" << name << "\">"
         << "<figure></figure>"
         << "<p>" << name << "</p>"
         << "</a>";
@@ -1799,6 +1798,8 @@ bool ViseServer::StringStartsWith( const std::string &s, const std::string &pref
     return false;
   }
 }
+
+
 bool ViseServer::SearchEngineExists( std::string search_engine_name ) {
   // iterate through all directories in vise_enginedir_
   boost::filesystem::directory_iterator dir_it( vise_enginedir_ ), end_it;

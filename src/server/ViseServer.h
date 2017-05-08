@@ -27,6 +27,7 @@
 #include <boost/lambda/construct.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
+#include <boost/filesystem.hpp>
 
 #include <Magick++.h>            // to transform images
 
@@ -207,7 +208,6 @@ class ViseServer {
   bool ReplaceString(std::string &s, std::string old_str, std::string new_str);
   bool StringStartsWith( const std::string &s, const std::string &prefix );
   std::string GetHttpContentType(boost::filesystem::path fn);
-  bool SearchEngineExists( std::string search_engine_name );
 
   // @todo: move to ViseServer.cc ( do not know how! )
   template<typename T> void ParseCsvString( const std::string csv, std::vector< T > &d ) {
@@ -240,7 +240,7 @@ class ViseServer {
   static const int STATE_INDEX      =  8;
   static const int STATE_QUERY      =  9;
 
-  ViseServer( std::string vise_datadir, std::string vise_templatedir );
+  ViseServer( boost::filesystem::path vise_datadir, boost::filesystem::path vise_templatedir );
   ~ViseServer();
 
   std::string GetCurrentStateName();
@@ -254,6 +254,8 @@ class ViseServer {
   void Start(unsigned int port);
   bool Stop();
   bool Restart();
+
+  bool SearchEngineExists( std::string search_engine_name );
 };
 
 #endif /* _VISE_SERVER_H */

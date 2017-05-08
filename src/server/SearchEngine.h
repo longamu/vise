@@ -45,7 +45,7 @@ class SearchEngine {
 public:
 
   SearchEngine();
-  void Init(std::string name, boost::filesystem::path basedir);
+  void Init(std::string name, boost::filesystem::path engine_dir );
   void UpdateEngineOverview();
 
   void Preprocess();
