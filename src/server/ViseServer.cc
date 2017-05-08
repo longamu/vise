@@ -817,7 +817,12 @@ void ViseServer::QueryTransformImage(Magick::Image &im,
       im.crop( Magick::Geometry( x1-x0 , y1-y0 ) );
 
       if ( scale ) {
-        im.resize( Magick::Geometry( sw, sh ) );
+        Magick::Geometry s0 = im.size();
+        double aspect_ratio = ((double) s0.width()) / ((double) s0.height());
+        unsigned int new_height = sh;
+        unsigned int new_width = ((unsigned int) (new_height * aspect_ratio));
+
+        im.zoom( Magick::Geometry( new_width, new_height ) );
       }
       return;
     } else {
@@ -825,7 +830,12 @@ void ViseServer::QueryTransformImage(Magick::Image &im,
       im.crop( Magick::Geometry( tx1-tx0 , ty1-ty0 ) );
 
       if ( scale ) {
-        im.resize( Magick::Geometry( sw, sh ) );
+        Magick::Geometry s0 = im.size();
+        double aspect_ratio = ((double) s0.width()) / ((double) s0.height());
+        unsigned int new_height = sh;
+        unsigned int new_width = ((unsigned int) (new_height * aspect_ratio));
+
+        im.zoom( Magick::Geometry( new_width, new_height ) );
       }
       return;
     }
