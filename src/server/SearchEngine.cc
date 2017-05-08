@@ -13,6 +13,7 @@ SearchEngine::SearchEngine() {
 }
 
 void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
+  engine_config_.clear();
   basedir_ = boost::filesystem::path(basedir);
   engine_name_ = name;
 
@@ -37,7 +38,6 @@ void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
     boost::filesystem::create_directory( transformed_imgdir_ );
     boost::filesystem::create_directory( training_datadir_ );
     boost::filesystem::create_directory( tmp_datadir_ );
-    std::cout << "\n" << engine_name_ << " search engine created" << std::flush;
   } else {
     if ( ! boost::filesystem::exists( transformed_imgdir_ ) ) {
       boost::filesystem::create_directory( transformed_imgdir_ );
@@ -48,8 +48,6 @@ void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
     if ( ! boost::filesystem::exists( tmp_datadir_ ) ) {
       boost::filesystem::create_directory( tmp_datadir_ );
     }
-
-    std::cout << "\n" << engine_name_ << " search engine loaded" << std::flush;
   }
 }
 
@@ -353,14 +351,15 @@ void SearchEngine::SetEngineConfig(std::string engine_config) {
 
   std::string keyval;
   while( std::getline(d, keyval, '\n') ) {
-    unsigned int sep_idx = keyval.find('=');
-    std::string key = keyval.substr(0, sep_idx);
-    std::string val = keyval.substr(sep_idx+1);
-
-    engine_config_.insert( std::make_pair<std::string, std::string>(key, val) );
+    std::size_t pos_eq = keyval.find('=');
+    if ( pos_eq != std::string::npos ) {
+      std::string key = keyval.substr(0, pos_eq);
+      std::string val = keyval.substr(pos_eq + 1);
+      engine_config_.insert( std::make_pair<std::string, std::string>(key, val) );
+    }
   }
 
-    // save full configuration file to training_datadir_
+  // save full configuration file to training_datadir_
   SetEngineConfigParam("trainDatabasePath", transformed_imgdir_.string());
   SetEngineConfigParam("databasePath", transformed_imgdir_.string());
   SetEngineConfigParam("trainImagelistFn",  imglist_fn_.string());
@@ -377,8 +376,6 @@ void SearchEngine::SetEngineConfig(std::string engine_config) {
   SetEngineConfigParam("fidxFn", train_file_prefix.string() + "fidx.e3bin" );
   SetEngineConfigParam("wghtFn", train_file_prefix.string() + "wght.e3bin" );
   SetEngineConfigParam("tmpDir", tmp_datadir_.string());
-
-  WriteConfigToFile();
 }
 
 std::string SearchEngine::GetEngineConfigParam(std::string key) {
@@ -457,6 +454,21 @@ void SearchEngine::WriteImageListToFile(const std::string fn,
   }
 }
 
+void SearchEngine::LoadImglist() {
+  try {
+    std::ifstream f( imglist_fn_.string().c_str() );
+
+    std::string imglist_i;
+    while( std::getline(f, imglist_i, '\n') ) {
+      imglist_.push_back( imglist_i );
+    }
+    f.close();
+  } catch( std::exception &e) {
+    std::cerr << "\nSearchEngine::LoadImglist() : error reading image filename list from [" << imglist_fn_.string() << "]" << std::flush;
+    std::cerr << e.what() << std::flush;
+  }
+}
+
 void SearchEngine::WriteConfigToFile() {
   try {
     std::map<std::string, std::string>::iterator it;
@@ -512,6 +524,17 @@ void SearchEngine::SendPacket(std::string sender, std::string type, std::string 
 //
 // Helper methods
 //
+bool SearchEngine::EngineExists( std::string name ) {
+  boost::filesystem::path engine_name( name );
+  boost::filesystem::path enginedir = basedir_ / engine_name;
+
+  if ( boost::filesystem::exists( enginedir ) ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 std::string SearchEngine::GetName() {
   return engine_name_;
 }

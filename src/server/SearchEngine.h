@@ -88,6 +88,9 @@ public:
   bool EngineConfigParamExists(std::string key);
   void PrintEngineConfig();
 
+  bool EngineExists( std::string name );
+  void LoadImglist();
+
  private:
   std::string engine_name_;
 
@@ -114,7 +117,6 @@ public:
 
   void CreateEngine( std::string name );
   void LoadEngine( std::string name );
-  bool EngineExists( std::string name );
   bool EngineConfigExists();
 
   void SendLog(std::string sender, std::string log);

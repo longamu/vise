@@ -7,7 +7,7 @@ var _vise_server = new XMLHttpRequest();
 var _vise_messenger = new XMLHttpRequest();
 var _vise_query = new XMLHttpRequest();
 
-var VISE_SERVER_ADDRESS    = "http://localhost:8080/";
+var VISE_SERVER_ADDRESS    = "http://localhost:9973/";
 var VISE_MESSENGER_ADDRESS = VISE_SERVER_ADDRESS + "_message";
 var VISE_QUERY_ADDRESS     = VISE_SERVER_ADDRESS + "_query";
 
@@ -20,18 +20,62 @@ var _vise_current_state_name = "";
 var _vise_current_search_engine_name = "";
 var _vise_search_engine_state;
 
+// Image comparator
+var _vise_query_width;
+var _vise_query_height;
+
+var _vise_imcomp_im1;
+var _vise_imcomp_im2;
+var im1_loaded = false;
+var im2_loaded = false;
+
+// Image region selector
+var _vise_img_canvas;
+var _vise_img_ctx;
+var _vise_canvas_width, _vise_canvas_height;
+var _vise_current_image_width;
+var _vise_current_image_height;
+var _vise_current_image;
+var _vise_current_img_fn;
+var _vise_canvas_scale = 1.0;
+
+var _vise_click_x0;
+var _vise_click_y0;
+var _vise_click_x1;
+var _vise_click_y1;
+var _vise_current_x;
+var _vise_current_y;
+
+// state
+var _vise_is_user_drawing_region = false;
+
+// theme
+var VISE_THEME_REGION_BOUNDARY_WIDTH = 4;
+var VISE_THEME_BOUNDARY_FILL_COLOR   = "#aaeeff";
+var VISE_THEME_BOUNDARY_LINE_COLOR   = "#1a1a1a";
+
+// html elements
+var header = document.getElementById('header');
+var control_panel = document.getElementById('control_panel');
+var canvas_panel;
+
+// image region
+var original_img_region = new ImageRegion();
+var canvas_img_region = new ImageRegion();
+
+
 function _vise_init() {
   // initially hide footer and log
   document.getElementById("footer").style.display = "none";
   document.getElementById("log").style.display = "none";
 
   // debug
-  _vise_current_search_engine_name = 'ox5k';
-  imcomp("christ_church_000212.jpg","christ_church_000333.jpg","x0y0x1y1=436,28,612,346","H=1.09694,0,6.49256,0.0291605,0.981047,-30.7954,0,0,1");
+  //_vise_current_search_engine_name = 'ox5k';
+  //imcomp("christ_church_000212.jpg","christ_church_000333.jpg","x0y0x1y1=436,28,612,346","H=1.09694,0,6.49256,0.0291605,0.981047,-30.7954,0,0,1");
 
   //_vise_select_img_region( 'https://www.nasa.gov/sites/default/files/thumbnails/image/earthsun20170412.png' );
 
-/*
+  /**/
   // request the contents of vise_index.html
   _vise_server.open("GET", VISE_SERVER_ADDRESS + "_vise_index.html");
   _vise_server.send();
@@ -39,7 +83,6 @@ function _vise_init() {
   // create the seed connection to receive messages
   _vise_messenger.open("GET", VISE_MESSENGER_ADDRESS);
   _vise_messenger.send();
-*/
 }
 
 function _vise_server_response_listener() {
@@ -331,43 +374,9 @@ function ImageRegion() {
 // Image region selector
 //
 
-// image canvas
-var _vise_img_canvas;
-var _vise_img_ctx;
-var _vise_canvas_width, _vise_canvas_height;
-var _vise_current_image_width;
-var _vise_current_image_height;
-var _vise_current_image;
-var _vise_current_img_fn;
-var _vise_canvas_scale = 1.0;
-
-var _vise_click_x0;
-var _vise_click_y0;
-var _vise_click_x1;
-var _vise_click_y1;
-var _vise_current_x;
-var _vise_current_y;
-
-// state
-var _vise_is_user_drawing_region = false;
-
-// theme
-var VISE_THEME_REGION_BOUNDARY_WIDTH = 4;
-var VISE_THEME_BOUNDARY_FILL_COLOR   = "#aaeeff";
-var VISE_THEME_BOUNDARY_LINE_COLOR   = "#1a1a1a";
-
-// html elements
-var header = document.getElementById('header');
-var control_panel = document.getElementById('control_panel');
-var canvas_panel;
-
-// image region
-var original_img_region = new ImageRegion();
-var canvas_img_region = new ImageRegion();
-
 function _vise_select_img_region(img_uri) {
   _vise_current_img_fn = img_uri;
-  document.getElementById("content").innerHTML = '<div id="vise_canvas_panel"><canvas id="_vise_img_canvas"></canvas>';
+  document.getElementById("content").innerHTML = '<div style="text-align: center;" id="vise_canvas_panel"><canvas id="_vise_img_canvas"></canvas><p style="display: inline;">Click and drag to draw a region</div>';
   _vise_img_canvas = document.getElementById('_vise_img_canvas');
   _vise_img_ctx = _vise_img_canvas.getContext('2d');
 
@@ -380,6 +389,7 @@ function _vise_select_img_region(img_uri) {
   _vise_img_canvas.addEventListener('mousedown', _vise_canvas_mousedown_listener);
   _vise_img_canvas.addEventListener('mouseup'  , _vise_canvas_mouseup_listener);
   _vise_img_canvas.addEventListener('mousemove'  , _vise_canvas_mousemove_listener);
+  _vise_img_canvas.addEventListener('mouseover'  , _vise_canvas_mouseover_listener);
 }
 
 function vise_search_img_region() {
@@ -474,6 +484,10 @@ function set_all_canvas_size(w, h) {
 //
 // mouse handling for drawing regions
 //
+
+function _vise_canvas_mouseover_listener(e) {
+  document.getElementById('vise_canvas_panel').style.cursor = 'crosshair';
+}
 
 // user clicks on the canvas
 function _vise_canvas_mousedown_listener(e) {
@@ -609,14 +623,6 @@ function _vise_draw_rect(x, y, w, h) {
 //
 // Image comparator
 //
-
-var _vise_query_width;
-var _vise_query_height;
-
-var _vise_imcomp_im1;
-var _vise_imcomp_im2;
-var im1_loaded = false;
-var im2_loaded = false;
 
 function imcomp(im1fn, im2fn, region, H) {
   var control_panel = document.getElementById('control_panel');

@@ -181,8 +181,9 @@ void ViseServer::Start(unsigned int port) {
 
   std::cout << "\nServer started on port " << port << " :-)" << std::flush;
 
-  LoadSearchEngine( "ox5k" );
   /*
+  // DEBUG
+  LoadSearchEngine( "ox5k" );
   QueryTest();
   */
 
@@ -219,8 +220,8 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
   ExtractHttpResource(http_request, http_method_uri);
 
   // for debug
-  //std::cout << "\nRequest = " << http_request << std::flush;
   std::cout << "\n" << http_method << " " << http_method_uri << std::flush;
+  //std::cout << "\nRequest = " << http_request << std::flush;
 
   if ( http_method == "GET " ) {
     if ( http_method_uri == "" ) {
@@ -231,9 +232,6 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       // show help page when user enteres http://localhost:8080
       SendHttpResponse( vise_main_html_, p_socket);
       p_socket->close();
-      if ( GetCurrentStateId() == ViseServer::STATE_QUERY ) {
-        SendCommand("_state update_now");
-      }
       return;
     }
 
@@ -343,26 +341,37 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
         if ( tokens.at(0) == "create_search_engine" ) {
           if ( SearchEngineExists( search_engine_name ) ) {
             SendMessage("Search engine by that name already exists!");
-            p_socket->close();
-            return;
-          }
-          search_engine_.Init( search_engine_name, vise_enginedir_ );
-          if ( UpdateState() ) {
-            // send control message : state updated
-            SendCommand("_state update_now");
-            SendHttpPostResponse( http_post_data, "OK", p_socket );
           } else {
-            SendHttpPostResponse( http_post_data, "ERR", p_socket );
+            search_engine_.Init( search_engine_name, vise_enginedir_ );
+            if ( UpdateState() ) {
+              // send control message : state updated
+              SendCommand("_state update_now");
+              SendHttpPostResponse( http_post_data, "OK", p_socket );
+            } else {
+              SendHttpPostResponse( http_post_data, "ERR", p_socket );
+            }
           }
           p_socket->close();
           return;
           // send control message to set loaded engine name
         } else if ( tokens.at(0) == "load_search_engine" ) {
-          std::cout << "\nLoading engine: " << search_engine_name << std::flush;
-          LoadSearchEngine( search_engine_name );
-          SendHttpPostResponse( http_post_data, "OK", p_socket );
-          p_socket->close();
-          return;
+            if ( search_engine_.GetName() == search_engine_name ) {
+              // engine already loaded, update your UI
+              SendHttpPostResponse( http_post_data, "OK", p_socket );
+              SendCommand(""); // @todo: this is needed to wakeup the messaging system! But why?
+              SendCommand("_state update_now");
+            } else {
+              if ( search_engine_.EngineExists( search_engine_name ) ) {
+                SendMessage("Loading search engine [" + search_engine_name + "] ...");
+                LoadSearchEngine( search_engine_name );
+                SendHttpPostResponse( http_post_data, "OK", p_socket );
+              } else {
+                SendHttpPostResponse( http_post_data, "ERR", p_socket );
+                SendMessage("Search engine does not exists!");
+              }
+            }
+            p_socket->close();
+            return;
         } else if ( tokens.at(0) == "msg_to_training_process" ) {
           std::string msg = tokens.at(1);
           if ( msg == "stop" ) {
@@ -440,9 +449,9 @@ void ViseServer::SendJsonResponse(std::string json, boost::shared_ptr<tcp::socke
   http_response << "Content-Length: " << json.length() << "\r\n";
   http_response << "Connection: keep-alive\r\n";
   http_response << "\r\n";
-  http_response << json;
 
   boost::asio::write( *p_socket, boost::asio::buffer(http_response.str()) );
+  boost::asio::write( *p_socket, boost::asio::buffer(json) );
   //std::cout << "\nSent json response : [" << json << "]" << std::flush;
 }
 
@@ -460,8 +469,8 @@ void ViseServer::SendHttpResponse(std::string response, boost::shared_ptr<tcp::s
   http_response << "Content-Encoding: utf-8\r\n";
   http_response << "Content-Length: " << response.length() << "\r\n";
   http_response << "\r\n";
-  http_response << response;
   boost::asio::write( *p_socket, boost::asio::buffer(http_response.str()) );
+  boost::asio::write( *p_socket, boost::asio::buffer(response) );
 
   //std::cout << "\nSent http html response of length : " << response.length() << std::flush;
 }
@@ -632,6 +641,7 @@ void ViseServer::HandleStateGetRequest( std::string resource_name,
     if ( state_id == ViseServer::STATE_QUERY &&
          GetCurrentStateId() == ViseServer::STATE_QUERY ) {
       if ( resource_args.empty() ) {
+        std::cout << "\nViseServer::HandleStateGetRequest() : sending query" << std::flush;
         SendCommand("_state hide");
         QueryServeImgList( 0, 20, p_socket );
         return;
@@ -673,7 +683,6 @@ void ViseServer::HandleQueryGetRequest(std::string http_method_uri, boost::share
     s.str(imcount);
     s >> imcount_i;
 
-    std::cout << "\npage = " << page_i << ", page_count=" << imcount_i << std::flush;
     QueryServeImgList(page_i, imcount_i, p_socket);
     return;
   } else if ( cmd == "search_img_region") {
@@ -1117,7 +1126,7 @@ void ViseServer::QueryServeImgList( unsigned int page_no,
       << "<h3>( " << doc_id << " of " << dataset_->getNumDoc() <<" ) " << im_fn << "</h3>"
       << "<p>" << im_dim.first << " x " << im_dim.second << " px</p></li>";
   }
-  s << "</ul";
+  s << "</ul>";
   SendHttpResponse( s.str(), p_socket );
 
   SendCommand("_control_panel clear all");
@@ -1466,6 +1475,10 @@ int ViseServer::GetCurrentStateId() {
   return state_id_;
 }
 
+void ViseServer::ResetToInitialState() {
+  state_id_ = ViseServer::STATE_NOT_LOADED;
+}
+
 bool ViseServer::UpdateState() {
   if ( state_id_ == ViseServer::STATE_NOT_LOADED ) {
     // check if search engine was initialized properly
@@ -1533,6 +1546,8 @@ bool ViseServer::UpdateState() {
 }
 
 void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
+  ResetToInitialState();
+
   /*
   SendMessage("Loading search engine " + search_engine_name + " ...");
 
@@ -1561,42 +1576,43 @@ void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
   assert( GetCurrentStateId() == ViseServer::STATE_PREPROCESS );
   //SendMessage("[" + search_engine_name + "] Loading pre-processed data ...");
 
-  search_engine_.Preprocess();
+  //search_engine_.Preprocess();
+  search_engine_.LoadImglist();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_DESCRIPTOR );
   //SendMessage("[" + search_engine_name + "] Loading descriptors ...");
 
-  search_engine_.Descriptor();
+  //search_engine_.Descriptor();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_CLUSTER );
   //SendMessage("[" + search_engine_name + "] Loading clusters ...");
 
-  search_engine_.Cluster();
+  //search_engine_.Cluster();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_ASSIGN );
   //SendMessage("[" + search_engine_name + "] Loading assign ...");
 
-  search_engine_.Assign();
+  //search_engine_.Assign();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_HAMM );
   //SendMessage("[" + search_engine_name + "] Loading hamm ...");
 
-  search_engine_.Hamm();
+  //search_engine_.Hamm();
   if ( !UpdateState() ) {
     return;
   }
   assert( GetCurrentStateId() == ViseServer::STATE_INDEX );
   //SendMessage("[" + search_engine_name + "] Loading index ...");
 
-  search_engine_.Index();
+  //search_engine_.Index();
   if ( !UpdateState() ) {
     return;
   }
@@ -1604,10 +1620,12 @@ void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
   //SendMessage("[" + search_engine_name + "] Loading complete :-)");
   QueryInit();
 
+  SendMessage("Search engine [" + search_engine_.GetName() + "] loaded.");
+
   //SendCommand("_log clear hide");
   //SendCommand("_control_panel clear all");
 
-  //SendCommand("_state update_now");
+  SendCommand("_state update_now");
 }
 
 //
@@ -1616,7 +1634,7 @@ void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
 void ViseServer::GenerateViseIndexHtml() {
   std::ostringstream s;
   s << "<div id=\"create_engine_panel\">";
-  s << "<input id=\"vise_search_engine_name\" name=\"vise_search_engine_name\" value=\"test\" onclick=\"document.getElementById('vise_search_engine_name').value=''\" size=\"20\" autocomplete=\"off\">";
+  s << "<input id=\"vise_search_engine_name\" name=\"vise_search_engine_name\" value=\"engine_name\" onclick=\"document.getElementById('vise_search_engine_name').value=''\" size=\"20\" autocomplete=\"off\">";
   s << "<div class=\"action_button\" onclick=\"_vise_create_search_engine()\">&nbsp;&nbsp;Create</div>";
   s << "</div>";
   s << "<div id=\"load_engine_panel\">";

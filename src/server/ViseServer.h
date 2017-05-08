@@ -136,6 +136,7 @@ class ViseServer {
 
   // state maintainanace
   bool UpdateState();
+  void ResetToInitialState();
   std::string GetStateJsonData();
   void GenerateViseIndexHtml();
   void ServeStaticResource(const std::string resource_name,
