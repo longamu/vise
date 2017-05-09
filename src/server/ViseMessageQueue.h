@@ -17,7 +17,10 @@
 class ViseMessageQueue {
 public:
   void Push( const std::string &d );
-  void BlockingPop( std::string &d );
+  std::string BlockingPop();
+
+  // to avoid the cases where the HTTP client is swamped by a large message queue
+  void WaitUntilEmpty();
 
 private:
   std::queue< std::string > messages_;

@@ -60,10 +60,11 @@ void SearchEngine::Preprocess() {
     CreateFileList( imagePath );
   }
 
-  if ( boost::filesystem::exists( imglist_fn_ ) ) {
-    //SendLog("Preprocess", "\nLoaded");
-  } else {
+  if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
+    std::cout << "\nViseServer::Preprocess() : Started" << std::flush;
     SendLog("Preprocess", "\nPreprocessing started ...");
+    SendCommand("Preprocess", "_progress reset");
+
     std::string transformed_img_width = GetEngineConfigParam("transformed_img_width");
     if (transformed_img_width != "original") {
       // scale and copy image to transformed_imgdir_
@@ -101,6 +102,7 @@ void SearchEngine::Preprocess() {
 
             im.write( dest_fn.string() );
             imglist_fn_transformed_size_.at(i) = boost::filesystem::file_size(dest_fn.string().c_str());
+            SendProgress( "Preprocess", i+1, imglist_.size() );
           } else {
             // just copy the files
             boost::filesystem::copy_file( src_fn, dest_fn );
@@ -114,11 +116,18 @@ void SearchEngine::Preprocess() {
         }
       }
     }
+
+    std::cout << "\nViseServer::Preprocess() : Waiting for queue to be empty" << std::flush;
+    std::cout << " [EMPTY NOW]" << std::flush;
     SendLog("Preprocess", "[Done]");
+    std::cout << "\nViseServer::Preprocess() : Done" << std::flush;
 
     //if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
     WriteImageListToFile( imglist_fn_.string(), imglist_ );
     SendLog("Preprocess", "\nWritten image list to : [" + imglist_fn_.string() + "]" );
+    SendCommand("Preprocess", "_progress complete");
+
+    vise_message_queue_.WaitUntilEmpty(); // to ensure that the user receives all messages
   }
 }
 
@@ -126,12 +135,10 @@ void SearchEngine::Descriptor() {
   std::string const trainDescsFn  = GetEngineConfigParam("descFn");
   boost::filesystem::path train_desc_fn( trainDescsFn );
 
-  if ( boost::filesystem::exists( train_desc_fn ) ) {
-    // delete file
-    //boost::filesystem::remove( train_desc_fn );
-    //SendLog("Descriptor", "\nLoaded");
-  } else {
+  if ( ! boost::filesystem::exists( train_desc_fn ) ) {
     SendLog("Descriptor", "\nComputing training descriptors ...");
+    SendCommand("Descriptor", "_progress reset");
+
     std::string const trainImagelistFn = GetEngineConfigParam("trainImagelistFn");
     std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
 
@@ -165,7 +172,9 @@ void SearchEngine::Descriptor() {
 // $ sudo python setup.py install
 void SearchEngine::Cluster() {
   if ( ! ClstFnExists() ) {
+    std::cout << "\nStarting clustering of descriptors ..." << std::flush;
     SendLog("Cluster", "\nStarting clustering of descriptors ...");
+    SendCommand("Cluster", "_progress reset");
 
     //boost::thread t( boost::bind( &SearchEngine::RunClusterCommand, this ) );
     RunClusterCommand();
@@ -183,12 +192,13 @@ void SearchEngine::RunClusterCommand() {
   FILE *pipe = popen( cmd.c_str(), "r");
 
   if ( pipe != NULL ) {
-    SendPacket("Cluster", "status", "\nCommand executed: $" + cmd);
+    SendLog("Cluster", "\nCommand executed: $" + cmd);
 
     char line[128];
-    while ( fgets(line, 64, pipe) ) {
+    while ( fgets(line, 128, pipe) ) {
       std::string status_txt(line);
       SendLog("Cluster", status_txt);
+      std::cout << "\nstatus_txt = " << status_txt << std::flush;
     }
     pclose( pipe );
   } else {
@@ -511,6 +521,16 @@ void SearchEngine::ReadConfigFromFile() {
   }
 }
 
+void SearchEngine::SendCommand(std::string sender, std::string command) {
+  SendPacket(sender, "command", command);
+}
+
+void SearchEngine::SendProgress(std::string state_name, unsigned long completed, unsigned long total) {
+  std::ostringstream s;
+  s << state_name << " progress " << completed << "/" << total;
+  vise_message_queue_.Push( s.str() );
+}
+
 void SearchEngine::SendLog(std::string sender, std::string log) {
   SendPacket(sender, "log", log);
 }
@@ -524,6 +544,25 @@ void SearchEngine::SendPacket(std::string sender, std::string type, std::string 
 //
 // Helper methods
 //
+bool SearchEngine::IsEngineNameValid(std::string engine_name) {
+  // search engine name cannot contain:
+  //  - spaces
+  //  - special characters (*, ?, /)
+  std::size_t space = engine_name.find(' ');
+  std::size_t asterix = engine_name.find('*');
+  std::size_t qmark = engine_name.find('?');
+  std::size_t fslash = engine_name.find('/');
+
+  if ( space == std::string::npos ||
+       asterix == std::string::npos ||
+       qmark == std::string::npos ||
+       fslash == std::string::npos ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 std::string SearchEngine::GetName() {
   return engine_name_;
 }

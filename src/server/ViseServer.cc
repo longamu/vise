@@ -232,6 +232,14 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       // show help page when user enteres http://localhost:8080
       SendHttpResponse( vise_main_html_, p_socket);
       p_socket->close();
+
+      /*
+      // debug
+      for ( unsigned int i=0; i<101; i++ ) {
+        SendProgress( "Main", i, 100 );
+        boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+      }
+      */
       return;
     }
 
@@ -271,8 +279,7 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       // we always create this _message channel which keeps waiting for messages
       // to be pushed to vise_message_queue_, sends this message to the client
       // which in turn again creates another request for any future messages
-      std::string msg;
-      vise_message_queue_.BlockingPop( msg );
+      std::string msg = vise_message_queue_.BlockingPop();
       SendRawResponse( "text/plain", msg, p_socket );
       p_socket->close();
       return;
@@ -342,12 +349,18 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
           if ( SearchEngineExists( search_engine_name ) ) {
             SendMessage("Search engine by that name already exists!");
           } else {
-            search_engine_.Init( search_engine_name, vise_enginedir_ );
-            if ( UpdateState() ) {
-              // send control message : state updated
-              SendCommand("_state update_now");
-              SendHttpPostResponse( http_post_data, "OK", p_socket );
+            if ( search_engine_.IsEngineNameValid( search_engine_name ) ) {
+              search_engine_.Init( search_engine_name, vise_enginedir_ );
+              if ( UpdateState() ) {
+                // send control message : state updated
+                SendCommand("_state update_now");
+                SendHttpPostResponse( http_post_data, "OK", p_socket );
+              } else {
+                SendMessage("Cannot initialize search engine [" + search_engine_name + "]");
+                SendHttpPostResponse( http_post_data, "ERR", p_socket );
+              }
             } else {
+              SendMessage("Search engine name cannot contains spaces, or special characters ( *,?,/ )");
               SendHttpPostResponse( http_post_data, "ERR", p_socket );
             }
           }
@@ -562,6 +575,12 @@ void ViseServer::SendLog(std::string log) {
 
 void ViseServer::SendCommand(std::string command) {
   SendPacket("command", command );
+}
+
+void ViseServer::SendProgress(std::string state_name, unsigned long completed, unsigned long total) {
+  std::ostringstream s;
+  s << state_name << " progress " << completed << "/" << total;
+  vise_message_queue_.Push( s.str() );
 }
 
 void ViseServer::SendPacket(std::string type, std::string message) {
@@ -905,6 +924,7 @@ void ViseServer::HomographyPointTransform( double H[], const double x, const dou
 void ViseServer::HandleStatePostData( int state_id, std::string http_post_data, boost::shared_ptr<tcp::socket> p_socket ) {
   if ( state_id == ViseServer::STATE_SETTING ) {
     search_engine_.SetEngineConfig(http_post_data);
+    search_engine_.WriteConfigToFile();
 
     if ( UpdateState() ) {
       // send control message : state updated
@@ -951,7 +971,7 @@ void ViseServer::InitiateSearchEngineTraining() {
       // send control message : state updated
       SendCommand("_state update_now");
     } else {
-      SendMessage("\n" + GetCurrentStateName() + " : failed to change to next state");
+      SendLog("\n" + GetCurrentStateName() + " : failed to change to next state");
       return;
     }
   }

@@ -120,9 +120,16 @@ namespace buildIndex {
             processed_numDescs_ += numToCopy;
 
             std::ostringstream s;
+/*
             //s << "Descriptor log \nDone " << processed_img_count_ << " / " << total_img_count_;
             s << "Descriptor log \nDone " << processed_numDescs_ << " / " << numDescs_;
+            vise_message_queue_.Push( s.str() );
 
+            s.clear();
+            s.str("");
+            s.reset();
+*/
+            s << "Descriptor progress " << processed_numDescs_ << "/" << numDescs_;
             vise_message_queue_.Push( s.str() );
           }
           remainNumDescs_-= numToCopy;

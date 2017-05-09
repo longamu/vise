@@ -194,6 +194,7 @@ class ViseServer {
   void SendMessage(std::string message);
   void SendLog(std::string log);
   void SendCommand(std::string command);
+  void SendProgress(std::string state_name, unsigned long completed, unsigned long total);
   void SendPacket(std::string type, std::string message);
 
   // helper functions

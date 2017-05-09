@@ -6,11 +6,20 @@ void ViseMessageQueue::Push( const std::string &d ) {
   queue_condition_.notify_one();
 }
 
-void ViseMessageQueue::BlockingPop( std::string &d ) {
+std::string ViseMessageQueue::BlockingPop() {
   boost::mutex::scoped_lock lock(mtx_);
   while ( messages_.empty() ) {
     queue_condition_.wait(lock);
   }
-  d = messages_.front();
+  std::string d = messages_.front();
   messages_.pop();
+  queue_condition_.notify_one();
+  return d;
+}
+
+void ViseMessageQueue::WaitUntilEmpty() {
+  boost::mutex::scoped_lock lock(mtx_);
+  while ( !messages_.empty() ) {
+    queue_condition_.wait(lock);
+  }
 }

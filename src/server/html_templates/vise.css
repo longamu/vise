@@ -11,7 +11,7 @@ body {
   text-align: center;
   padding-top: 1em;
   padding-bottom: 1em;
-  border-bottom: 1px solid #f2f2f2;
+  /*border-bottom: 1px solid #f2f2f2;*/
 }
 #content {
   display: block;
@@ -134,6 +134,22 @@ body {
 
 .action_img:hover {
   cursor: pointer;
+}
+
+/* Progress bar */
+#progress {
+  display: block;
+  width: 100%;
+  background-color: #f2f2f2;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+#progress_bar {
+  width: 0%;
+  height: 2px;
+  background-color: #80b3ff;
+  text-align: left;
 }
 
 /* State: Setting */

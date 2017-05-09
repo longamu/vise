@@ -88,8 +88,10 @@ public:
   bool EngineConfigParamExists(std::string key);
   void PrintEngineConfig();
 
-  bool EngineExists( std::string name );
   void LoadImglist();
+  bool IsEngineNameValid(std::string engine_name);
+  void WriteConfigToFile();
+  void ReadConfigFromFile();
 
  private:
   std::string engine_name_;
@@ -119,6 +121,8 @@ public:
   void LoadEngine( std::string name );
   bool EngineConfigExists();
 
+  void SendProgress(std::string state_name, unsigned long completed, unsigned long total);
+  void SendCommand(std::string sender, std::string command);
   void SendLog(std::string sender, std::string log);
   void SendPacket(std::string sender, std::string type, std::string messsage);
 
@@ -126,8 +130,6 @@ public:
                             const std::vector< std::string > &imlist);
   void CreateFileList(boost::filesystem::path dir);
 
-  void WriteConfigToFile();
-  void ReadConfigFromFile();
   void InitEngineResources( std::string name );
   void RunClusterCommand();
 };

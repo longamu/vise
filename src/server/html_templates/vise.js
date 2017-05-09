@@ -63,19 +63,18 @@ var canvas_panel;
 var original_img_region = new ImageRegion();
 var canvas_img_region = new ImageRegion();
 
-
 function _vise_init() {
   // initially hide footer and log
   document.getElementById("footer").style.display = "none";
   document.getElementById("log").style.display = "none";
 
+  /**/
   // debug
   //_vise_current_search_engine_name = 'ox5k';
   //imcomp("christ_church_000212.jpg","christ_church_000333.jpg","x0y0x1y1=436,28,612,346","H=1.09694,0,6.49256,0.0291605,0.981047,-30.7954,0,0,1");
 
   //_vise_select_img_region( 'https://www.nasa.gov/sites/default/files/thumbnails/image/earthsun20170412.png' );
 
-  /**/
   // request the contents of vise_index.html
   _vise_server.open("GET", VISE_SERVER_ADDRESS + "_vise_index.html");
   _vise_server.send();
@@ -83,8 +82,13 @@ function _vise_init() {
   // create the seed connection to receive messages
   _vise_messenger.open("GET", VISE_MESSENGER_ADDRESS);
   _vise_messenger.send();
+
 }
 
+
+//
+// Vise Server ( localhost:9973 )
+//
 function _vise_server_response_listener() {
   var response_str = this.responseText;
   var content_type = this.getResponseHeader('Content-Type')
@@ -138,6 +142,8 @@ function _vise_handle_message(packet) {
     _vise_handle_log_message(sender, msg);
   } else if ( receiver === "message" ) {
     _vise_show_message(msg, VISE_THEME_MESSAGE_TIMEOUT_MS);
+  } else if ( receiver === "progress" ) {
+    _vise_handle_progress_message(sender, msg);
   }
 }
 
@@ -158,6 +164,35 @@ function _vise_show_message(msg, t) {
   }
 }
 
+//
+// progress bar
+//
+function _vise_handle_progress_message(state_name, msg) {
+  var values = msg.split('/');
+  var completed = parseInt(values[0]);
+  var total = parseInt(values[1]);
+  var progress = Math.round( (completed/total) * 100 );
+  console.log( "Progress " + completed + " of " + total );
+
+  var progress_bar = document.getElementById("progress_bar");
+  progress_bar.style.width = progress + "%";
+  progress_bar.innerHTML = progress + "%";
+
+  if ( progress == 100 ) {
+    progress_bar.innerHTML = '';
+  }
+}
+
+function _vise_reset_progress_bar() {
+  var progress_bar = document.getElementById("progress_bar");
+  progress_bar.style.width = "0%";
+}
+
+function _vise_complete_progress_bar() {
+  var progress_bar = document.getElementById("progress_bar");
+  progress_bar.style.width = "100%";
+}
+
 function _vise_handle_log_message(sender, msg) {
   var log_panel = document.getElementById( "log" );
   if ( msg.startsWith("\n") ) {
@@ -169,6 +204,9 @@ function _vise_handle_log_message(sender, msg) {
   } 
 }
 
+//
+// command
+//
 function _vise_handle_command(sender, command_str) {
   // command_str = "_state update_now"
   // command_str = "_control_panel remove Info_proceed_button"
@@ -196,7 +234,18 @@ function _vise_handle_command(sender, command_str) {
     case "_control_panel":
       _vise_handle_control_panel_command(param);
       break;
-    defaul:
+    case "_progress":
+      switch( param ) {
+        case 'reset':
+          _vise_reset_progress_bar();
+          break;
+        case 'complete':
+          _vise_complete_progress_bar();
+          break;
+      }
+      break;
+
+    default:
       console.log("Unknown command : " + command_str);
   }
 }
@@ -275,6 +324,9 @@ function _vise_update_state_info( json ) {
 
     // request content for this state
     _vise_fetch_current_state_content();
+
+    // reset the progress bar
+    _vise_reset_progress_bar();
   }
 }
 
