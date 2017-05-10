@@ -87,16 +87,16 @@ class searchPage:
         imw_limit= 800; imh_limit= 800;
         
         if uploadID==None:
-            imw, imh= self.docMap[dsetname].getWidthHeight(docID);
-        else:
-            imw, imh= Image.open( st['localFilename_jpg'] ).size;
-        scale= min( float(imw_limit)/imh, float(imh_limit)/imw );
-               
-        if uploadID==None:
             filename= self.pathManager_obj[dsetname].hide(self.docMap[dsetname].getFn(docID));
+            imw, imh= self.docMap[dsetname].getWidthHeight(docID);
         else:
             st= savedTemp.load(uploadID);
             filename= st['originalFullFilename'];
+            imw, imh= Image.open( st['localFilename_jpg'] ).size;
+
+        scale= min( float(imw_limit)/imh, float(imh_limit)/imw );
+               
+
         body+='name: %s<br><br>\n' % filename;
         body+='<a href="getImageFull?%s&dsetname=%s">Full size image</a><br><br>' % (querySpec, dsetname);
 

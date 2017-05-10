@@ -79,20 +79,20 @@ class dynamicImage:
         im= Image.open(fn);
         imw, imh= im.size;
         
-        if (xl!=None and xu!=None and yl!=None and yu!=None):
+        if (xl is not None and xu is not None and yl is not None and yu is not None):
             xl= float(xl); xu= float(xu); yl= float(yl); yu= float(yu);
         
-        if H!=None:
+        if H is not None:
             H_= [float(hi) for hi in H.split(',')];
             H= np.array( H_ ).reshape( (3,3) );
             X= np.array([[xl,yl,1.0], [xu,yl,1.0], [xu,yu,1.0], [xl,yu,1.0]]).T;
         
-        crop= (crop!=None) and (xl!=None and xu!=None and yl!=None and yu!=None);
+        crop= (crop!=None) and (xl is not None and xu is not None and yl is not None and yu is not None);
         
         drawBox= (drawBox=="true") and not(crop);
         
         if crop:
-            if H==None:
+            if H is None:
                 cropBox= (xl,yl,xu,yu);
             else:
                 XP = np.dot(H, X);
@@ -105,16 +105,16 @@ class dynamicImage:
         else:
             cropw,croph= imw,imh;
         
-        if (H!=None and drawBox) or width!=None or height!=None:
+        if ( H is not None and drawBox) or width is not None or height is not None:
             
             # if you change scale computation don't forget to change do_search scale!!
             
-            if width==None and height==None:
+            if width is None and height is None:
                 scale= 1;
             else:
-                if width==None:
+                if width is None:
                     scale= float(height)/croph;
-                elif height==None:
+                elif height is None:
                     scale= float(width)/cropw;
                 else:
                     scale= min( float(width)/cropw, float(height)/croph );
@@ -127,7 +127,7 @@ class dynamicImage:
             else:
                 im= im.resize( ( int(imw*scale), int(imh*scale) ) );
             
-            if H!=None and drawBox:
+            if H is not None and drawBox:
                 
                 S= np.array( [[scale,0,0],[0,scale,0],[0,0,1]] );
                 X= np.array([[xl,yl,1.0], [xu,yl,1.0], [xu,yu,1.0], [xl,yu,1.0]]).T;

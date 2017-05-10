@@ -115,15 +115,38 @@ absAPI::session( socket_ptr sock ){
 }
 
 
+void InitReljaRetrivalFrontend(std::string dsetname, std::string configFn) {
+  std::cout << "\nLoading frontend " << std::flush;
+  std::ostringstream s;
+  s << "python ../src/ui/web/webserver2.py 9971";
+  s << " " << dsetname;
+  s << " 65521";
+  s << " " << configFn;
+  s << " true";
+
+  std::cout << "\nFrontend : $" << s.str() << std::flush;
+
+  FILE *pipe = popen( s.str().c_str(), "r");
+  vise_message_queue_.Push("Query command _redirect http://localhost:9971 1000");
+
+  if ( pipe == NULL ) {
+    std::cerr << "\nViseServer::InitReljaRetrivalBackend : failed to execute the frontend" << std::flush;
+  }
+  pclose( pipe );
+}
 
 void
-absAPI::server(boost::asio::io_service& io_service, short int port) {
+absAPI::server(boost::asio::io_service& io_service, unsigned int port, std::string dsetname, std::string configFn) {
     
-    std::cout << "Waiting for requests" << "\n";
+    std::cout << "\nabsAPI::server() : Waiting for requests on port " << port << std::flush;
 try_again:
     try {
         tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), port));
         a.set_option(tcp::acceptor::reuse_address(true));
+
+
+        boost::thread t( boost::bind( &InitReljaRetrivalFrontend, dsetname, configFn ) );
+
         while (1) {
             socket_ptr sock(new tcp::socket(io_service));
             a.accept(*sock);
@@ -131,7 +154,7 @@ try_again:
         }
     }
     catch (std::exception& e) {
-        std::cerr<<"exception: "<<e.what()<<"\n"; std::cerr.flush();
+        std::cerr<<"\nabsAPI::server() : "<< e.what() << std::flush;
         sleep(1);
         goto try_again;
     }

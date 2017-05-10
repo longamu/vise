@@ -21,7 +21,8 @@ ViseMessageQueue vise_message_queue_;
 int main(int argc, char** argv) {
   std::cout << "\nVGG Image Search Engine (VISE)";
   std::cout << "\n";
-  unsigned int port = 9973;
+  //unsigned int port = 9973;
+  unsigned int port = 8080;
 
   Magick::InitializeMagick(*argv);
 

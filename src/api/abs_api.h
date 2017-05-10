@@ -36,6 +36,11 @@ If these 2 are not included here, before boost/asio.hpp: Arthur has some problem
 #include "dataset_abs.h"
 
 
+#include "ViseMessageQueue.h"
+
+// defined in src/vise.cc
+// a global message queue to send communications to client HTTP browser
+extern ViseMessageQueue vise_message_queue_;
 
 using boost::asio::ip::tcp;
 typedef boost::shared_ptr<tcp::socket> socket_ptr;
@@ -50,7 +55,7 @@ class absAPI {
         virtual ~absAPI() {}
         
         virtual void
-            server(boost::asio::io_service& io_service, short int port);
+            server(boost::asio::io_service& io_service, unsigned int port, std::string dsetname, std::string configFn);
         
         virtual std::string
             getReply( boost::property_tree::ptree &pt, std::string const &request ) const =0;

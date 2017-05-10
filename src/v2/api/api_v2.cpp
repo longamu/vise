@@ -55,15 +55,28 @@ No usage or redistribution is allowed without explicit permission.
 #include "tfidf_v2.h"
 #include "util.h"
 
-
-
+/*
 int main(int argc, char* argv[]){
     MPI_INIT_ENV
-    
-    // ------------------------------------ setup basic
-    
+    std::vector< std::string > param;
+    for( unsigned int i=0; i<argc; i++) {
+      param.push_back( argv[i] );
+    }
+    api_v2( param );
+    return 0;
+}
+*/
+
+
+//
+// so that this can be invoked from within C++
+// (temporary: used until JS based frontend is ready)
+//
+void api_v2(std::vector< std::string > argv) {
+// ------------------------------------ setup basic
+    int argc = argv.size();
     int APIport= 35200;
-    if (argc>1) APIport= atoi(argv[1]);
+    if (argc>1) APIport= atoi(argv[1].c_str());
     std::cout<<"APIport= "<<APIport<<"\n";
     
     std::string dsetname= "oxMini20_v2";
@@ -277,7 +290,7 @@ int main(int argc, char* argv[]){
     
     // start
     boost::asio::io_service io_service;
-    API_obj.server(io_service, APIport);
+    API_obj.server(io_service, APIport, dsetname, configFn);
     
     // make sure this is deleted before everything which uses it
     delete consQueue;
@@ -296,8 +309,5 @@ int main(int argc, char* argv[]){
             delete SA;
     }
     
-    return 0;
-   
-
-
 }
+

@@ -184,9 +184,11 @@ void ViseServer::Start(unsigned int port) {
   /*
   // DEBUG
   LoadSearchEngine( "ox5k" );
-  QueryTest();
+  QueryInit();
+  //QueryTest();
   */
 
+  /*  */
   try {
     while ( 1 ) {
       boost::shared_ptr<tcp::socket> p_socket( new tcp::socket(io_service) );
@@ -197,7 +199,6 @@ void ViseServer::Start(unsigned int port) {
     std::cerr << "\nCannot listen for http request!\n" << e.what() << std::flush;
     return;
   }
-
 }
 
 bool ViseServer::Stop() {
@@ -658,12 +659,15 @@ void ViseServer::HandleStateGetRequest( std::string resource_name,
   if ( state_id != -1 ) {
     if ( state_id == ViseServer::STATE_QUERY &&
          GetCurrentStateId() == ViseServer::STATE_QUERY ) {
+      return;
+      /*
       if ( resource_args.empty() ) {
         std::cout << "\nViseServer::HandleStateGetRequest() : sending query" << std::flush;
         SendCommand("_state hide");
         QueryServeImgList( 0, 20, p_socket );
         return;
       }
+      */
     } else {
       switch( state_id ) {
       case ViseServer::STATE_SETTING:
@@ -1113,6 +1117,7 @@ void ViseServer::InitiateSearchEngineTraining() {
     return;
   }
 
+  QueryInit();
 }
 
 //
@@ -1123,8 +1128,16 @@ void ViseServer::QueryServeImgList( unsigned int page_no,
                                     boost::shared_ptr<tcp::socket> p_socket ) {
   std::ostringstream s;
   uint32_t start_doc_id = page_no * per_page_im_count;
+
+  int32_t next_page_no = page_no + 1;
+  int32_t prev_page_no = page_no - 1;
+  if ( page_no == 0 ) {
+    prev_page_no = -1;
+  }
+
   if ( start_doc_id > dataset_->getNumDoc() ) {
     start_doc_id = dataset_->getNumDoc() - per_page_im_count;
+    next_page_no = -1;
   }
 
   uint32_t end_doc_id   = start_doc_id + per_page_im_count;
@@ -1133,6 +1146,10 @@ void ViseServer::QueryServeImgList( unsigned int page_no,
   }
 
   s << "<ul class=\"img_list columns-4\">";
+  s << "<input type=\"hidden\" name=\"page_no\" value=\"" << page_no << "\">";
+  s << "<input type=\"hidden\" name=\"per_page_im_count\" value=\"" << per_page_im_count << "\">";
+  s << "<input type=\"hidden\" name=\"next_page_no\" value=\"" << next_page_no << "\">";
+  s << "<input type=\"hidden\" name=\"prev_page_no\" value=\"" << prev_page_no << "\">";
 
   for ( uint32_t doc_id=start_doc_id; doc_id < end_doc_id; doc_id++) {
     std::string im_fn  = dataset_->getInternalFn( doc_id );
@@ -1142,33 +1159,11 @@ void ViseServer::QueryServeImgList( unsigned int page_no,
     s << "<li><img class=\"action_img\" "
       << "onclick=\"_vise_select_img_region('" << im_uri << "')\" "
       << "src=\"" << im_uri << "\" />"
-      << "<h3>( " << doc_id << " of " << dataset_->getNumDoc() <<" ) " << im_fn << "</h3>"
+      << "<h3>( " << (doc_id+1) << " of " << (dataset_->getNumDoc()+1) <<" ) " << im_fn << "</h3>"
       << "<p>" << im_dim.first << " x " << im_dim.second << " px</p></li>";
   }
   s << "</ul>";
   SendHttpResponse( s.str(), p_socket );
-
-  SendCommand("_control_panel clear all");
-  std::ostringstream cs;
-
-  if ( start_doc_id == 0 ) {
-    cs << "_control_panel add Previous";
-  } else {
-    cs << "_control_panel add <div class=\"action_button\" onclick=\"q('cmd=show_img_list&page="
-       << (page_no-1)
-       << "&imcount=20')\">Previous</a>";
-  }
-  SendCommand( cs.str() );
-  cs.str("");
-
-  if ( end_doc_id == dataset_->getNumDoc() ) {
-    cs << "_control_panel add &nbsp;&nbsp;Next";
-  } else {
-    cs << "_control_panel add &nbsp;&nbsp;<div class=\"action_button\" onclick=\"q('cmd=show_img_list&page="
-       << (page_no+1)
-       << "&imcount=20')\">Next</a>";
-  }
-  SendCommand( cs.str() );
 }
 
 void ViseServer::QuerySearchImageRegion(std::string query_img_fn,
@@ -1315,6 +1310,7 @@ void ViseServer::QueryCompareImage(std::string im1fn,
 }
 
 void ViseServer::QueryInit() {
+  /*
   // construct dataset
   dataset_ = new datasetV2( search_engine_.GetEngineConfigParam("dsetFn"),
                             search_engine_.GetEngineConfigParam("databasePath"),
@@ -1323,6 +1319,8 @@ void ViseServer::QueryInit() {
   // load the search index in separate thread
   // while the user browses image list and prepares search area
   vise_load_search_index_thread_ = new boost::thread( boost::bind( &ViseServer::QueryLoadSearchIndex, this ) );
+  */
+  boost::thread t( boost::bind( &ViseServer::InitReljaRetrival, this ) );
 }
 
 void ViseServer::QueryLoadSearchIndex() {
@@ -1654,7 +1652,7 @@ void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
   //SendCommand("_log clear hide");
   //SendCommand("_control_panel clear all");
 
-  SendCommand("_state update_now");
+  //SendCommand("_state update_now");
 }
 
 //
@@ -1865,4 +1863,42 @@ void ViseServer::AddTrainingStat(std::string dataset_name, std::string state_nam
   std::strftime(date_str, sizeof(date_str), "%F,%T", std::gmtime(&t));
 
   training_stat_f << "\n" << date_str  << "," << dataset_name << "," << state_name << "," << time_sec << "," << space_bytes << std::flush;
+}
+
+// TEMPORARY CODE -- WILL BE REMOVE IN FUTURE
+// setup relja_retrival backend and frontend (temporary, until JS based frontend is ready)
+extern void api_v2(std::vector< std::string > argv);
+void ViseServer::InitReljaRetrival() {
+  boost::thread backend( boost::bind( &ViseServer::InitReljaRetrivalBackend, this ) );
+  //boost::thread frontend( boost::bind( &ViseServer::InitReljaRetrivalFrontend, this ) );
+
+  backend.join();
+  //frontend.join();
+}
+void ViseServer::InitReljaRetrivalBackend() {
+  // start relja_retrival backend
+  std::vector< std::string > param;
+  param.push_back("api_v2");
+  param.push_back("65521");
+  param.push_back( search_engine_.GetName() );
+  param.push_back( search_engine_.GetEngineConfigFn().string() );
+  api_v2( param );
+}
+
+void ViseServer::InitReljaRetrivalFrontend() {
+  std::cout << "\nLoading frontend " << std::flush;
+  std::ostringstream s;
+  s << "python ../src/ui/web/webserver.py 9971";
+  s << " " << search_engine_.GetName();
+  s << " 65521";
+  s << " " << search_engine_.GetEngineConfigFn().string();
+  s << " true";
+
+  std::cout << "\nFrontend : $" << s.str() << std::flush;
+
+  FILE *pipe = popen( s.str().c_str(), "r");
+  if ( pipe == NULL ) {
+    std::cerr << "\nViseServer::InitReljaRetrivalBackend : failed to execute the frontend" << std::flush;
+  }
+  pclose( pipe );
 }

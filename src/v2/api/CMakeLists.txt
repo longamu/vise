@@ -2,7 +2,8 @@ if (cREGISTER)
     set(REGISTER_LIB "register_images")
 endif (cREGISTER)
 
-add_executable( api_v2 api_v2.cpp )
+#add_executable( api_v2 api_v2.cpp )
+add_library( api_v2 api_v2.cpp )
 target_link_libraries( api_v2
     clst_centres
     dataset_v2

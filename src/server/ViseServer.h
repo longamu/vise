@@ -213,6 +213,12 @@ class ViseServer {
   bool StringStartsWith( const std::string &s, const std::string &prefix );
   std::string GetHttpContentType(boost::filesystem::path fn);
 
+  // TEMPORARY -- WILL BE REMOVED IN FUTURE
+  // setup relja_retrival backend and frontend (temporary, until JS based frontend is ready)
+  void InitReljaRetrival();
+  void InitReljaRetrivalBackend();
+  void InitReljaRetrivalFrontend();
+
   // @todo: move to ViseServer.cc ( do not know how! )
   template<typename T> void ParseCsvString( const std::string csv, std::vector< T > &d ) {
     d.clear();

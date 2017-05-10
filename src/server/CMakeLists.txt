@@ -30,6 +30,7 @@ target_link_libraries( ViseServer
   spatial_api
   spatial_verif_v2
   tfidf_v2
+  api_v2
   ${Boost_LIBRARIES} 
   ${ImageMagick_LIBRARIES}
   ${fastann_LIBRARIES})

@@ -195,10 +195,15 @@ void SearchEngine::RunClusterCommand() {
     SendLog("Cluster", "\nCommand executed: $" + cmd);
 
     char line[128];
+    /*
     while ( fgets(line, 128, pipe) ) {
-      std::string status_txt(line);
-      SendLog("Cluster", status_txt);
-      std::cout << "\nstatus_txt = " << status_txt << std::flush;
+    */
+    while ( !feof( pipe ) ) {
+      if ( fgets(line, 128, pipe) != NULL ) {
+        std::string status_txt(line);
+        SendLog("Cluster", status_txt);
+        std::cout << "\nstatus_txt = " << status_txt << std::flush;
+      }
     }
     pclose( pipe );
   } else {

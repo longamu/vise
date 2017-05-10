@@ -7,7 +7,7 @@ var _vise_server = new XMLHttpRequest();
 var _vise_messenger = new XMLHttpRequest();
 var _vise_query = new XMLHttpRequest();
 
-var VISE_SERVER_ADDRESS    = "http://localhost:9973/";
+var VISE_SERVER_ADDRESS    = "http://localhost:8080/";
 var VISE_MESSENGER_ADDRESS = VISE_SERVER_ADDRESS + "_message";
 var VISE_QUERY_ADDRESS     = VISE_SERVER_ADDRESS + "_query";
 
@@ -242,6 +242,21 @@ function _vise_handle_command(sender, command_str) {
         case 'complete':
           _vise_complete_progress_bar();
           break;
+      }
+      break;
+
+    case "_redirect":
+      var args = param.split(' ');
+      if (args.length == 2) {
+        var uri = args[0];
+        var delay = parseInt( args[1] );
+        setTimeout( function() {
+          var win = window.open( uri );
+          win.focus();
+        }, delay);
+      } else {
+        var win = window.open( param );
+        win.focus();
       }
       break;
 
@@ -784,3 +799,8 @@ function img_comp_canvas_mouseup_listener(e) {
   //imcomp_ctx.clearRect(0, 0, _vise_query_width, _vise_query_height);
   imcomp_ctx.drawImage(imcomp_im1, 0, 0);
 }
+
+//
+// infinite scroll pane for image list
+//
+
