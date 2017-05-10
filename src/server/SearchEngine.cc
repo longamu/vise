@@ -302,10 +302,6 @@ void SearchEngine::Index() {
   }
 }
 
-void SearchEngine::Query() {
-  // @todo-query implement image query
-}
-
 //
 // Helper functions
 //

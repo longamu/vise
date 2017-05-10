@@ -1178,6 +1178,10 @@ void ViseServer::QuerySearchImageRegion(std::string query_img_fn,
                                         unsigned int y1,
                                         boost::shared_ptr<tcp::socket> p_socket) {
 
+  // ensure that search index loading is complete
+  // see ViseServer::QueryInit()
+  vise_load_search_index_thread_->join();
+
   SendCommand("_control_panel clear all");
 
   uint32_t doc_id = dataset_->getDocID( query_img_fn );
@@ -1316,6 +1320,12 @@ void ViseServer::QueryInit() {
                             search_engine_.GetEngineConfigParam("databasePath"),
                             search_engine_.GetEngineConfigParam("docMapFindPath") );
 
+  // load the search index in separate thread
+  // while the user browses image list and prepares search area
+  vise_load_search_index_thread_ = new boost::thread( boost::bind( &ViseServer::QueryLoadSearchIndex, this ) );
+}
+
+void ViseServer::QueryLoadSearchIndex() {
   // needed to setup forward and inverted index
   cons_queue_ = new sequentialConstructions();
 

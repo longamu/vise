@@ -86,6 +86,7 @@ class ViseServer {
 
   // threads
   boost::thread *vise_training_thread_;
+  boost::thread *vise_load_search_index_thread_;
 
   // html content
   std::string vise_main_html_;
@@ -170,6 +171,8 @@ class ViseServer {
   void SendImageResponse(Magick::Image &im, std::string content_type, boost::shared_ptr<tcp::socket> p_socket);
 
   void QueryInit();
+  void QueryLoadSearchIndex();
+
   void QueryTest();
   void HomographyTransform( double H[],
                             double   x0, double   y0, double   x1, double   y1,
