@@ -61,9 +61,8 @@ void SearchEngine::Preprocess() {
   }
 
   if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
-    std::cout << "\nViseServer::Preprocess() : Started" << std::flush;
     SendLog("Preprocess", "\nPreprocessing started ...");
-    SendCommand("Preprocess", "_progress reset");
+    SendCommand("Preprocess", "_progress reset show");
 
     std::string transformed_img_width = GetEngineConfigParam("transformed_img_width");
     if (transformed_img_width != "original") {
@@ -107,6 +106,10 @@ void SearchEngine::Preprocess() {
             // just copy the files
             boost::filesystem::copy_file( src_fn, dest_fn );
             imglist_fn_transformed_size_.at(i) = imglist_fn_original_size_.at(i);
+
+            if ( (i % 50) == 0 ) {
+              SendProgress( "Preprocess", i+1, imglist_.size() );
+            }
           }
           if ( (i % 50) == 0 ) {
             SendLog("Preprocess", ".");
@@ -116,18 +119,16 @@ void SearchEngine::Preprocess() {
         }
       }
     }
+    if (transformed_img_width != "original") {
+      SendProgress( "Preprocess", imglist_.size(), imglist_.size() );
+    }
 
-    std::cout << "\nViseServer::Preprocess() : Waiting for queue to be empty" << std::flush;
-    std::cout << " [EMPTY NOW]" << std::flush;
     SendLog("Preprocess", "[Done]");
-    std::cout << "\nViseServer::Preprocess() : Done" << std::flush;
 
     //if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
     WriteImageListToFile( imglist_fn_.string(), imglist_ );
     SendLog("Preprocess", "\nWritten image list to : [" + imglist_fn_.string() + "]" );
-    SendCommand("Preprocess", "_progress complete");
-
-    vise_message_queue_.WaitUntilEmpty(); // to ensure that the user receives all messages
+    SendCommand("Cluster", "_progress reset hide");
   }
 }
 
@@ -137,7 +138,7 @@ void SearchEngine::Descriptor() {
 
   if ( ! boost::filesystem::exists( train_desc_fn ) ) {
     SendLog("Descriptor", "\nComputing training descriptors ...");
-    SendCommand("Descriptor", "_progress reset");
+    SendCommand("Descriptor", "_progress reset show");
 
     std::string const trainImagelistFn = GetEngineConfigParam("trainImagelistFn");
     std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
@@ -164,6 +165,9 @@ void SearchEngine::Descriptor() {
                                   trainNumDescs,
                                   featGetter_obj);
   }
+  SendLog("Descriptor", "Completed computing descriptors");
+  std::cout << "\n@todo: Message queue size = " << vise_message_queue_.GetSize() << std::flush;
+  SendCommand("Cluster", "_progress reset hide");
 }
 
 // ensure that you install the dkmeans_relja as follows
@@ -172,9 +176,8 @@ void SearchEngine::Descriptor() {
 // $ sudo python setup.py install
 void SearchEngine::Cluster() {
   if ( ! ClstFnExists() ) {
-    std::cout << "\nStarting clustering of descriptors ..." << std::flush;
     SendLog("Cluster", "\nStarting clustering of descriptors ...");
-    SendCommand("Cluster", "_progress reset");
+    SendCommand("Cluster", "_progress reset show");
 
     //boost::thread t( boost::bind( &SearchEngine::RunClusterCommand, this ) );
     RunClusterCommand();
@@ -202,10 +205,25 @@ void SearchEngine::RunClusterCommand() {
       if ( fgets(line, 128, pipe) != NULL ) {
         std::string status_txt(line);
         SendLog("Cluster", status_txt);
-        std::cout << "\nstatus_txt = " << status_txt << std::flush;
+
+        std::string itr_prefix = "Iteration ";
+        if ( status_txt.substr(0, itr_prefix.length()) == itr_prefix) { // starts with
+          unsigned int second_spc = status_txt.find(' ', itr_prefix.length() );
+          unsigned int itr_str_len = second_spc - itr_prefix.length();
+          std::string itr_str = status_txt.substr(itr_prefix.length(), itr_str_len);
+          if ( itr_str.find('/') != std::string::npos ) {
+            unsigned long completed, total;
+            char slash;
+            std::istringstream s ( itr_str );
+            s >> completed >> slash >> total;
+            SendProgress("Cluster", completed, total);
+            std::cout << "\nSending progress " << completed << " of " << total << std::flush;
+          }
+        }
       }
     }
     pclose( pipe );
+    SendCommand("Cluster", "_progress reset hide");
   } else {
     //SendLog("Cluster", "\nFailed to execute python script for clustering: \n\t $" + cmd);
   }
@@ -214,6 +232,7 @@ void SearchEngine::RunClusterCommand() {
 void SearchEngine::Assign() {
   if ( ! AssignFnExists() ) {
     SendLog("Assign", "\nStarting assignment ...");
+    SendCommand("Cluster", "_progress reset hide");
     bool useRootSIFT = false;
     if ( GetEngineConfigParam("RootSIFT") == "on" ) {
       useRootSIFT = true;
@@ -231,6 +250,7 @@ void SearchEngine::Assign() {
 void SearchEngine::Hamm() {
   if ( ! HammFnExists() ) {
     SendLog("Hamm", "\nComputing hamm ...");
+    SendCommand("Cluster", "_progress reset hide");
     uint32_t hammEmbBits;
     std::string hamm_emb_bits = GetEngineConfigParam("hammEmbBits");
     std::istringstream s(hamm_emb_bits);
@@ -255,6 +275,7 @@ void SearchEngine::Hamm() {
 void SearchEngine::Index() {
   if ( ! IndexFnExists() ) {
     SendLog("Index", "\nStarting indexing ...");
+    SendCommand("Cluster", "_progress reset show");
     bool SIFTscale3 = false;
     if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
       SIFTscale3 = true;

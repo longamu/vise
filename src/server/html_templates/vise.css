@@ -11,7 +11,7 @@ body {
   text-align: center;
   padding-top: 1em;
   padding-bottom: 1em;
-  /*border-bottom: 1px solid #f2f2f2;*/
+  border-bottom: 1px solid #f2f2f2;
 }
 #content {
   display: block;
@@ -137,19 +137,31 @@ body {
 }
 
 /* Progress bar */
-#progress {
+#progress_panel {
   display: block;
   width: 100%;
-  background-color: #f2f2f2;
-  margin: 0;
+  height: 30px;
+  background-color: #ffffff;
+  margin: 0.2em 0em;
   padding: 0;
   text-align: center;
 }
+#progress_box {
+  display: none;
+  position: relative;
+  border: 1px solid #000000;
+  padding: 0 0;
+  height: 1.6em;
+}
+#progress_text {
+  position: absolute;
+  text-align: center;
+  line-height: 1.4em;
+}
 #progress_bar {
   width: 0%;
-  height: 2px;
+  height: 1.6em;
   background-color: #80b3ff;
-  text-align: left;
 }
 
 /* State: Setting */

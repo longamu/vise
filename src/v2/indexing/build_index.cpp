@@ -218,9 +218,14 @@ buildManagerSemiSorted::compute( uint32_t jobID, buildResultSemiSorted &result )
             results_.erase(it++);
             completed_jobs += 1;
         }
-        std::ostringstream s;
-        s << "Index status \nSemiSorted processed " << completed_jobs << " / " << total_jobs;
-        vise_message_queue_.Push( s.str() );
+        std::ostringstream log;
+        log << "Index log \nSemiSorted processed " << completed_jobs << " / " << total_jobs;
+        vise_message_queue_.Push( log.str() );
+
+        std::ostringstream progress;
+        progress << "Index progress " << completed_jobs << "/" << total_jobs;
+        vise_message_queue_.Push( progress.str() );
+
     }
 }
 

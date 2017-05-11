@@ -46,10 +46,11 @@ if __name__=='__main__':
     pntsFn= trainFilesPrefix + "descs.e3bin";
     
     vocSize= getOptional( lambda: config.getint(dsetname, 'vocSize'), 100 );
+    clusterNumIteration = getOptional( lambda: config.getint(dsetname, 'clusterNumIteration'), 30 );
     seed= 43;
   
     compute_clusters(clstFn, pntsFn, vocSize,
-                     4, approx=True, seed= seed,
+                     clusterNumIteration, approx=True, seed= seed,
                      featureWrapper= ("hell" if RootSIFT else None) );
     
     mpi.finalize();

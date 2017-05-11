@@ -174,18 +174,13 @@ function _vise_handle_progress_message(state_name, msg) {
   var progress = Math.round( (completed/total) * 100 );
   console.log( "Progress " + completed + " of " + total );
 
-  var progress_bar = document.getElementById("progress_bar");
-  progress_bar.style.width = progress + "%";
-  progress_bar.innerHTML = progress + "%";
-
-  if ( progress == 100 ) {
-    progress_bar.innerHTML = '';
-  }
+  document.getElementById("progress_bar").style.width = progress + "%";
+  document.getElementById("progress_text").innerHTML = state_name + " : " + completed + " of " + total;
 }
 
 function _vise_reset_progress_bar() {
-  var progress_bar = document.getElementById("progress_bar");
-  progress_bar.style.width = "0%";
+  document.getElementById("progress_bar").style.width = "0%";
+  document.getElementById("progress_text").innerHTML = "";
 }
 
 function _vise_complete_progress_bar() {
@@ -235,13 +230,22 @@ function _vise_handle_command(sender, command_str) {
       _vise_handle_control_panel_command(param);
       break;
     case "_progress":
-      switch( param ) {
-        case 'reset':
-          _vise_reset_progress_bar();
-          break;
-        case 'complete':
-          _vise_complete_progress_bar();
-          break;
+      var all_param = param.split(' ');
+      for ( var i=0; i<all_param.length; i++ ) {
+        switch( all_param[i] ) {
+          case 'show':
+            document.getElementById("progress_box").style.display = "block";
+            break;
+          case 'hide':
+            document.getElementById("progress_box").style.display = "none";
+            break;
+          case 'reset':
+            _vise_reset_progress_bar();
+            break;
+          case 'complete':
+            _vise_complete_progress_bar();
+            break;
+        }
       }
       break;
 

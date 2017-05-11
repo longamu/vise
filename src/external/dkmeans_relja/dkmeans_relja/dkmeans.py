@@ -175,7 +175,7 @@ def dkmeans3(pnts_fn, nk, niters, clst_fn, nn_class=nn.nn, seed=42, pnts_step=50
       t2 = time.time()
 
       #print 'Iteration %d, sse = %g, mem = %.2fMB, took %.2fs' % (iter_num+1, distortion[0], resident()/2**20, t2-t1)
-      sys.stdout.write('\nIteration %d, sse = %g, mem = %.2fMB, took %.2fs' % (iter_num+1, distortion[0], resident()/2**20, t2-t1))
+      sys.stdout.write('\nIteration %d/%d : sse = %g, mem = %.2fMB, took %.2fs' % (iter_num+1, niters, distortion[0], resident()/2**20, t2-t1))
       sys.stdout.flush() # done to send intermediate messages to waiting threads
 
       # Potentially save the clusters.

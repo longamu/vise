@@ -21,6 +21,7 @@ public:
 
   // to avoid the cases where the HTTP client is swamped by a large message queue
   void WaitUntilEmpty();
+  unsigned int GetSize();
 
 private:
   std::queue< std::string > messages_;

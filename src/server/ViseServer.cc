@@ -236,10 +236,12 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
 
       /*
       // debug
+      SendCommand("_progress show");
       for ( unsigned int i=0; i<101; i++ ) {
         SendProgress( "Main", i, 100 );
-        boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
       }
+      SendCommand("_progress hide");
       */
       return;
     }
@@ -979,12 +981,14 @@ void ViseServer::InitiateSearchEngineTraining() {
       return;
     }
   }
+  /*
   if ( vise_training_thread_->interruption_requested() ) {
     SendLog("\nStopped training process on user request");
     SendCommand("_control_panel clear all");
     SendCommand("_control_panel add <div id=\"Training_button_continue\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('continue')\">Continue</div>");
     return;
   }
+  */
 
   // Descriptor
   if ( state_id_ == ViseServer::STATE_DESCRIPTOR ) {
@@ -1005,13 +1009,14 @@ void ViseServer::InitiateSearchEngineTraining() {
       return;
     }
   }
+  /*
   if ( vise_training_thread_->interruption_requested() ) {
     SendLog("\nStopped training process on user request");
     SendCommand("_control_panel clear all");
     SendCommand("_control_panel add <div id=\"Training_button_continue\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('continue')\">Continue</div>");
     return;
   }
-
+*/
   // Cluster
   if ( state_id_ == ViseServer::STATE_CLUSTER ) {
     boost::timer::cpu_timer t_start;
@@ -1031,12 +1036,14 @@ void ViseServer::InitiateSearchEngineTraining() {
       return;
     }
   }
+  /*
   if ( vise_training_thread_->interruption_requested() ) {
     SendLog("\nStopped training process on user request");
     SendCommand("_control_panel clear all");
     SendCommand("_control_panel add <div id=\"Training_button_continue\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('continue')\">Continue</div>");
     return;
   }
+  */
 
   // Assign
   if ( state_id_ == ViseServer::STATE_ASSIGN ) {
