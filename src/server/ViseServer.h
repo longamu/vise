@@ -81,6 +81,7 @@ class ViseServer {
   std::vector< int > state_id_list_;
   std::vector< std::string > state_name_list_;
   std::vector< std::string > state_info_list_;
+  std::vector< std::vector<double> > state_complexity_model_;
   std::vector< std::string > state_html_fn_list_;
   std::vector< std::string > state_html_list_;
 
@@ -110,6 +111,14 @@ class ViseServer {
   boost::filesystem::path vise_templatedir_;
   boost::filesystem::path vise_logdir_;
   boost::filesystem::path vise_enginedir_;
+
+  // state complexity
+  void LoadStateComplexityModel();
+  std::string GetStateComplexityInfo();
+  void UpdateStateInfoList();
+  std::vector<double> total_complexity_model_;
+  std::string state_complexity_info_;
+  std::string complexity_model_assumption_;
 
   // search engine query
   spatialVerifV2 *spatial_verif_v2_;

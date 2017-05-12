@@ -73,6 +73,8 @@ namespace timing {
             
             void
                 inc(std::string extraInfo= ""){
+                    ++totalDone_;
+/*
                     if (totalDone_==0) t1_= timing::tic();
                     ++totalDone_;
                     if (totalDone_<4 ||
@@ -80,7 +82,7 @@ namespace timing {
                         totalDone_%printStep_==0 || totalDone_==nJobs_){
 
                         if (totalDone_==1) {
-                            std::cout<<prefix_<<": "<< timing::getTimeString()<<" 1 / "<<nJobs_<<"\n";
+                            //std::cout<<prefix_<<": "<< timing::getTimeString()<<" 1 / "<<nJobs_<<"\n";
                         }
                         else {
                             double time= timing::toc(t1_)/1000;
@@ -94,6 +96,7 @@ namespace timing {
                                     <<"; avg "<< avgtime <<" s\n";
                         }
                     }
+*/
                 }
             
             inline void

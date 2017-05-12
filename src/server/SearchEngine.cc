@@ -10,6 +10,13 @@ SearchEngine::SearchEngine() {
   acceptable_img_ext_.insert( ".pgm" );
   acceptable_img_ext_.insert( ".pnm" );
   acceptable_img_ext_.insert( ".ppm" );
+
+  /*
+  uint32_t n_desc;
+  uint32_t desc_dim;
+  GetTrainDescSize("/home/tlm/vise/search_engines/ox5k/training_data/train_descs.e3bin", n_desc, desc_dim);
+  std::cout << "\nn_desc=" << n_desc << ", desc_dim=" << desc_dim << std::flush;
+  */
 }
 
 void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
@@ -56,8 +63,7 @@ void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
 //
 void SearchEngine::Preprocess() {
   if ( imglist_.empty() ) {
-    boost::filesystem::path imagePath(GetEngineConfigParam("imagePath"));
-    CreateFileList( imagePath );
+    CreateFileList();
   }
 
   if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
@@ -144,9 +150,25 @@ void SearchEngine::Descriptor() {
     std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
 
     int32_t trainNumDescs;
+    /*
     std::stringstream s;
     s << GetEngineConfigParam("trainNumDescs");
     s >> trainNumDescs;
+    */
+
+    // @todo : find a better place to define these constants
+    unsigned int DESCRIPTORS_PER_IMAGE = 1000;
+    double VOCABULARY_SIZE_FACTOR = 10; // voc. size = no. of descriptors / 10
+
+    trainNumDescs = imglist_.size() * DESCRIPTORS_PER_IMAGE; // we use all the images
+
+    std::ostringstream s;
+    unsigned int vocSize = ((double)trainNumDescs) / VOCABULARY_SIZE_FACTOR;
+    s << vocSize;
+    SetEngineConfigParam( "vocSize", s.str());
+    WriteConfigToFile();
+    std::cout << "\nSearchEngine::Descriptor() : trainNumDescs = " << trainNumDescs << std::flush;
+    std::cout << "\nSearchEngine::Descriptor() : vocSize = " << vocSize << std::flush;
 
     bool SIFTscale3 = false;
     if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
@@ -175,6 +197,7 @@ void SearchEngine::Descriptor() {
 // $ python setup.py build
 // $ sudo python setup.py install
 void SearchEngine::Cluster() {
+  std::cout << "\n@todo: Message queue size = " << vise_message_queue_.GetSize() << std::flush;
   if ( ! ClstFnExists() ) {
     SendLog("Cluster", "\nStarting clustering of descriptors ...");
     SendCommand("Cluster", "_progress reset show");
@@ -206,6 +229,7 @@ void SearchEngine::RunClusterCommand() {
         std::string status_txt(line);
         SendLog("Cluster", status_txt);
 
+        std::cout << "\nSearchEngine::Cluster() : " << status_txt << std::flush;
         std::string itr_prefix = "Iteration ";
         if ( status_txt.substr(0, itr_prefix.length()) == itr_prefix) { // starts with
           unsigned int second_spc = status_txt.find(' ', itr_prefix.length() );
@@ -339,7 +363,9 @@ bool SearchEngine::EngineConfigExists() {
   }
 }
 
-void SearchEngine::CreateFileList(boost::filesystem::path dir ) {
+void SearchEngine::CreateFileList() {
+
+  boost::filesystem::path dir(GetEngineConfigParam("imagePath"));
 
   //std::cout << "\nShowing directory contents of : " << dir.string() << std::endl;
   imglist_.clear();
@@ -451,25 +477,6 @@ boost::filesystem::path SearchEngine::GetEngineConfigFn() {
 }
 std::string SearchEngine::GetSearchEngineBaseUri() {
   return "/" + engine_name_ + "/";
-}
-
-void SearchEngine::UpdateEngineOverview() {
-  engine_overview_.str("");
-  engine_overview_.clear();
-
-  if ( imglist_.empty() ) {
-    boost::filesystem::path imagePath(GetEngineConfigParam("imagePath"));
-    CreateFileList( imagePath );
-  }
-  engine_overview_ << "<h3>Overview of Search Engine</h3>";
-  engine_overview_ << "<table id=\"engine_overview\">";
-  engine_overview_ << "<tr><td># of images</td><td>" << imglist_.size() << "</td></tr>";
-  engine_overview_ << "<tr><td>Training time*</td><td>4 hours</td></tr>";
-  engine_overview_ << "<tr><td>Memory required*</td><td>3 GB</td></tr>";
-  engine_overview_ << "<tr><td>Disk space required*</td><td>10 GB</td></tr>";
-  engine_overview_ << "<tr><td>&nbsp;</td><td>&nbsp;</td></tr>";
-  engine_overview_ << "</table>";
-  engine_overview_ << "<p>&nbsp;</p><p>* : todo</p>";
 }
 
 void SearchEngine::WriteImageListToFile(const std::string fn,
@@ -665,14 +672,15 @@ unsigned long SearchEngine::GetImglistTransformedSize() {
   return total_size;
 }
 
-std::string SearchEngine::GetEngineOverview() {
-  return engine_overview_.str();
-}
 boost::filesystem::path SearchEngine::GetOriginalImageDir() {
   return original_imgdir_;
 }
 boost::filesystem::path SearchEngine::GetTransformedImageDir() {
   return transformed_imgdir_;
+}
+
+unsigned long SearchEngine::GetImglistSize() {
+  return imglist_.size();
 }
 
 // for debug

@@ -124,15 +124,14 @@ void InitReljaRetrivalFrontend(std::string dsetname, std::string configFn) {
   s << " " << configFn;
   s << " true";
 
-  std::cout << "\nFrontend : $" << s.str() << std::flush;
-
   FILE *pipe = popen( s.str().c_str(), "r");
   vise_message_queue_.Push("Query command _redirect http://localhost:9971 1000");
 
   if ( pipe == NULL ) {
-    std::cerr << "\nViseServer::InitReljaRetrivalBackend : failed to execute the frontend" << std::flush;
+    std::cerr << " [failed]" << std::flush;
   }
   pclose( pipe );
+  std::cout << " [done]" << std::flush;
 }
 
 void

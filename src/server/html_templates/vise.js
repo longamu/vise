@@ -172,7 +172,7 @@ function _vise_handle_progress_message(state_name, msg) {
   var completed = parseInt(values[0]);
   var total = parseInt(values[1]);
   var progress = Math.round( (completed/total) * 100 );
-  console.log( "Progress " + completed + " of " + total );
+  //console.log( "Progress " + completed + " of " + total );
 
   document.getElementById("progress_bar").style.width = progress + "%";
   document.getElementById("progress_text").innerHTML = state_name + " : " + completed + " of " + total;
@@ -203,6 +203,7 @@ function _vise_handle_log_message(sender, msg) {
 // command
 //
 function _vise_handle_command(sender, command_str) {
+  //console.log("command_str = " + command_str);
   // command_str = "_state update_now"
   // command_str = "_control_panel remove Info_proceed_button"
   var first_spc = command_str.indexOf(' ', 0);
@@ -264,8 +265,16 @@ function _vise_handle_command(sender, command_str) {
       }
       break;
 
+    case "_go_to":
+      switch( param ) {
+        case "home":
+          window.location.href = VISE_SERVER_ADDRESS;
+          break;
+      }
+      break;
+
     default:
-      console.log("Unknown command : " + command_str);
+      console.log("Unknown command : [" + command_str + "]");
   }
 }
 

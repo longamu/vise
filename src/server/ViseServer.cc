@@ -54,51 +54,63 @@ ViseServer::ViseServer( boost::filesystem::path vise_datadir, boost::filesystem:
   state_name_list_.push_back( "NotLoaded" );
   state_html_fn_list_.push_back( "404.html" );
   state_info_list_.push_back( "" );
+  state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_SETTING );
   state_name_list_.push_back( "Setting" );
   state_html_fn_list_.push_back( "Setting.html" );
   state_info_list_.push_back( "" );
+  state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_INFO );
   state_name_list_.push_back( "Info" );
   state_html_fn_list_.push_back( "Info.html" );
-  state_info_list_.push_back( "(2 min.)" );
+  state_info_list_.push_back( "" );
+  state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_PREPROCESS );
   state_name_list_.push_back( "Preprocess" );
   state_html_fn_list_.push_back( "Preprocess.html" );
-  state_info_list_.push_back( "(6 min.)" );
+  state_info_list_.push_back( "" );
+  state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_DESCRIPTOR );
   state_name_list_.push_back( "Descriptor" );
   state_html_fn_list_.push_back( "Descriptor.html" );
-  state_info_list_.push_back( "(49 min.)" );
+  state_info_list_.push_back( "" );
+  state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_CLUSTER );
   state_name_list_.push_back( "Cluster" );
   state_html_fn_list_.push_back( "Cluster.html" );
-  state_info_list_.push_back( "(12 min.)" );
+  state_info_list_.push_back( "" );
+  state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_ASSIGN );
   state_name_list_.push_back( "Assign" );
   state_html_fn_list_.push_back( "Assign.html" );
-  state_info_list_.push_back( "(1 min.)" );
+  state_info_list_.push_back( "" );
+  state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_HAMM );
   state_name_list_.push_back( "Hamm" );
   state_html_fn_list_.push_back( "Hamm.html" );
-  state_info_list_.push_back( "(1 min.)" );
+  state_info_list_.push_back( "" );
+  state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_INDEX );
   state_name_list_.push_back( "Index" );
   state_html_fn_list_.push_back( "Index.html" );
-  state_info_list_.push_back( "(3 hours)" );
+  state_info_list_.push_back( "" );
+  state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_QUERY );
   state_name_list_.push_back( "Query" );
   state_html_fn_list_.push_back( "Query.html" );
   state_info_list_.push_back( "" );
+  state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
+
+  total_complexity_model_ = std::vector<double>(4, 0.0);
 
   state_id_ = ViseServer::STATE_NOT_LOADED;
 
@@ -123,9 +135,11 @@ ViseServer::ViseServer( boost::filesystem::path vise_datadir, boost::filesystem:
 
   training_stat_f.open( vise_training_stat_fn_.string().c_str(), std::ofstream::app );
   if ( append_csv_header ) {
-    training_stat_f << "date,time,dataset_name,state_name,time_sec,space_bytes";
+    training_stat_f << "date,time,dataset_name,img_count,state_name,time_sec,space_bytes";
   }
   std::cout << "\nvise_training_stat_fn_ = " << vise_training_stat_fn_ << std::flush;
+
+  LoadStateComplexityModel();
 }
 
 ViseServer::~ViseServer() {
@@ -165,6 +179,107 @@ ViseServer::~ViseServer() {
   delete dbIidx_;
 }
 
+std::string ViseServer::GetStateComplexityInfo() {
+  unsigned long n = search_engine_.GetImglistSize();
+
+  std::ostringstream s;
+  std::vector< double > m = total_complexity_model_;
+  double time  = m[0] + m[1] * n; // in minutes
+  double space = m[2] + m[3] * n; // in MB
+
+  s << "<h3>Overview of Search Engine Training Requirements</h3>"
+    << "<table id=\"engine_overview\">"
+    << "<tr><td>Number of images</td><td>" << n << "</td></tr>"
+    << "<tr><td>Estimated total training time*</td><td>" << (unsigned int) time << " min.</td></tr>"
+    << "<tr><td>Estimated total disk space needed*</td><td>" << (unsigned int) space << " MB</td></tr>"
+    << "<tr><td>&nbsp;</td><td>&nbsp;</td></tr>"
+    << "<tr><td colspan=\"2\">* estimates are based on the following specifications : </td></tr>"
+    << "<tr><td colspan=\"2\">  " << complexity_model_assumption_ << "</td></tr>"
+    <<"</td></tr>"
+    << "</table>";
+  return s.str();
+}
+
+void ViseServer::UpdateStateInfoList() {
+  unsigned long n = search_engine_.GetImglistSize();
+  std::vector< int > state_id_list;
+  state_id_list.push_back( ViseServer::STATE_PREPROCESS );
+  state_id_list.push_back( ViseServer::STATE_DESCRIPTOR );
+  state_id_list.push_back( ViseServer::STATE_CLUSTER );
+  state_id_list.push_back( ViseServer::STATE_INDEX );
+
+  for (unsigned int i=0; i<state_id_list.size(); i++) {
+    int state_id = state_id_list.at(i);
+    std::vector< double > m = state_complexity_model_.at(state_id);
+    double time  = m[0] + m[1] * n; // in minutes
+    double space = m[2] + m[3] * n; // in MB
+
+    std::ostringstream sinfo;
+    sinfo << "(" << (unsigned int) time << " min, " << (unsigned int) space << " MB)";
+    state_info_list_.at( state_id ) = sinfo.str();
+    std::cout << "\nm=" << m[0] << "," << m[1] << "," << m[2] << "," << m[3] << std::flush;
+    std::cout << "\nstate = " << state_id << " : " << sinfo.str() << std::flush;
+  }
+}
+
+void ViseServer::LoadStateComplexityModel() {
+  /*
+    NOTE: state_model_complexity_ is obtained as follows:
+    regression coefficient source: docs/training_time/plot_training_time_model.R
+
+    > source('plot.R')
+    [1] "Model coefficients for time"
+    state_name   (Intercept)    img_count
+    1     Assign -0.0635593220 0.0008276836
+    2    Cluster -1.5004237288 0.0364477401
+    3 Descriptor  0.2545197740 0.0031129944
+    4       Hamm -0.0004237288 0.0001144068
+    5      Index -0.4600282486 0.0175409605
+    6 Preprocess -0.0608757062 0.0011031073
+    7      TOTAL -1.8307909605 0.0591468927
+    [1] "Model coefficients for space"
+    state_name   (Intercept)   img_count
+    1     Assign  4.440892e-16 0.003814697
+    2    Cluster  3.147125e-05 0.048828125
+    3 Descriptor  4.768372e-06 0.122070312
+    4       Hamm  3.126557e-02 0.024414063
+    5      Index -1.438618e+00 0.072752569
+    6 Preprocess  3.374722e+00 0.427843547
+    7      TOTAL  1.967406e+00 0.699723314
+  */
+
+  complexity_model_assumption_ = "cpu name: Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz; cpu MHz : 3099.992; RAM: 16GB; cores : 8";
+
+  // time_min = coef_0 + coef_1 * img_count
+  state_complexity_model_.at( ViseServer::STATE_PREPROCESS ).at(0) = -0.0608757062; // coef_0 (time)
+  state_complexity_model_.at( ViseServer::STATE_PREPROCESS ).at(1) =  0.0011031073; // coef_1 (time)
+  state_complexity_model_.at( ViseServer::STATE_PREPROCESS ).at(2) =  3.374722;     // coef_0 (space)
+  state_complexity_model_.at( ViseServer::STATE_PREPROCESS ).at(3) =  0.427843547;  // coef_1 (space)
+
+  // time_min = coef_0 + coef_1 * img_count
+  state_complexity_model_.at( ViseServer::STATE_DESCRIPTOR ).at(0) = 0.2545197740; // coef_0 (time)
+  state_complexity_model_.at( ViseServer::STATE_DESCRIPTOR ).at(1) = 0.0031129944; // coef_1 (time)
+  state_complexity_model_.at( ViseServer::STATE_DESCRIPTOR ).at(2) = 4.768372e-06; // coef_0 (space)
+  state_complexity_model_.at( ViseServer::STATE_DESCRIPTOR ).at(3) = 0.122070312;  // coef_1 (space)
+
+  // time_min = coef_0 + coef_1 * img_count
+  state_complexity_model_.at( ViseServer::STATE_CLUSTER ).at(0) = -1.5004237288; // coef_0 (time)
+  state_complexity_model_.at( ViseServer::STATE_CLUSTER ).at(1) =  0.0364477401; // coef_1 (time)
+  state_complexity_model_.at( ViseServer::STATE_CLUSTER ).at(2) =  3.147125e-05; // coef_0 (space)
+  state_complexity_model_.at( ViseServer::STATE_CLUSTER ).at(3) =  0.048828125;  // coef_1 (space)
+
+  // time_min = coef_0 + coef_1 * img_count
+  state_complexity_model_.at( ViseServer::STATE_INDEX ).at(0) = -0.4600282486; // coef_0 (time)
+  state_complexity_model_.at( ViseServer::STATE_INDEX ).at(1) =  0.0175409605; // coef_1 (time)
+  state_complexity_model_.at( ViseServer::STATE_INDEX ).at(2) = -1.438618;     // coef_0 (space)
+  state_complexity_model_.at( ViseServer::STATE_INDEX ).at(3) =  0.072752569;  // coef_1 (space)
+
+  // time_min = coef_0 + coef_1 * img_count
+  total_complexity_model_.at(0) = -1.8307909605; // coef_0 (time)
+  total_complexity_model_.at(1) =  0.0591468927; // coef_1 (time)
+  total_complexity_model_.at(2) =  1.967406;     // coef_0 (space)
+  total_complexity_model_.at(3) =  0.699723314;  // coef_1 (space)
+}
 
 void ViseServer::Start(unsigned int port) {
   hostname_ = "localhost";
@@ -186,6 +301,8 @@ void ViseServer::Start(unsigned int port) {
   LoadSearchEngine( "ox5k" );
   QueryInit();
   //QueryTest();
+
+  return;
   */
 
   /*  */
@@ -247,6 +364,7 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
     }
 
     if ( http_method_uri == "/_vise_index.html" ) {
+      vise_index_html_reload_ = true; // @todo
       if ( vise_index_html_reload_ ) {
         GenerateViseIndexHtml();
       }
@@ -282,6 +400,7 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       // we always create this _message channel which keeps waiting for messages
       // to be pushed to vise_message_queue_, sends this message to the client
       // which in turn again creates another request for any future messages
+
       std::string msg = vise_message_queue_.BlockingPop();
       SendRawResponse( "text/plain", msg, p_socket );
       p_socket->close();
@@ -676,8 +795,7 @@ void ViseServer::HandleStateGetRequest( std::string resource_name,
         SendCommand("_state show");
         break;
       case ViseServer::STATE_INFO:
-        search_engine_.UpdateEngineOverview();
-        state_html_list_.at( ViseServer::STATE_INFO ) = search_engine_.GetEngineOverview();
+        state_html_list_.at( ViseServer::STATE_INFO ) = GetStateComplexityInfo();
         SendCommand("_control_panel add <div class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Proceed</div>");
         break;
       }
@@ -931,6 +1049,10 @@ void ViseServer::HandleStatePostData( int state_id, std::string http_post_data, 
   if ( state_id == ViseServer::STATE_SETTING ) {
     search_engine_.SetEngineConfig(http_post_data);
     search_engine_.WriteConfigToFile();
+    if ( search_engine_.GetImglistSize() == 0 ) {
+      search_engine_.CreateFileList();
+    }
+    UpdateStateInfoList();
 
     if ( UpdateState() ) {
       // send control message : state updated
@@ -1125,6 +1247,7 @@ void ViseServer::InitiateSearchEngineTraining() {
   }
 
   QueryInit();
+  SendCommand("_go_to home");
 }
 
 //
@@ -1869,7 +1992,7 @@ void ViseServer::AddTrainingStat(std::string dataset_name, std::string state_nam
   char date_str[100];
   std::strftime(date_str, sizeof(date_str), "%F,%T", std::gmtime(&t));
 
-  training_stat_f << "\n" << date_str  << "," << dataset_name << "," << state_name << "," << time_sec << "," << space_bytes << std::flush;
+  training_stat_f << "\n" << date_str  << "," << dataset_name << "," << search_engine_.GetImglistSize() << "," << state_name << "," << time_sec << "," << space_bytes << std::flush;
 }
 
 // TEMPORARY CODE -- WILL BE REMOVE IN FUTURE
@@ -1882,6 +2005,8 @@ void ViseServer::InitReljaRetrival() {
   backend.join();
   //frontend.join();
 }
+
+// Note: frontend is invoked by src/api/abs_api.cpp::InitReljaRetrivalFrontend()
 void ViseServer::InitReljaRetrivalBackend() {
   // start relja_retrival backend
   std::vector< std::string > param;
@@ -1890,22 +2015,4 @@ void ViseServer::InitReljaRetrivalBackend() {
   param.push_back( search_engine_.GetName() );
   param.push_back( search_engine_.GetEngineConfigFn().string() );
   api_v2( param );
-}
-
-void ViseServer::InitReljaRetrivalFrontend() {
-  std::cout << "\nLoading frontend " << std::flush;
-  std::ostringstream s;
-  s << "python ../src/ui/web/webserver.py 9971";
-  s << " " << search_engine_.GetName();
-  s << " 65521";
-  s << " " << search_engine_.GetEngineConfigFn().string();
-  s << " true";
-
-  std::cout << "\nFrontend : $" << s.str() << std::flush;
-
-  FILE *pipe = popen( s.str().c_str(), "r");
-  if ( pipe == NULL ) {
-    std::cerr << "\nViseServer::InitReljaRetrivalBackend : failed to execute the frontend" << std::flush;
-  }
-  pclose( pipe );
 }

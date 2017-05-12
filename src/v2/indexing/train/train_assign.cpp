@@ -164,7 +164,7 @@ computeTrainAssigns(
     ASSERT( boost::filesystem::exists(trainDescsFn) );
     
     bool useThreads= detectUseThreads();
-    uint32_t numWorkerThreads= 4;
+    uint32_t numWorkerThreads= 8;
     
     // clusters
     if (rank==0) {

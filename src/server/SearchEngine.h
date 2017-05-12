@@ -46,7 +46,6 @@ public:
 
   SearchEngine();
   void Init(std::string name, boost::filesystem::path engine_dir );
-  void UpdateEngineOverview();
 
   void Preprocess();
   void Descriptor();
@@ -75,6 +74,7 @@ public:
   unsigned long AssignFnSize();
   unsigned long HammFnSize();
   unsigned long IndexFnSize();
+  unsigned long GetImglistSize();
 
   boost::filesystem::path GetEngineConfigFn();
   std::string GetResourceUri(std::string resource_name);
@@ -89,6 +89,7 @@ public:
   void PrintEngineConfig();
 
   void LoadImglist();
+  void CreateFileList();
   bool IsEngineNameValid(std::string engine_name);
   void WriteConfigToFile();
   void ReadConfigFromFile();
@@ -112,9 +113,6 @@ public:
   std::map< std::string, std::string > engine_config_;
   boost::filesystem::path engine_config_fn_;
 
-  bool update_engine_overview_;
-  std::ostringstream engine_overview_;
-
   std::set< std::string > acceptable_img_ext_;
 
   void CreateEngine( std::string name );
@@ -128,7 +126,6 @@ public:
 
   void WriteImageListToFile(const std::string fn,
                             const std::vector< std::string > &imlist);
-  void CreateFileList(boost::filesystem::path dir);
 
   void InitEngineResources( std::string name );
   void RunClusterCommand();

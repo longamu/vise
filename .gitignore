@@ -2,6 +2,7 @@
 */tmp/*.jpg
 dep/*
 *~
+src/ui/web/tmp/*
 
 # cmake build
 build/*
