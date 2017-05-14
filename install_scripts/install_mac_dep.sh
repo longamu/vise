@@ -65,9 +65,9 @@ if [ -d "$IMAGEMAGICK_LIBDIR" ]; then
     echo "Skipping ImageMagick library as it already exists at "$IMAGEMAGICK_LIBDIR
 else
     cd $TMP_BASEDIR
-    wget https://www.imagemagick.org/download/releases/ImageMagick-6.9.8-0.tar.gz
-    tar -zxvf ImageMagick-6.9.8-0.tar.gz
-    cd ImageMagick-6.9.8-0
+    wget https://www.imagemagick.org/download/releases/ImageMagick-6.9.8-4.tar.gz
+    tar -zxvf ImageMagick-6.9.8-4.tar.gz
+    cd ImageMagick-6.9.8-4
     CC=gcc-5 CXX=g++-5 ./configure --prefix=$IMAGEMAGICK_LIBDIR --with-quantum-depth=16 --disable-dependency-tracking --with-x=yes --without-perl
     make -j8
     make install
@@ -102,9 +102,9 @@ else
     wget https://netcologne.dl.sourceforge.net/project/boost/boost/1.63.0/boost_1_63_0.tar.gz
     tar -zxvf boost_1_63_0.tar.gz
     cd boost_1_63_0
-    ./bootstrap.sh --prefix=$BOOST_LIBDIR --with-toolset=gcc --with-libraries=filesystem,system,thread,date_time,chrono,atomic
+    ./bootstrap.sh --prefix=$BOOST_LIBDIR --with-toolset=gcc --with-libraries=filesystem,system,thread,date_time,chrono,atomic,timer
     sed -i.old 's/using gcc ;/using gcc : 5.4.0 : g++-5 ;/g' project-config.jam
-    ./b2 --with-filesystem --with-system --with-thread --with-date_time --with-chrono --with-atomic variant=release threading=multi toolset=gcc install
+    ./b2 --with-filesystem --with-system --with-thread --with-date_time --with-chrono --with-atomic --with-timer variant=release threading=multi toolset=gcc install
 fi
 
 
