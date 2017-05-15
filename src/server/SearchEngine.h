@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <locale>                // for std::tolower
 #include <cassert>               // for assert()
+
 #include <boost/filesystem.hpp>  // to query/update filesystem
 
 #include <Magick++.h>            // to transform images

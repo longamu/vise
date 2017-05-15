@@ -3,6 +3,7 @@ add_subdirectory( train )
 
 add_library( build_index build_index.cpp )
 target_link_libraries( build_index
+    ViseMessageQueue
     build_index_status.pb
     clst_centres
     dataset_v2

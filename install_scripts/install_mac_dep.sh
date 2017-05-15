@@ -1,4 +1,4 @@
-DEP_BASEDIR=$(pwd)"/../dep/"
+DEP_BASEDIR=$(pwd)"/../../vise_dep/"
 
 if [ -d "$DEP_BASEDIR" ]; then
     echo "Dependency directory already exists. Re-using this directory!"
@@ -9,23 +9,6 @@ TMP_BASEDIR=$DEP_BASEDIR"tmp_libsrc/"
 LIBDIR=$DEP_BASEDIR"lib/"
 mkdir $LIBDIR
 mkdir $TMP_BASEDIR
-
-
-#
-# Install homebrew package manager
-#
-which -s brew
-if [[ $? != 0 ]] ; then
-    # Install Homebrew
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-else
-    brew update
-fi
-
-brew install wget
-brew install cmake
-brew install libjpg
-brew install python
 
 #
 # Compile and install fast ann
@@ -50,12 +33,26 @@ else
     #rm -fr ./fastann
 fi
 
+#
+# Install homebrew package manager
+#
+which -s brew
+if [[ $? != 0 ]] ; then
+    # Install Homebrew
+    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+else
+    brew update
+fi
 
 #
-# Install gcc-5
+# Install gcc-6
 #
-brew install gcc@5
+brew install gcc@6
 
+#
+# Install other dependencies
+#
+brew install libpng libjpeg
 
 #
 # Install ImageMagick
@@ -65,10 +62,11 @@ if [ -d "$IMAGEMAGICK_LIBDIR" ]; then
     echo "Skipping ImageMagick library as it already exists at "$IMAGEMAGICK_LIBDIR
 else
     cd $TMP_BASEDIR
-    wget https://www.imagemagick.org/download/releases/ImageMagick-6.9.8-4.tar.gz
+    #wget https://www.imagemagick.org/download/releases/ImageMagick-6.9.8-4.tar.gz
+    wget -O ImageMagick-6.9.8-4.tar.gz http://git.imagemagick.org/repos/ImageMagick/repository/archive.tar.gz?ref=6.9.8-4
     tar -zxvf ImageMagick-6.9.8-4.tar.gz
-    cd ImageMagick-6.9.8-4
-    CC=gcc-5 CXX=g++-5 ./configure --prefix=$IMAGEMAGICK_LIBDIR --with-quantum-depth=16 --disable-dependency-tracking --with-x=yes --without-perl
+    cd ImageMagick-6.9.8-4-ed5b4e81a2e1cdcb2a95db7119f26266c700d837
+    CC=gcc-6 CXX=g++-6 ./configure --prefix=$IMAGEMAGICK_LIBDIR --with-quantum-depth=16 --disable-dependency-tracking --with-x=yes --without-perl
     make -j8
     make install
 fi
@@ -84,7 +82,7 @@ else
     wget https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz
     tar -zxvf protobuf-2.6.1.tar.gz
     cd protobuf-2.6.1
-    CC=gcc-5 CXX=g++-5 ./configure --prefix=$PROTOBUF_LIBDIR
+    CC=gcc-6 CXX=g++-6 ./configure --prefix=$PROTOBUF_LIBDIR
     make -j8
     make install
 fi
@@ -99,11 +97,11 @@ if [ -d "$BOOST_LIBDIR" ]; then
     echo "Skipping BOOST library as it already exists at "$BOOST_LIBDIR
 else
     cd $TMP_BASEDIR
-    wget https://netcologne.dl.sourceforge.net/project/boost/boost/1.63.0/boost_1_63_0.tar.gz
-    tar -zxvf boost_1_63_0.tar.gz
-    cd boost_1_63_0
+    wget https://netcologne.dl.sourceforge.net/project/boost/boost/1.64.0/boost_1_64_0.tar.gz
+    tar -zxvf boost_1_64_0.tar.gz
+    cd boost_1_64_0
     ./bootstrap.sh --prefix=$BOOST_LIBDIR --with-toolset=gcc --with-libraries=filesystem,system,thread,date_time,chrono,atomic,timer
-    sed -i.old 's/using gcc ;/using gcc : 5.4.0 : g++-5 ;/g' project-config.jam
+    sed -i.old 's/using gcc ;/using gcc : 6.3.0 : g++-6 ;/g' project-config.jam
     ./b2 --with-filesystem --with-system --with-thread --with-date_time --with-chrono --with-atomic --with-timer variant=release threading=multi toolset=gcc install
 fi
 

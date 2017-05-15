@@ -413,7 +413,7 @@ void SearchEngine::SetEngineConfig(std::string engine_config) {
     if ( pos_eq != std::string::npos ) {
       std::string key = keyval.substr(0, pos_eq);
       std::string val = keyval.substr(pos_eq + 1);
-      engine_config_.insert( std::make_pair<std::string, std::string>(key, val) );
+      engine_config_.insert( std::pair<std::string, std::string>(key, val) );
     }
   }
 
@@ -468,7 +468,7 @@ void SearchEngine::SetEngineConfigParam(std::string key, std::string value) {
     it->second = value;
   }
   else {
-    engine_config_.insert( std::make_pair<std::string, std::string>(key, value) );
+    engine_config_.insert( std::pair<std::string, std::string>(key, value) );
   }
 }
 

@@ -1874,7 +1874,7 @@ void ViseServer::ParseHttpMethodUri(const std::string http_method_uri,
 
     std::string key   = argi.at(0);
     std::string value = argi.at(1);
-    resource_args.insert( std::make_pair<std::string, std::string>(key, value) );
+    resource_args.insert( std::pair<std::string, std::string>(key, value) );
   }
 }
 
