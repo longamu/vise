@@ -30,6 +30,7 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <fastann.hpp>
 
+#include "ViseMessageQueue.h"
 #include "build_index_status.pb.h"
 #include "clst_centres.h"
 #include "dataset_v2.h"
@@ -83,14 +84,14 @@ saveStatus(std::string const indexingStatusFn, rr::buildIndexStatus const &statu
 
 class buildManagerFiles : public managerWithTiming<std::string> {
     public:
-        
+
         buildManagerFiles(uint32_t nJobs, std::string const desc) : managerWithTiming<std::string>(nJobs, desc) {}
-        
+
         void
             compute( uint32_t jobID, std::string &result ){
                 fns_.push_back(result);
             }
-        
+
         std::vector<std::string> fns_;
 };
 
@@ -99,34 +100,34 @@ class buildManagerFiles : public managerWithTiming<std::string> {
 
 class orderIDs {
     public:
-        
+
         #define IES_COMPARE(fieldName) \
             if (entries_->at(l.first).fieldName(l.second) > entries_->at(r.first).fieldName(r.second)) \
                 return true; \
             if (entries_->at(l.first).fieldName(l.second) < entries_->at(r.first).fieldName(r.second)) \
                 return false;
-        
+
         #define IES_COMPARESTR(fieldName) \
             if (entries_->at(l.first).fieldName()[l.second] > entries_->at(r.first).fieldName()[r.second]) \
                 return true; \
             if (entries_->at(l.first).fieldName()[l.second] < entries_->at(r.first).fieldName()[r.second]) \
                 return false;
-        
+
         #define IES_COMPARE_IF_EXISTS(fieldName) \
             if (entries_->at(l.first).fieldName ## _size()){ \
                 IES_COMPARE(fieldName) \
             }
-        
+
         #define IES_COMPARESTR_IF_EXISTS(fieldName) \
             if (entries_->at(l.first).fieldName().length()>0){ \
                 IES_COMPARESTR(fieldName) \
             }
         orderIDs(std::vector<rr::indexEntry> const &entries) : entries_(&entries) {}
-        
+
         bool operator()(std::pair<uint32_t,int> const &l, std::pair<uint32_t,int> const &r) const {
-            
+
             IES_COMPARE(id)
-            
+
             IES_COMPARE_IF_EXISTS(docid)
             IES_COMPARE_IF_EXISTS(x)
             IES_COMPARE_IF_EXISTS(qx)
@@ -138,10 +139,10 @@ class orderIDs {
             IES_COMPARESTR_IF_EXISTS(qel_scale)
             IES_COMPARESTR_IF_EXISTS(qel_ratio)
             IES_COMPARESTR_IF_EXISTS(qel_angle)
-            
+
             return true;
         }
-        
+
     private:
         std::vector<rr::indexEntry> const *entries_;
 };
@@ -149,14 +150,14 @@ class orderIDs {
 
 
 class orderFidxIDs {
-    
+
     public:
         orderFidxIDs(std::vector<uint32_t> const &IDs) : IDs_(&IDs) {}
-        
+
         bool operator() (uint32_t l, uint32_t r) const {
             return IDs_->at(l) > IDs_->at(r);
         }
-    
+
     private:
         std::vector<uint32_t> const *IDs_;
 };
@@ -175,7 +176,7 @@ typedef std::pair< std::string, std::pair<uint32_t, uint32_t> > buildResultSemiS
 
 class buildManagerSemiSorted : public managerWithTiming<buildResultSemiSorted> {
     public:
-        
+
         buildManagerSemiSorted(uint32_t numDocs, std::string const dsetFn)
             : managerWithTiming<buildResultSemiSorted>(numDocs, "buildManagerSemiSorted"),
               dsetBuilder_(dsetFn),
@@ -185,10 +186,10 @@ class buildManagerSemiSorted : public managerWithTiming<buildResultSemiSorted> {
                 completed_jobs = 0;
                 total_jobs = numDocs;
               }
-        
+
         void
             compute( uint32_t jobID, buildResultSemiSorted &result );
-    
+
     private:
         uint32_t completed_jobs;
         uint32_t total_jobs;
@@ -196,7 +197,7 @@ class buildManagerSemiSorted : public managerWithTiming<buildResultSemiSorted> {
         datasetBuilder dsetBuilder_;
         uint32_t nextID_;
         std::map<uint32_t, buildResultSemiSorted> results_;
-        
+
         DISALLOW_COPY_AND_ASSIGN(buildManagerSemiSorted)
 };
 
@@ -220,11 +221,11 @@ buildManagerSemiSorted::compute( uint32_t jobID, buildResultSemiSorted &result )
         }
         std::ostringstream log;
         log << "Index log \nSemiSorted processed " << completed_jobs << " / " << total_jobs;
-        vise_message_queue_.Push( log.str() );
+        ViseMessageQueue::Instance()->Push( log.str() );
 
         std::ostringstream progress;
         progress << "Index progress " << completed_jobs << "/" << total_jobs;
-        vise_message_queue_.Push( progress.str() );
+        ViseMessageQueue::Instance()->Push( progress.str() );
 
     }
 }
@@ -233,20 +234,20 @@ buildManagerSemiSorted::compute( uint32_t jobID, buildResultSemiSorted &result )
 
 class buildWorkerSemiSorted : public queueWorker<buildResultSemiSorted> {
     public:
-        
+
         buildWorkerSemiSorted(std::string const outDir,
                               std::string const imagelistFn, std::string const databasePath,
                               featGetter const &featGetter_obj,
                               fastann::nn_obj<float> const &nn_obj,
                               clstCentres const *clstCentres_obj= NULL,
                               embedderFactory const *embFactory= NULL);
-        
+
         ~buildWorkerSemiSorted() {
             finish();
             if (delEmbF_) delete embFactory_;
             delete emb_;
         }
-        
+
         void
             finish(){
                 if (indexEntry_.id_size()>0)
@@ -258,25 +259,25 @@ class buildWorkerSemiSorted : public queueWorker<buildResultSemiSorted> {
                 findexBuilder_.close();
                 fImagelist_.close();
             }
-        
+
         void
             operator() ( uint32_t jobID, buildResultSemiSorted &result ) const;
-        
+
         mutable std::vector<std::string> fns_;
         std::string const fidx_fn_;
         mutable uint64_t totalFeats_;
-        
+
     private:
-        
+
         void
             closeFile() const;
-        
+
         void
             save() const;
-        
+
         mutable std::ifstream fImagelist_;
         std::string const databasePath_;
-        
+
         featGetter const *featGetter_;
         uint32_t const numDims_;
         fastann::nn_obj<float> const *nn_;
@@ -285,15 +286,15 @@ class buildWorkerSemiSorted : public queueWorker<buildResultSemiSorted> {
         bool delEmbF_;
         embedder *emb_;
         mutable rr::indexEntry indexEntry_;
-        
+
         std::string const outDir_;
         mutable protoDbFileBuilder *dbBuilder_;
         mutable indexBuilder *indexBuilder_;
         mutable protoDbFileBuilder fdbBuilder_;
         mutable indexBuilder findexBuilder_;
-        
+
         mutable uint32_t nextPossibleID_;
-        
+
         DISALLOW_COPY_AND_ASSIGN(buildWorkerSemiSorted)
 };
 
@@ -335,9 +336,9 @@ buildWorkerSemiSorted::buildWorkerSemiSorted(
 
 void
 buildWorkerSemiSorted::operator() ( uint32_t jobID, buildResultSemiSorted &result ) const {
-    
+
     uint32_t docID= jobID;
-    
+
     // get filename
     ASSERT(nextPossibleID_<=docID);
     std::string imageFn;
@@ -345,7 +346,7 @@ buildWorkerSemiSorted::operator() ( uint32_t jobID, buildResultSemiSorted &resul
         ASSERT( std::getline(fImagelist_, imageFn) );
     result.first= imageFn;
     imageFn= databasePath_ + imageFn;
-    
+
     // make sure the image exists and is readable
     result.second= std::make_pair(0,0);
     if (boost::filesystem::exists(imageFn) && boost::filesystem::is_regular_file(imageFn)){
@@ -358,11 +359,11 @@ buildWorkerSemiSorted::operator() ( uint32_t jobID, buildResultSemiSorted &resul
         std::cerr<<"buildWorkerSemiSorted::operator(): "<<imageFn<<" is corrupt or 0x0\n";
         return;
     }
-    
+
     uint32_t numFeats;
     std::vector<ellipse> regions;
     float *descs;
-    
+
     // extract features
     featGetter_->getFeats(imageFn.c_str(), numFeats, regions, descs);
     if (numFeats==0){
@@ -370,7 +371,7 @@ buildWorkerSemiSorted::operator() ( uint32_t jobID, buildResultSemiSorted &resul
         return;
     }
     totalFeats_+= numFeats;
-    
+
     // prepare memory
     uint32_t reserveCount= static_cast<uint32_t>(indexEntry_.id_size()) + numFeats;
     google::protobuf::RepeatedField<uint32_t> *wordIDs= indexEntry_.mutable_id();
@@ -388,23 +389,23 @@ buildWorkerSemiSorted::operator() ( uint32_t jobID, buildResultSemiSorted &resul
     std::vector<uint32_t> wordIDsUnique;
     wordIDsUnique.reserve(numFeats);
     emb_->reserve(numFeats);
-    
+
     // add docID
     protobufUtil::addManyToEnd<uint32_t>( docID, numFeats, *(indexEntry_.mutable_docid()) );
-    
+
     float *itD= descs;
-    
+
     for (uint32_t iFeat=0; iFeat<numFeats; ++iFeat){
-        
+
         // assign to clusters
-        
+
         unsigned clusterID;
         float distSq;
-        
+
         nn_->search_nn(descs+iFeat*numDims_, 1, &clusterID, &distSq);
-        
+
         ellipse const &region= regions[iFeat];
-        
+
         wordIDsUnique.push_back( clusterID );
         wordIDs->AddAlreadyReserved( clusterID );
         qx->AddAlreadyReserved( round(region.x) );
@@ -412,7 +413,7 @@ buildWorkerSemiSorted::operator() ( uint32_t jobID, buildResultSemiSorted &resul
         a->AddAlreadyReserved( region.a );
         b->AddAlreadyReserved( region.b );
         c->AddAlreadyReserved( region.c );
-        
+
         if (emb_->doesSomething()){
             float *thisDesc= itD;
             float const *itC= clstCentres_->clstC_flat + clusterID * numDims_;
@@ -421,23 +422,23 @@ buildWorkerSemiSorted::operator() ( uint32_t jobID, buildResultSemiSorted &resul
                 *itD -= *itC;
             emb_->add(thisDesc, clusterID);
         }
-        
+
     }
-    
+
     // cleanup
     delete []descs;
-    
+
     // protobufs are not designed for more
     if (indexEntry_.ByteSize() + static_cast<int>(emb_->getByteSize()) > semiSortedProtoByteSizeLim)
         save();
-    
+
     // save fidx
     std::sort(wordIDsUnique.begin(), wordIDsUnique.end());
     std::vector<uint32_t>::const_iterator newEnd= std::unique(wordIDsUnique.begin(), wordIDsUnique.end());
     rr::indexEntry fidxEntry;
     google::protobuf::RepeatedField<uint32_t> *fidxWordID= fidxEntry.mutable_id();
     fidxWordID->Reserve(newEnd - wordIDsUnique.begin());
-    
+
     for (std::vector<uint32_t>::const_iterator it= wordIDsUnique.begin();
          it!=newEnd;
          ++it){
@@ -450,11 +451,11 @@ buildWorkerSemiSorted::operator() ( uint32_t jobID, buildResultSemiSorted &resul
 
 void
 buildWorkerSemiSorted::save() const {
-    
+
     // sort according to clusterID
     std::vector<int> inds;
     indexEntryUtil::argSort::sort(indexEntry_, inds);
-    
+
     // apply the sort
     rr::indexEntry indexEntry= indexEntry_; // to get all repeated field sizes correctly
     uint32_t *wordID= indexEntry.mutable_id()->mutable_data();
@@ -466,7 +467,7 @@ buildWorkerSemiSorted::save() const {
     float *c= indexEntry.mutable_c()->mutable_data();
     uint32_t size= indexEntry_.id_size();
     embedder *emb= embFactory_->getEmbedder();
-    
+
     for (uint32_t i= 0; i<size; ++i, ++wordID, ++docID, ++qx, ++qy, ++a, ++b, ++c){
         int ind= inds[i];
         *wordID= indexEntry_.id(ind);
@@ -478,15 +479,15 @@ buildWorkerSemiSorted::save() const {
         *c= indexEntry_.c(ind);
         emb->copyFrom(*emb_, ind);
     }
-    
+
     // clear for future usage (will clear indexEntry_ later)
     emb_->clear();
-    
+
     // dump extra data into indexEntry_
     if (emb->getByteSize()>0)
         indexEntry.set_data( emb->getEncoding() );
     delete emb;
-    
+
     // do we need to make a new file?
     if (dbBuilder_==NULL){
         ASSERT( indexBuilder_==NULL );
@@ -494,13 +495,13 @@ buildWorkerSemiSorted::save() const {
         dbBuilder_= new protoDbFileBuilder( fns_.back(), "indexing" );
         indexBuilder_= new indexBuilder(*dbBuilder_, true, true, true);
     }
-    
+
     // save to disk
     indexBuilder_->addEntry( 0, indexEntry );
-    
+
     // clear for future usage (cleared emb_ already)
     indexEntry_.Clear();
-    
+
     // is the current file too big?
     if (dbBuilder_!=NULL){
         ASSERT( indexBuilder_!= NULL );
@@ -529,29 +530,29 @@ buildWorkerSemiSorted::closeFile() const {
 
 class buildWorkerSorted : public queueWorker<std::string> {
     public:
-        
+
         buildWorkerSorted(std::string const outDir,
                           std::vector<std::string> const &inputFns,
                           uint32_t protoByteSizeLim,
                           embedderFactory const *embFactory= NULL);
-        
+
         ~buildWorkerSorted(){
             if (delEmbF_) delete embFactory_;
         }
-        
+
         void
             operator() ( uint32_t jobID, std::string &result ) const;
-        
+
         mutable std::vector<std::string> fns_;
-        
+
     private:
-        
+
         std::string const outDir_;
         std::vector<std::string> const *inputFns_;
         int const sortedProtoByteSizeLim_;
         embedderFactory const *embFactory_;
         bool delEmbF_;
-        
+
         DISALLOW_COPY_AND_ASSIGN(buildWorkerSorted)
 };
 
@@ -580,7 +581,7 @@ buildWorkerSorted::buildWorkerSorted(
 
 void
 buildWorkerSorted::operator() ( uint32_t jobID, std::string &result ) const {
-    
+
     std::vector<rr::indexEntry> entries;
     uint32_t ID_fake= 0;
     {
@@ -588,25 +589,25 @@ buildWorkerSorted::operator() ( uint32_t jobID, std::string &result ) const {
         protoDbFile inDb( inputFns_->at(jobID) );
         protoIndex inIdx(inDb, false);
         ASSERT( inIdx.numIDs() == 1 );
-        
+
         inIdx.getEntries(0, entries);
     }
-    
+
     // make the file
     result= util::getTempFileName( outDir_, "sortedpart_", ".bin" );
     protoDbFileBuilder dbBuilder(result, "indexing");
     indexBuilder idxBuilder(dbBuilder, true, true, true);
-    
+
     // make the heap
     // entries[first].id(second)
     std::priority_queue< std::pair<uint32_t,int>,
                          std::vector< std::pair<uint32_t,int> >,
                          orderIDs > queue( (orderIDs(entries)) );
     std::vector<embedder*> embedders(entries.size());
-    
+
     for (uint32_t iEntry= 0; iEntry < entries.size(); ++iEntry)
         if (entries[iEntry].id_size()>0){
-            
+
             queue.push(std::make_pair(iEntry, 0));
             rr::indexEntry const &entry= entries[iEntry];
             int n= entry.id_size();
@@ -619,7 +620,7 @@ buildWorkerSorted::operator() ( uint32_t jobID, std::string &result ) const {
             ASSERT( entry.a_size()==0 );
             ASSERT( entry.b_size()==0 );
             ASSERT( entry.c_size()==0 );
-            
+
             embedders[iEntry]= embFactory_->getEmbedder();
             if ( embedders[iEntry]->doesSomething() ){
                 ASSERT(entry.has_data());
@@ -627,9 +628,9 @@ buildWorkerSorted::operator() ( uint32_t jobID, std::string &result ) const {
                 ASSERT( n == static_cast<int>(embedders[iEntry]->getNum()) );
             }
             entries[iEntry].clear_data(); // to save RAM
-            
+
         } else embedders[iEntry]= NULL;
-    
+
     rr::indexEntry merged;
     merged.mutable_id()->Reserve(100000);
     merged.mutable_docid()->Reserve(100000);
@@ -640,15 +641,15 @@ buildWorkerSorted::operator() ( uint32_t jobID, std::string &result ) const {
     merged.mutable_qel_angle()->reserve(100000);
     embedder *emb= embFactory_->getEmbedder();
     emb->reserve(100000);
-    
+
     while (queue.size()){
-        
+
         // get smallest ID
         std::pair<uint32_t,int> const &t= queue.top();
         uint32_t iEntry= t.first;
         int ind= t.second;
         queue.pop();
-        
+
         // add data from the entry
         rr::indexEntry const &entry= entries[iEntry];
         merged.add_id( entry.id(ind) );
@@ -659,7 +660,7 @@ buildWorkerSorted::operator() ( uint32_t jobID, std::string &result ) const {
         merged.mutable_qel_ratio()->append( &(entry.qel_ratio()[ind]), 1 );
         merged.mutable_qel_angle()->append( &(entry.qel_angle()[ind]), 1 );
         emb->copyFrom(*embedders[iEntry], ind);
-        
+
         // protobufs are not designed for more
         if (merged.id_size()%100==0 && // to avoid doing ByteSize() all the time
             merged.ByteSize() + static_cast<int>(emb->getByteSize()) > sortedProtoByteSizeLim_){
@@ -670,7 +671,7 @@ buildWorkerSorted::operator() ( uint32_t jobID, std::string &result ) const {
             ++ID_fake;
             merged.Clear();
         }
-        
+
         // push next if we haven't reached the end
         ++ind;
         if (ind < entry.id_size())
@@ -680,7 +681,7 @@ buildWorkerSorted::operator() ( uint32_t jobID, std::string &result ) const {
             embedders[iEntry]= NULL;
         }
     }
-    
+
     if (merged.id_size()>0){
         // save last time
         if (emb->doesSomething())
@@ -689,10 +690,10 @@ buildWorkerSorted::operator() ( uint32_t jobID, std::string &result ) const {
         idxBuilder.addEntry(ID_fake, merged);
         merged.Clear();
     }
-    
+
     idxBuilder.close();
     delete emb;
-    
+
     for (uint32_t iEntry= 0; iEntry<entries.size(); ++iEntry)
         ASSERT(embedders[iEntry]==NULL);
 }
@@ -711,38 +712,38 @@ mergeSortedFiles(
         std::string const iidxFn,
         uint32_t const totalFeats,
         embedderFactory const *embFactory= NULL){
-    
+
     bool delEmbF= false;
     if (embFactory==NULL){
         embFactory= new noEmbedderFactory;
         delEmbF= true;
     }
-    
+
     double t0= timing::tic();
-    
+
     uint32_t const numFiles= fns.size();
     std::vector< protoDbFile* > inDbs;
     std::vector< protoIndex* > inIdxs;
     std::vector<uint32_t> ID_fake;
     std::vector<rr::indexEntry> entries, entries_temp;
-    
+
     timing::progressPrint progressPrint(totalFeats, "buildIndex::mergeSortedFiles");
-    
+
     // the heap
     // entries[first].id(second)
     std::priority_queue< std::pair<uint32_t,int>,
                          std::vector< std::pair<uint32_t,int> >,
                          orderIDs > queue( (orderIDs(entries)) );
     std::vector<embedder*> embedders(numFiles);
-    
+
     // load first IDs of all files, add the first element to the heap
     for (uint32_t iEntry= 0; iEntry<numFiles; ++iEntry){
         inDbs.push_back( new protoDbFile(fns[iEntry]) );
         inIdxs.push_back( new protoIndex(*inDbs.back(), false) );
         ID_fake.push_back(0);
-        
+
         if (inDbs.back()->numIDs()>0){
-            
+
             inIdxs.back()->getEntries(0, entries_temp);
             ASSERT( entries_temp.size()==1 );
             rr::indexEntry const &entry= entries_temp[0];
@@ -756,7 +757,7 @@ mergeSortedFiles(
             ASSERT( entry.a_size()==0 );
             ASSERT( entry.b_size()==0 );
             ASSERT( entry.c_size()==0 );
-            
+
             embedders[iEntry]= embFactory->getEmbedder();
             if ( embedders[iEntry]->doesSomething() ){
                 ASSERT(entry.has_data());
@@ -764,19 +765,19 @@ mergeSortedFiles(
                 ASSERT( n == static_cast<int>(embedders[iEntry]->getNum()) );
             }
             entries_temp[0].clear_data(); // to save RAM
-            
+
             entries.push_back( entry );
             queue.push(std::make_pair(iEntry, 0)); // make sure to do this AFTER setting entries so that sorting works
-            
+
         } else embedders[iEntry]= NULL;
     }
-    
+
     uint32_t ID= 0, prevID= 0;
-    
+
     // do merging
     protoDbFileBuilder dbBuilder(iidxFn, "index");
     indexBuilder idxBuilder(dbBuilder, true, true, true);
-    
+
     rr::indexEntry merged;
     merged.mutable_id()->Reserve(100000);
     merged.mutable_qx()->Reserve(100000);
@@ -786,21 +787,21 @@ mergeSortedFiles(
     merged.mutable_qel_angle()->reserve(100000);
     embedder *emb= embFactory->getEmbedder();
     emb->reserve(100000);
-    
+
     while (queue.size()){
-        
+
         progressPrint.inc();
-        
+
         // get smallest ID
         std::pair<uint32_t,int> const &t= queue.top();
         uint32_t iEntry= t.first;
         int ind= t.second;
         queue.pop();
-        
+
         // add data from the entry
         rr::indexEntry const &entry= entries[iEntry];
         ID= entry.id(ind);
-        
+
         ASSERT(ID>=prevID);
         if (ID>prevID && merged.id_size()>0){
             // save the current one as ID changed
@@ -811,7 +812,7 @@ mergeSortedFiles(
             merged.Clear();
             prevID= ID;
         }
-        
+
         merged.add_id( entry.docid(ind) );
         merged.add_qx( entry.qx(ind) );
         merged.add_qy( entry.qy(ind) );
@@ -819,7 +820,7 @@ mergeSortedFiles(
         merged.mutable_qel_ratio()->append( &(entry.qel_ratio()[ind]), 1 );
         merged.mutable_qel_angle()->append( &(entry.qel_angle()[ind]), 1 );
         emb->copyFrom(*embedders[iEntry], ind);
-        
+
         // protobufs are not designed for more
         if (merged.id_size()%100==0 && // to avoid doing ByteSize() all the time
             merged.ByteSize() > mergedProtoByteSizeLim){
@@ -829,7 +830,7 @@ mergeSortedFiles(
             idxBuilder.addEntry(ID, merged);
             merged.Clear();
         }
-        
+
         // push next
         ++ind;
         if (ind < entry.id_size())
@@ -838,12 +839,12 @@ mergeSortedFiles(
         else {
             // load the next entry
             ++ID_fake[iEntry];
-            
+
             delete embedders[iEntry];
             embedders[iEntry]= NULL;
-            
+
             if (ID_fake[iEntry] < inDbs[iEntry]->numIDs()){
-                
+
                 inIdxs[iEntry]->getEntries(ID_fake[iEntry], entries_temp);
                 ASSERT( entries_temp.size()==1 );
                 rr::indexEntry const &entry= entries_temp[0];
@@ -857,7 +858,7 @@ mergeSortedFiles(
                 ASSERT( entry.a_size()==0 );
                 ASSERT( entry.b_size()==0 );
                 ASSERT( entry.c_size()==0 );
-                
+
                 embedders[iEntry]= embFactory->getEmbedder();
                 if ( embedders[iEntry]->doesSomething() ){
                     ASSERT(entry.has_data());
@@ -865,15 +866,15 @@ mergeSortedFiles(
                     ASSERT( n == static_cast<int>(embedders[iEntry]->getNum()) );
                 }
                 entries_temp[0].clear_data(); // to save RAM
-                
+
                 entries[iEntry]= entry;
                 queue.push(std::make_pair(iEntry, 0)); // make sure to do this AFTER setting entries so that sorting works
-                
+
             }
         }
-        
+
     }
-    
+
     if (merged.id_size()>0){
         // save last time
         if (emb->doesSomething())
@@ -882,43 +883,43 @@ mergeSortedFiles(
         idxBuilder.addEntry(ID, merged);
         merged.Clear();
     }
-    
+
     idxBuilder.close();
-    
+
     util::delPointerVector(inIdxs);
     util::delPointerVector(inDbs);
     if (delEmbF) delete embFactory;
     delete emb;
     for (uint32_t iEntry= 0; iEntry<numFiles; ++iEntry)
         ASSERT(embedders[iEntry]==NULL);
-    
+
     std::cout<<"buildIndex::mergeSortedFiles: done in "<< timing::hrminsec(timing::toc(t0)/1000) <<"\n";
-    
+
     ASSERT( progressPrint.totalDone() == totalFeats );
-    
+
     for (uint32_t i= 0; i<fns.size(); ++i)
         boost::filesystem::remove(fns[i]);
-    
+
 }
 
 
 
 void
 mergePartialFidx(std::vector<std::string> const &fns, std::string const fidxFn) {
-    
+
     double t0= timing::tic();
-    
+
     uint32_t const numFiles= fns.size();
     std::vector< protoDbFile* > inDbs;
     std::vector<uint32_t> IDs(numFiles);
     std::vector<rr::indexEntry> entries;
-    
+
     // the heap
     // entries[first].id(second)
     std::priority_queue< uint32_t,
                          std::vector<uint32_t>,
                          orderFidxIDs > queue( (orderFidxIDs(IDs)) );
-    
+
     // add available IDs from all files to the heap
     for (uint32_t iFile= 0; iFile<numFiles; ++iFile){
         inDbs.push_back( new protoDbFile(fns[iFile]) );
@@ -930,16 +931,16 @@ mergePartialFidx(std::vector<std::string> const &fns, std::string const fidxFn) 
             queue.push(iFile);
         }
     }
-    
+
     uint32_t ID= 0, nextID= 0;
     std::vector<std::string> data;
     uint32_t numNoFeatsWarnings= 0;
-    
+
     // do merging
     protoDbFileBuilder dbBuilder(fidxFn, "index");
-    
+
     while (queue.size()){
-        
+
         // get smallest ID
         uint32_t iFile= queue.top();
         queue.pop();
@@ -948,7 +949,7 @@ mergePartialFidx(std::vector<std::string> const &fns, std::string const fidxFn) 
         for (; numNoFeatsWarnings<5 && nextID<ID; ++nextID, ++numNoFeatsWarnings)
             std::cout<<"buildIndex::mergePartialFidx: warning no features detected in imageID="<<nextID<<"\n";
         nextID= ID+1;
-        
+
         // get/add data
         protoDbFile const *db= inDbs[iFile];
         db->getData(ID, data);
@@ -969,7 +970,7 @@ mergePartialFidx(std::vector<std::string> const &fns, std::string const fidxFn) 
                 std::cout<<"buildIndex::mergePartialFidx: warning no features detected in imageID="<<ID<<"\n";
             ++numNoFeatsWarnings;
         }
-        
+
         // push next
         for (++ID; ID<db->numIDs() && !(db->contains(ID)); ++ID);
         if (ID < db->numIDs()){
@@ -977,19 +978,19 @@ mergePartialFidx(std::vector<std::string> const &fns, std::string const fidxFn) 
             queue.push(iFile);
         }
     }
-    
+
     dbBuilder.close();
-    
+
     util::delPointerVector(inDbs);
-    
+
     if (numNoFeatsWarnings>5)
         std::cout<<"buildIndex::mergePartialFidx: warning no features detected "<<numNoFeatsWarnings<<" images\n";
-    
+
     std::cout<<"buildIndex::mergePartialFidx: done in "<< timing::hrminsec(timing::toc(t0)/1000) <<"\n";
-    
+
     for (uint32_t i= 0; i<fns.size(); ++i)
         boost::filesystem::remove(fns[i]);
-    
+
 }
 
 
@@ -1017,61 +1018,61 @@ build(
         featGetter const &featGetter_obj,
         std::string const clstFn,
         embedderFactory const *embFactory) {
-    
+
     MPI_GLOBAL_ALL
     bool useThreads= detectUseThreads();
     uint32_t numWorkerThreads= 8;
     std::ostringstream s;
-    
+
     ASSERT(tmpDir[tmpDir.length()-1]=='/');
     std::string indexingStatusFn= tmpDir+"indexingstatus.bin";
-    
+
     // load status
     rr::buildIndexStatus status;
     IF_MPI_BARRIER
-    
+
     if (rank==0 && !loadStatus(indexingStatusFn, status)){
         status.set_state( rr::buildIndexStatus::beginning );
         saveStatus(indexingStatusFn, status);
     }
-    
+
     double t0= timing::tic();
-    
-    
-    
+
+
+
     // ------------------------------------ SemiSorted
-    
+
     IF_MPI_BARRIER
     ASSERT(loadStatus(indexingStatusFn, status));
     if (status.state()==rr::buildIndexStatus::beginning){
-        
+
         // extract features, assign to clusters, save to files sorted by clusterID within each indexEntry
         // also save the bare fidx (i.e. list of unique wordIDs)
         // also construct the dataset info (i.e. list of images, width/height)
-        
+
         if (rank==0) {
             std::cout<<"buildIndex::build: beginning\n";
         }
         // clusters
         if (rank==0) {
             //std::cout<<"buildIndex::build: Loading cluster centres\n";
-            vise_message_queue_.Push( "Index log \nLoading cluster centres ... " );
+            ViseMessageQueue::Instance()->Push( "Index log \nLoading cluster centres ... " );
         }
         double t0= timing::tic();
         clstCentres clstCentres_obj( clstFn.c_str(), true );
         if (rank==0) {
             //std::cout<<"buildIndex::build: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
-            s.str(""); 
+            s.str("");
             s.clear();
             s << "Index log done (" << timing::toc(t0) << " ms)";
-            vise_message_queue_.Push( s.str() );
+            ViseMessageQueue::Instance()->Push( s.str() );
         }
         if (rank==0) {
             //std::cout<<"buildIndex::build: Constructing NN search object\n";
-            vise_message_queue_.Push( "Index log \nConstructing NN search object ... " );
+            ViseMessageQueue::Instance()->Push( "Index log \nConstructing NN search object ... " );
         }
         t0= timing::tic();
-        
+
         fastann::nn_obj<float> const *nn_obj=
         #if 1
             fastann::nn_obj_build_kdtree(
@@ -1086,12 +1087,12 @@ build(
         #endif
         if (rank==0) {
             //std::cout<<"buildIndex::build: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
-            s.str(""); 
+            s.str("");
             s.clear();
             s << "Index log done (" << timing::toc(t0) << " ms)";
-            vise_message_queue_.Push( s.str() );
+            ViseMessageQueue::Instance()->Push( s.str() );
         }
-        
+
         // get number of documents
         uint32_t numDocs= 0;
         if (rank==0){
@@ -1107,22 +1108,22 @@ build(
             }
             fImagelist.close();
         }
-        
+
         // communicate numDocs to everyone
         #ifdef RR_MPI
         if (!useThreads)
             boost::mpi::broadcast(comm, numDocs, 0);
         #endif
-        
+
         buildManagerSemiSorted *manager= (rank==0) ?
             new buildManagerSemiSorted(numDocs, dsetFn) :
             NULL;
-        
+
         std::vector<std::string> fns;
         uint32_t totalFeats= 0;
-        
+
         if (useThreads){
-            
+
             std::vector<queueWorker<buildResultSemiSorted> const *> workers;
             for (uint32_t i= 0; i<numWorkerThreads; ++i)
                 workers.push_back( new buildWorkerSemiSorted(
@@ -1131,10 +1132,10 @@ build(
                     *nn_obj,
                     &clstCentres_obj,
                     embFactory) );
-            
+
             // start feature extraction + assignment
             threadQueue<buildResultSemiSorted>::start( numDocs, workers, *manager );
-            
+
             // collect file names
             for (uint32_t i= 0; i<workers.size(); ++i){
                 ((buildWorkerSemiSorted *)workers[i])->finish();
@@ -1144,13 +1145,13 @@ build(
                 status.add_fidx_filename( ((buildWorkerSemiSorted const *)workers[i])->fidx_fn_ );
                 totalFeats+= ((buildWorkerSemiSorted const *)workers[i])->totalFeats_;
             }
-            
+
             util::delPointerVector(workers);
-            
+
         } else {
-            
+
             #ifdef RR_MPI
-            
+
             // start feature extraction + assignment
             buildWorkerSemiSorted worker(
                 tmpDir, imagelistFn, databasePath,
@@ -1160,7 +1161,7 @@ build(
                 embFactory);
             mpiQueue<buildResultSemiSorted>::start( numDocs, worker, manager );
             worker.finish();
-            
+
             // collect file names
             if (rank==0){
                 for (uint32_t iProc= 0; iProc < numProc; ++iProc){
@@ -1188,16 +1189,16 @@ build(
                 comm.send( 0, 1, worker.fidx_fn_ );
                 comm.send( 0, 2, worker.totalFeats_ );
             }
-            
+
             #else
             ASSERT(false); // need to have MPI for this
             #endif
-            
+
         }
-        
+
         if (rank==0) delete manager;
         delete nn_obj;
-        
+
         // update status
         if (rank==0){
             status.set_state( rr::buildIndexStatus::semiSorted );
@@ -1208,46 +1209,46 @@ build(
             saveStatus(indexingStatusFn, status);
         }
     }
-    
-    
-    
+
+
+
     // ------------------------------------ Sorted
-    
+
     IF_MPI_BARRIER
     ASSERT(loadStatus(indexingStatusFn, status));
     if (status.state()==rr::buildIndexStatus::semiSorted){
-        
+
         // sort the previously generated files (sorted within each indexEntry by clusterID) such that sorting is maintained accorss indexEntries as well (i.e. last element of first indexEntry is < than first element of second indexEntry)
-        
+
         if (rank==0){
             //std::cout<<"buildIndex::build: semiSorted\n";
             //std::cout<< "\n" << status.DebugString() <<"\n";
-            vise_message_queue_.Push( "Index log \nindex semi sorted" );
+            ViseMessageQueue::Instance()->Push( "Index log \nindex semi sorted" );
         }
-        
+
         std::vector<std::string> fns;
         fns.reserve( status.filename_size() );
         for (int i= 0; i < status.filename_size(); ++i)
             fns.push_back(status.filename(i));
-        
+
         uint32_t nJobs= fns.size();
-        
+
         buildManagerFiles *manager= (rank==0) ?
             new buildManagerFiles(nJobs, "buildManagerSorted") :
             NULL;
         buildWorkerSorted worker(tmpDir, fns, mergingMemoryLim / std::max(numProc, numWorkerThreads), embFactory );
-        
+
         if (useThreads)
             threadQueue<std::string>::start( nJobs, worker, *manager, numWorkerThreads );
         else
             mpiQueue<std::string>::start( nJobs, worker, manager );
-        
+
         // delete old files
         if (rank==0){
             for (uint32_t i= 0; i<fns.size(); ++i)
                 boost::filesystem::remove(fns[i]);
         }
-        
+
         // update status
         if (rank==0){
             status.set_state( rr::buildIndexStatus::merged );
@@ -1255,94 +1256,94 @@ build(
             fns= manager->fns_;
             for (uint32_t i= 0; i<fns.size(); ++i)
                 status.add_filename( fns[i] );
-            
+
             saveStatus(indexingStatusFn, status);
         }
-        
+
         if (rank==0) delete manager;
     }
-    
-    
-    
+
+
+
     // ------------------------------------ Merged
-    
-    
-    
+
+
+
     IF_MPI_BARRIER
     ASSERT(loadStatus(indexingStatusFn, status));
     if (status.state()==rr::buildIndexStatus::merged){
-        
+
         if (rank==0){
             //std::cout<<"buildIndex::build: merged\n";
             //std::cout<< "\n" << status.DebugString() <<"\n";
-            vise_message_queue_.Push( "Index log \nindex merged" );
+            ViseMessageQueue::Instance()->Push( "Index log \nindex merged" );
         }
-        
+
         std::vector<std::string> fns;
         fns.reserve( status.filename_size() );
         for (int i= 0; i < status.filename_size(); ++i)
             fns.push_back(status.filename(i));
-        
+
         std::vector<std::string> fidxFns;
         fidxFns.reserve( status.fidx_filename_size() );
         for (int i= 0; i < status.fidx_filename_size(); ++i)
             fidxFns.push_back(status.fidx_filename(i));
-        
+
         if (useThreads){
-            
+
             // merge fidx
             boost::thread thread1( boost::bind(mergePartialFidx, fidxFns, fidxFn) );
-            
+
             // merge iidx
             boost::thread thread2( boost::bind(mergeSortedFiles, fns, iidxFn, status.totalfeats(), embFactory) );
-            
+
             thread1.join();
             thread2.join();
-            
+
         } else {
-            
+
             #ifdef RR_MPI
-            
+
             if (rank==0){
                 // merge fidx
                 mergePartialFidx(fidxFns, fidxFn);
             }
-            
+
             if ((numProc==1 && rank==0) || rank==1){
                 // merge iidx
                 mergeSortedFiles(fns, iidxFn, status.totalfeats(), embFactory);
             }
-            
+
             comm.barrier();
-            
+
             #else
             ASSERT(false); // need to have MPI for this
             #endif
-            
+
         }
-        
+
         // update status
         if (rank==0){
             status.set_state( rr::buildIndexStatus::done );
             status.clear_filename();
             status.clear_fidx_filename();
-            
+
             saveStatus(indexingStatusFn, status);
         }
-        
+
     }
-    
+
     if (rank==0){
         ASSERT(loadStatus(indexingStatusFn, status));
         ASSERT(status.state()==rr::buildIndexStatus::done);
         //std::cout<<"buildIndex::build: done in "<< timing::hrminsec(timing::toc(t0)/1000) <<"\n";
         //std::cout<< "\n" << status.DebugString() <<"\n";
-        s.str(""); 
+        s.str("");
         s.clear();
         s << "Index log \nIndexing completed in " << timing::hrminsec(timing::toc(t0)/1000);
-        vise_message_queue_.Push( s.str() );
+        ViseMessageQueue::Instance()->Push( s.str() );
     }
-    
+
 }
 
 };

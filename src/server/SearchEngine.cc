@@ -188,7 +188,7 @@ void SearchEngine::Descriptor() {
                                   featGetter_obj);
   }
   SendLog("Descriptor", "Completed computing descriptors");
-  std::cout << "\n@todo: Message queue size = " << vise_message_queue_.GetSize() << std::flush;
+  std::cout << "\n@todo: Message queue size = " << ViseMessageQueue::Instance()->GetSize() << std::flush;
   SendCommand("Cluster", "_progress reset hide");
 }
 
@@ -197,7 +197,7 @@ void SearchEngine::Descriptor() {
 // $ python setup.py build
 // $ sudo python setup.py install
 void SearchEngine::Cluster() {
-  std::cout << "\n@todo: Message queue size = " << vise_message_queue_.GetSize() << std::flush;
+  std::cout << "\n@todo: Message queue size = " << ViseMessageQueue::Instance()->GetSize() << std::flush;
   if ( ! ClstFnExists() ) {
     SendLog("Cluster", "\nStarting clustering of descriptors ...");
     SendCommand("Cluster", "_progress reset show");
@@ -557,7 +557,7 @@ void SearchEngine::SendCommand(std::string sender, std::string command) {
 void SearchEngine::SendProgress(std::string state_name, unsigned long completed, unsigned long total) {
   std::ostringstream s;
   s << state_name << " progress " << completed << "/" << total;
-  vise_message_queue_.Push( s.str() );
+  ViseMessageQueue::Instance()->Push( s.str() );
 }
 
 void SearchEngine::SendLog(std::string sender, std::string log) {
@@ -567,7 +567,7 @@ void SearchEngine::SendLog(std::string sender, std::string log) {
 void SearchEngine::SendPacket(std::string sender, std::string type, std::string message) {
   std::ostringstream s;
   s << sender << " " << type << " " << message;
-  vise_message_queue_.Push( s.str() );
+  ViseMessageQueue::Instance()->Push( s.str() );
 }
 
 //

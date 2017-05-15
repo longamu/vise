@@ -35,13 +35,6 @@ If these 2 are not included here, before boost/asio.hpp: Arthur has some problem
 
 #include "dataset_abs.h"
 
-
-#include "ViseMessageQueue.h"
-
-// defined in src/vise.cc
-// a global message queue to send communications to client HTTP browser
-extern ViseMessageQueue vise_message_queue_;
-
 using boost::asio::ip::tcp;
 typedef boost::shared_ptr<tcp::socket> socket_ptr;
 

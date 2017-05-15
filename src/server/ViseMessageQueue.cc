@@ -1,5 +1,14 @@
 #include "ViseMessageQueue.h"
 
+ViseMessageQueue* ViseMessageQueue::vise_global_message_queue_ = NULL;
+
+ViseMessageQueue* ViseMessageQueue::Instance() {
+  if ( !vise_global_message_queue_ ) {
+    vise_global_message_queue_ = new ViseMessageQueue;
+  }
+  return vise_global_message_queue_;
+}
+
 void ViseMessageQueue::Push( const std::string &d ) {
   //boost::lock_guard<boost::mutex> guard(mtx_);
   boost::mutex::scoped_lock lock(mtx_);

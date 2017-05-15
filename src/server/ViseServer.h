@@ -65,10 +65,6 @@
 
 using boost::asio::ip::tcp;
 
-// defined in src/vise.cc
-// a global message queue to send communications to client HTTP browser
-extern ViseMessageQueue vise_message_queue_;
-
 class ViseServer {
  private:
   SearchEngine search_engine_;
@@ -226,7 +222,6 @@ class ViseServer {
   // setup relja_retrival backend and frontend (temporary, until JS based frontend is ready)
   void InitReljaRetrival();
   void InitReljaRetrivalBackend();
-  void InitReljaRetrivalFrontend();
 
   // @todo: move to ViseServer.cc ( do not know how! )
   template<typename T> void ParseCsvString( const std::string csv, std::vector< T > &d ) {

@@ -30,13 +30,12 @@ No usage or redistribution is allowed without explicit permission.
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
+#include "ViseMessageQueue.h"
 #include "timing.h"
-
-
 
 void
 absAPI::session( socket_ptr sock ){
-    
+
     // Read the client's request.
     std::string request = "";
     while (1) {
@@ -55,62 +54,62 @@ absAPI::session( socket_ptr sock ){
         request+= std::string(buffer, len);
         std::string requestTrim= request;
         boost::algorithm::trim_right(requestTrim);
-        
+
         if (std::string(requestTrim.begin() + requestTrim.size() - 6, requestTrim.end()) == " $END$"){
             request= requestTrim;
             break;
         }
     }
-    
+
     request= request.substr(0, request.length()-6); // remove end
-    
+
     double t0= timing::tic();
-    
+
     // parse the request
     std::stringstream ss( request );
-    
+
     boost::property_tree::ptree pt;
     read_xml( ss, pt );
-    
+
     std::string reply;
-    
+
     if ( pt.count("dsetGetNumDocs") ){
-        
+
         reply= ( boost::format("%d") % dataset_->getNumDoc() ).str();
-        
+
     } else if ( pt.count("dsetGetFn") ){
-        
+
         uint32_t docID= pt.get<uint32_t>("dsetGetFn.docID");
         reply= ( boost::format("%d") % dataset_->getFn(docID) ).str();
-        
+
     } else if ( pt.count("dsetGetDocID") ){
-        
+
         std::string fn= pt.get<std::string>("dsetGetDocID.fn");
         reply= ( boost::format("%d") % dataset_->getDocIDFromAbsFn(fn) ).str();;
-        
+
     } else if ( pt.count("dsetGetWidthHeight") ){
-        
+
         uint32_t docID= pt.get<uint32_t>("dsetGetWidthHeight.docID");
         std::pair<uint32_t, uint32_t> wh= dataset_->getWidthHeight(docID);
         reply= ( boost::format("%d %d") % wh.first % wh.second ).str();
-        
+
     } else if ( pt.count("containsFn") ){
-        
+
         std::string fn= pt.get<std::string>("containsFn.fn");
         reply= ( boost::format("%d") % dataset_->containsFn(fn) ).str();
-        
+
     } else {
-        
+
 //         std::cout<< timing::getTimeString() <<" Request= "<<request<<"\n";
 //        std::cout<< timing::getTimeString() <<" Request= "<< request.substr(0,300) << ( request.length()>300 ? " (...) \n" : "\n" ) ;
-        
+
         reply= getReply(pt, request);
-        
+
 //         std::cout<<"Response= "<<reply<<"\n";
 //        std::cout<<"Response= "<< reply.substr(0,300) << ( reply.length()>300 ? " (...) \n" : "\n" ) ;
         std::cout<<timing::getTimeString()<<" Request - DONE ("<< timing::toc(t0) <<" ms)\n";
     }
-    
+
     boost::asio::write(*sock, boost::asio::buffer(reply));
 }
 
@@ -125,7 +124,7 @@ void InitReljaRetrivalFrontend(std::string dsetname, std::string configFn) {
   s << " true";
 
   FILE *pipe = popen( s.str().c_str(), "r");
-  vise_message_queue_.Push("Query command _redirect http://localhost:9971 1000");
+  ViseMessageQueue::Instance()->Push("Query command _redirect http://localhost:9971 1000");
 
   if ( pipe == NULL ) {
     std::cerr << " [failed]" << std::flush;
@@ -136,7 +135,7 @@ void InitReljaRetrivalFrontend(std::string dsetname, std::string configFn) {
 
 void
 absAPI::server(boost::asio::io_service& io_service, unsigned int port, std::string dsetname, std::string configFn) {
-    
+
     std::cout << "\nabsAPI::server() : Waiting for requests on port " << port << std::flush;
 try_again:
     try {
@@ -157,6 +156,5 @@ try_again:
         sleep(1);
         goto try_again;
     }
-    
-}
 
+}

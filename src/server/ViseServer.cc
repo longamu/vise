@@ -401,7 +401,7 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       // to be pushed to vise_message_queue_, sends this message to the client
       // which in turn again creates another request for any future messages
 
-      std::string msg = vise_message_queue_.BlockingPop();
+      std::string msg = ViseMessageQueue::Instance()->BlockingPop();
       SendRawResponse( "text/plain", msg, p_socket );
       p_socket->close();
       return;
@@ -702,13 +702,13 @@ void ViseServer::SendCommand(std::string command) {
 void ViseServer::SendProgress(std::string state_name, unsigned long completed, unsigned long total) {
   std::ostringstream s;
   s << state_name << " progress " << completed << "/" << total;
-  vise_message_queue_.Push( s.str() );
+  ViseMessageQueue::Instance()->Push( s.str() );
 }
 
 void ViseServer::SendPacket(std::string type, std::string message) {
   std::ostringstream s;
   s << GetCurrentStateName() << " " << type << " " << message;
-  vise_message_queue_.Push( s.str() );
+  ViseMessageQueue::Instance()->Push( s.str() );
 }
 
 void ViseServer::SendHttpPostResponse(std::string http_post_data, std::string result, boost::shared_ptr<tcp::socket> p_socket) {

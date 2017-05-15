@@ -1,5 +1,5 @@
 /** @file   ViseMessageQueue.h
- *  @brief  Multiple-Producer Multiple-Consumer message queue
+ *  @brief  Multiple-Producer Multiple-Consumer message queue based on C++ Singleton design pattern
  *
  *
  *  @author Abhishek Dutta (adutta@robots.ox.ac.uk)
@@ -15,7 +15,9 @@
 #include <boost/thread.hpp>
 
 class ViseMessageQueue {
-public:
+ public:
+  static ViseMessageQueue *Instance();
+
   void Push( const std::string &d );
   std::string BlockingPop();
 
@@ -23,7 +25,15 @@ public:
   void WaitUntilEmpty();
   unsigned int GetSize();
 
-private:
+ private:
+  // C++ Singleton design pattern
+  ViseMessageQueue() { };                                    // to prevent creation of new objects
+  ViseMessageQueue( ViseMessageQueue const & ) { };          // prevent copy constructor
+  ViseMessageQueue *operator=(ViseMessageQueue const& ) {    // prevent assignment operator
+    return 0;
+  };
+  static ViseMessageQueue* vise_global_message_queue_;
+
   std::queue< std::string > messages_;
   boost::mutex mtx_;
   boost::condition_variable queue_condition_;

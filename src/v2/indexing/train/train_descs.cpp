@@ -26,6 +26,7 @@
 #include <boost/serialization/string.hpp>
 #endif
 
+#include "ViseMessageQueue.h"
 #include "image_util.h"
 #include "mpi_queue.h"
 #include "par_queue.h"
@@ -122,11 +123,11 @@ namespace buildIndex {
             std::ostringstream s;
             //s << "Descriptor log \nDone " << processed_img_count_ << " / " << total_img_count_;
             s << "Descriptor log \nFinished computing descriptors " << processed_numDescs_ << " / " << numDescs_;
-            vise_message_queue_.Push( s.str() );
+            ViseMessageQueue::Instance()->Push( s.str() );
 
             std::ostringstream progress;
             progress << "Descriptor progress " << processed_numDescs_ << "/" << numDescs_;
-            vise_message_queue_.Push( progress.str() );
+            ViseMessageQueue::Instance()->Push( progress.str() );
           }
           remainNumDescs_-= numToCopy;
         }
@@ -282,4 +283,3 @@ namespace buildIndex {
   }
 
 };
-

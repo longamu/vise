@@ -22,6 +22,7 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <fastann.hpp>
 
+#include "ViseMessageQueue.h"
 #include "clst_centres.h"
 #include "flat_desc_file.h"
 #include "mpi_queue.h"
@@ -41,7 +42,7 @@ typedef std::vector<uint32_t> trainAssignsResult; // clusterIDs
 
 class trainAssignsManager : public managerWithTiming<trainAssignsResult> {
     public:
-        
+
         trainAssignsManager(uint32_t numDocs, std::string const trainAssignsFn)
             : managerWithTiming<trainAssignsResult>(numDocs, "trainAssignsManager"),
               nextID_(0){
@@ -51,12 +52,12 @@ class trainAssignsManager : public managerWithTiming<trainAssignsResult> {
                 completed_jobs = 0;
                 total_jobs = numDocs;
             }
-        
+
         ~trainAssignsManager(){ fclose(f_); }
-        
+
         void
             compute( uint32_t jobID, trainAssignsResult &result );
-    
+
     private:
         FILE *f_;
         uint32_t nextID_;
@@ -75,25 +76,25 @@ trainAssignsManager::compute( uint32_t jobID, trainAssignsResult &result ){
     // make sure results are saved sorted by job!
     results_[jobID]= result;
     if (jobID==nextID_){
-        
+
         // save the buffered results and remove them from the map
         for (std::map<uint32_t, trainAssignsResult>::iterator it= results_.begin();
              it!=results_.end() && it->first==nextID_;
              ++nextID_){
-            
+
             trainAssignsResult const &res= it->second;
             fwrite( &res[0],
                     sizeof(uint32_t),
                     res.size(),
                     f_ );
-            
+
             results_.erase(it++);
             completed_jobs += 1;
         }
 
         std::ostringstream s;
         s << "Assignment log \nProcessed " << completed_jobs << " / " << total_jobs;
-        vise_message_queue_.Push( s.str() );
+        ViseMessageQueue::Instance()->Push( s.str() );
     }
 }
 
@@ -101,7 +102,7 @@ trainAssignsManager::compute( uint32_t jobID, trainAssignsResult &result ){
 
 class trainAssignsWorker : public queueWorker<trainAssignsResult> {
     public:
-        
+
         trainAssignsWorker(fastann::nn_obj<float> const &nn_obj,
                            flatDescsFile const &descFile,
                            uint32_t chunkSize)
@@ -110,16 +111,16 @@ class trainAssignsWorker : public queueWorker<trainAssignsResult> {
               chunkSize_(chunkSize),
               numDescs_(descFile.numDescs())
             {}
-        
+
         void
             operator() ( uint32_t jobID, trainAssignsResult &result ) const;
-        
+
     private:
-        
+
         fastann::nn_obj<float> const *nn_obj_;
         flatDescsFile const *descFile_;
         uint32_t const chunkSize_, numDescs_;
-        
+
         DISALLOW_COPY_AND_ASSIGN(trainAssignsWorker)
 };
 
@@ -127,21 +128,21 @@ class trainAssignsWorker : public queueWorker<trainAssignsResult> {
 
 void
 trainAssignsWorker::operator() ( uint32_t jobID, trainAssignsResult &result ) const {
-    
+
     result.clear();
-    
+
     uint32_t start= jobID*chunkSize_;
     uint32_t end= std::min( (jobID+1)*chunkSize_, numDescs_ );
-    
+
     float *descs;
     descFile_->getDescs(start, end, descs);
-    
+
     result.resize(end-start);
     float *distSq= new float[end-start];
-    
+
     nn_obj_->search_nn(descs, end-start, &result[0], distSq);
     delete []distSq;
-    
+
     delete []descs;
 }
 
@@ -153,23 +154,23 @@ computeTrainAssigns(
         bool const RootSIFT,
         std::string const trainDescsFn,
         std::string const trainAssignsFn){
-    
+
     MPI_GLOBAL_ALL;
-    
+
     if (boost::filesystem::exists(trainAssignsFn)){
         if (rank==0)
             std::cout<<"buildIndex::computeTrainAssigns: trainAssignsFn already exist ("<<trainAssignsFn<<")\n";
         return;
     }
     ASSERT( boost::filesystem::exists(trainDescsFn) );
-    
+
     bool useThreads= detectUseThreads();
     uint32_t numWorkerThreads= 8;
-    
+
     // clusters
     if (rank==0) {
         //std::cout<<"buildIndex::computeTrainAssigns: Loading cluster centres\n";
-        vise_message_queue_.Push( "Assignment log \nLoading cluster centers ..." );
+        ViseMessageQueue::Instance()->Push( "Assignment log \nLoading cluster centers ..." );
     }
     double t0= timing::tic();
     clstCentres clstCentres_obj( clstFn.c_str(), true );
@@ -177,11 +178,11 @@ computeTrainAssigns(
         //std::cout<<"buildIndex::computeTrainAssigns: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
         std::ostringstream s;
         s << "Assignment log done (" << timing::toc(t0) << " ms)";
-        vise_message_queue_.Push( s.str() );
+        ViseMessageQueue::Instance()->Push( s.str() );
     }
     if (rank==0) {
       //std::cout<<"buildIndex::computeTrainAssigns: Constructing NN search object\n";
-      vise_message_queue_.Push( "Assignment log \nConstructing NN search object ..." );
+      ViseMessageQueue::Instance()->Push( "Assignment log \nConstructing NN search object ..." );
     }
 
     t0= timing::tic();
@@ -201,7 +202,7 @@ computeTrainAssigns(
       //std::cout<<"buildIndex::computeTrainAssigns: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
       std::ostringstream s;
       s << "Assignment log done (" << timing::toc(t0) << " ms)";
-      vise_message_queue_.Push( s.str() );
+      ViseMessageQueue::Instance()->Push( s.str() );
     }
     flatDescsFile const descFile(trainDescsFn, RootSIFT);
     uint32_t const numTrainDescs= descFile.numDescs();
@@ -209,33 +210,33 @@ computeTrainAssigns(
       //std::cout<<"buildIndex::computeTrainAssigns: numTrainDescs= "<<numTrainDescs<<"\n";
       std::ostringstream s;
       s << "Assignment log \nnumTrainDescs= "<<numTrainDescs;
-      vise_message_queue_.Push( s.str() );
+      ViseMessageQueue::Instance()->Push( s.str() );
     }
     uint32_t const chunkSize=
         std::min( static_cast<uint32_t>(10000),
                   static_cast<uint32_t>(
                       std::ceil(static_cast<double>(numTrainDescs)/std::max(numWorkerThreads, numProc))) );
     uint32_t const nJobs= static_cast<uint32_t>( std::ceil(static_cast<double>(numTrainDescs)/chunkSize) );
-    
+
     // assign training descriptors
-    
+
     #ifdef RR_MPI
     if (!useThreads) comm.barrier();
     #endif
-    
+
     trainAssignsManager *manager= (rank==0) ?
         new trainAssignsManager(nJobs, trainAssignsFn) :
         NULL;
-    
+
     trainAssignsWorker worker(*nn_obj, descFile, chunkSize);
-    
+
     if (useThreads)
         threadQueue<trainAssignsResult>::start( nJobs, worker, *manager, numWorkerThreads );
     else
         mpiQueue<trainAssignsResult>::start( nJobs, worker, manager );
-    
+
     if (rank==0) delete manager;
-    
+
     delete nn_obj;
 }
 
