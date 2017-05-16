@@ -864,7 +864,18 @@ else:
     # Work around bug in OpenMPI (December 2009): 
     # https://bugs.launchpad.net/ubuntu/+source/petsc4py/+bug/232036
     from ctypes import *
-    mpi = CDLL('libmpi.so.0', RTLD_GLOBAL)
+
+    # fix for macos (added by Abhishek Dutta, 16 May 2017)
+    # source : https://github.com/TaikiKato/pypar/issues/2
+    #mpi = CDLL('libmpi.so.0', RTLD_GLOBAL)
+    if sys.platform == 'darwin': # works on OSX
+        mpi = CDLL('libmpi.dylib', RTLD_GLOBAL)
+    else:
+        try:
+            mpi = CDLL('libmpi.so.0', RTLD_GLOBAL)
+        except OSError:
+            mpi = CDLL('libmpi.so', RTLD_GLOBAL)
+
     # End work around
 
     # Initialise MPI with cmd line (needed by MPICH/Linux)
