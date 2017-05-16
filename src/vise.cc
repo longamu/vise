@@ -22,13 +22,13 @@ int main(int argc, char** argv) {
 
   Magick::InitializeMagick(*argv);
 
-  std::string user_home = getend("HOME");
+  std::string user_home = getenv("HOME");
   boost::filesystem::path home(user_home);
   boost::filesystem::path vgg = home / "vgg";
   boost::filesystem::path vise = vgg / "vise";
   boost::filesystem::path vise_src = vise / "vise_src";
   boost::filesystem::path vise_data = vise / "vise_data";
-  boost::filesystem::path vise_template = vise_src / "src/server/html_templates/";
+  boost::filesystem::path vise_template = vise_src / "vise/src/server/html_templates/";
 
   ViseServer vise_server( vise_data, vise_template );
   //vise_server.InitResources( visedata_dir, template_dir );
