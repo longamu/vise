@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include <map>
 #include <cassert>                // for assert()
+#include <math.h>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>

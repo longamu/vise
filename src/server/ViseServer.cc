@@ -190,8 +190,8 @@ std::string ViseServer::GetStateComplexityInfo() {
   s << "<h3>Overview of Search Engine Training Requirements</h3>"
     << "<table id=\"engine_overview\">"
     << "<tr><td>Number of images</td><td>" << n << "</td></tr>"
-    << "<tr><td>Estimated total training time*</td><td>" << (unsigned int) time << " min.</td></tr>"
-    << "<tr><td>Estimated total disk space needed*</td><td>" << (unsigned int) space << " MB</td></tr>"
+    << "<tr><td>Estimated total training time*</td><td>" << ceil(time) << " min.</td></tr>"
+    << "<tr><td>Estimated total disk space needed*</td><td>" << ceil(space) << " MB</td></tr>"
     << "<tr><td>&nbsp;</td><td>&nbsp;</td></tr>"
     << "<tr><td colspan=\"2\">* estimates are based on the following specifications : </td></tr>"
     << "<tr><td colspan=\"2\">  " << complexity_model_assumption_ << "</td></tr>"
@@ -215,10 +215,10 @@ void ViseServer::UpdateStateInfoList() {
     double space = m[2] + m[3] * n; // in MB
 
     std::ostringstream sinfo;
-    sinfo << "(" << (unsigned int) time << " min, " << (unsigned int) space << " MB)";
+    sinfo << "(" << ceil(time) << " min, " << ceil(space) << " MB)";
     state_info_list_.at( state_id ) = sinfo.str();
-    std::cout << "\nm=" << m[0] << "," << m[1] << "," << m[2] << "," << m[3] << std::flush;
-    std::cout << "\nstate = " << state_id << " : " << sinfo.str() << std::flush;
+    //std::cout << "\nm=" << m[0] << "," << m[1] << "," << m[2] << "," << m[3] << std::flush;
+    //std::cout << "\nstate = " << state_id << " : " << sinfo.str() << std::flush;
   }
 }
 
