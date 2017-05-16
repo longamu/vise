@@ -20,6 +20,7 @@ else
     echo export VISE_ROOTDIR=$VISE_ROOTDIR >> ~/.bash_profile
     echo export VISE_BUILDDIR=$BUILD_DIR >> ~/.bash_profile
     source ~/.bash_profile
+    echo "Saved environment variable to ~/.bash_profile"
 fi
 
 #
