@@ -152,10 +152,10 @@ body {
   border: 1px solid #000000;
   padding: 0 0;
   height: 1.6em;
+  text-align: center;
 }
 #progress_text {
   position: absolute;
-  text-align: center;
   line-height: 1.4em;
 }
 #progress_bar {

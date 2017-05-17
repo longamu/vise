@@ -128,6 +128,8 @@ void InitReljaRetrivalFrontend(std::string dsetname, std::string configFn) {
 
   if ( pipe == NULL ) {
     std::cerr << " [failed]" << std::flush;
+  } else {
+
   }
   pclose( pipe );
   std::cout << " [done]" << std::flush;

@@ -82,6 +82,9 @@ class ViseServer {
   std::vector< std::string > state_html_fn_list_;
   std::vector< std::string > state_html_list_;
 
+  // to terminate the VISE server
+  bool vise_shutdown_flag_;
+
   // threads
   boost::thread *vise_training_thread_;
   boost::thread *vise_load_search_index_thread_;
@@ -95,6 +98,10 @@ class ViseServer {
 
   std::string vise_index_html_;
   bool vise_index_html_reload_;
+
+  // boost asio based server
+  boost::asio::io_service io_service_;
+  boost::asio::ip::tcp::acceptor *vise_acceptor_;
 
   // html content location
   boost::filesystem::path vise_css_fn_;

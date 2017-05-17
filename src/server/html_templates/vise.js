@@ -68,6 +68,14 @@ function _vise_init() {
   document.getElementById("footer").style.display = "none";
   document.getElementById("log").style.display = "none";
 
+  /*
+  // @todo allow graceful shutdown of VISE server
+  window.onbeforeunload = function(e) {
+    _vise_server.open("POST", VISE_SERVER_ADDRESS);
+    _vise_server.send("shutdown_vise now");
+  }
+  */
+
   /**/
   // debug
   //_vise_current_search_engine_name = 'ox5k';
@@ -129,6 +137,7 @@ function _vise_message_listener() {
 }
 // msg = sender receiver msg
 function _vise_handle_message(packet) {
+  //console.log("message: " + packet);
   var first_space  = packet.indexOf(' ', 0);
   var second_space = packet.indexOf(' ', first_space + 1);
 
@@ -168,14 +177,18 @@ function _vise_show_message(msg, t) {
 // progress bar
 //
 function _vise_handle_progress_message(state_name, msg) {
-  var values = msg.split('/');
-  var completed = parseInt(values[0]);
-  var total = parseInt(values[1]);
-  var progress = Math.round( (completed/total) * 100 );
-  //console.log( "Progress " + completed + " of " + total );
+  if ( msg.includes('/') ) {
+    var values = msg.split('/');
+    var completed = parseInt(values[0]);
+    var total = parseInt(values[1]);
+    var progress = Math.round( (completed/total) * 100 );
+    //console.log( "Progress " + completed + " of " + total );
 
-  document.getElementById("progress_bar").style.width = progress + "%";
-  document.getElementById("progress_text").innerHTML = state_name + " : " + completed + " of " + total;
+    document.getElementById("progress_bar").style.width = progress + "%";
+    document.getElementById("progress_text").innerHTML = state_name + " : " + completed + " of " + total;
+  } else {
+    document.getElementById("progress_text").innerHTML = msg;
+  }
 }
 
 function _vise_reset_progress_bar() {
@@ -203,7 +216,7 @@ function _vise_handle_log_message(sender, msg) {
 // command
 //
 function _vise_handle_command(sender, command_str) {
-  //console.log("command_str = " + command_str);
+  //console.log("sender = " + sender + " : command_str = " + command_str);
   // command_str = "_state update_now"
   // command_str = "_control_panel remove Info_proceed_button"
   var first_spc = command_str.indexOf(' ', 0);
@@ -256,12 +269,14 @@ function _vise_handle_command(sender, command_str) {
         var uri = args[0];
         var delay = parseInt( args[1] );
         setTimeout( function() {
-          var win = window.open( uri );
-          win.focus();
+          //var win = window.open( uri );
+          //win.focus();
+          window.location.href = uri;
         }, delay);
       } else {
-        var win = window.open( param );
-        win.focus();
+        //var win = window.open( param );
+        //win.focus();
+        window.location.href = uri;
       }
       break;
 
@@ -294,6 +309,15 @@ function _vise_handle_log_command(command_str) {
       default:
         console.log("Received unknown log command : " + command[i]);
     }
+  }
+}
+
+function _vise_toggle_log() {
+  var log = document.getElementById("log");
+  if ( log.style.display === 'undefined' || log.style.display === 'none' ) {
+    document.getElementById("log").style.display = "block";
+  } else {
+    document.getElementById("log").style.display = "none";
   }
 }
 

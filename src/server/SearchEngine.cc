@@ -107,12 +107,17 @@ void SearchEngine::Preprocess() {
 
             im.write( dest_fn.string() );
             imglist_fn_transformed_size_.at(i) = boost::filesystem::file_size(dest_fn.string().c_str());
-            SendProgress( "Preprocess", i+1, imglist_.size() );
+
+            // to avoid overflow of the message queue
+            if ( (i % 5) == 0 ) {
+              SendProgress( "Preprocess", i+1, imglist_.size() );
+            }
           } else {
             // just copy the files
             boost::filesystem::copy_file( src_fn, dest_fn );
             imglist_fn_transformed_size_.at(i) = imglist_fn_original_size_.at(i);
 
+            // to avoid overflow of the message queue
             if ( (i % 50) == 0 ) {
               SendProgress( "Preprocess", i+1, imglist_.size() );
             }
@@ -130,11 +135,11 @@ void SearchEngine::Preprocess() {
     }
 
     SendLog("Preprocess", "[Done]");
+    std::cout << "\n@todo: Message queue size = " << ViseMessageQueue::Instance()->GetSize() << std::flush;
 
     //if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
     WriteImageListToFile( imglist_fn_.string(), imglist_ );
     SendLog("Preprocess", "\nWritten image list to : [" + imglist_fn_.string() + "]" );
-    SendCommand("Cluster", "_progress reset hide");
   }
 }
 
@@ -145,6 +150,7 @@ void SearchEngine::Descriptor() {
   if ( ! boost::filesystem::exists( train_desc_fn ) ) {
     SendLog("Descriptor", "\nComputing training descriptors ...");
     SendCommand("Descriptor", "_progress reset show");
+    SendProgressMessage("Descriptor", "Starting to compute image descriptors");
 
     std::string const trainImagelistFn = GetEngineConfigParam("trainImagelistFn");
     std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
@@ -201,6 +207,7 @@ void SearchEngine::Cluster() {
   if ( ! ClstFnExists() ) {
     SendLog("Cluster", "\nStarting clustering of descriptors ...");
     SendCommand("Cluster", "_progress reset show");
+    SendProgressMessage("Descriptor", "Starting clustering of descriptors");
 
     //boost::thread t( boost::bind( &SearchEngine::RunClusterCommand, this ) );
     RunClusterCommand();
@@ -241,7 +248,7 @@ void SearchEngine::RunClusterCommand() {
             std::istringstream s ( itr_str );
             s >> completed >> slash >> total;
             SendProgress("Cluster", completed, total);
-            std::cout << "\nSending progress " << completed << " of " << total << std::flush;
+            //std::cout << "\nSending progress " << completed << " of " << total << std::flush;
           }
         }
       }
@@ -257,6 +264,8 @@ void SearchEngine::Assign() {
   if ( ! AssignFnExists() ) {
     SendLog("Assign", "\nStarting assignment ...");
     SendCommand("Cluster", "_progress reset hide");
+    SendProgressMessage("Descriptor", "Starting assignment");
+
     bool useRootSIFT = false;
     if ( GetEngineConfigParam("RootSIFT") == "on" ) {
       useRootSIFT = true;
@@ -275,6 +284,8 @@ void SearchEngine::Hamm() {
   if ( ! HammFnExists() ) {
     SendLog("Hamm", "\nComputing hamm ...");
     SendCommand("Cluster", "_progress reset hide");
+    SendProgressMessage("Descriptor", "Starting to compute hamm embeddings");
+
     uint32_t hammEmbBits;
     std::string hamm_emb_bits = GetEngineConfigParam("hammEmbBits");
     std::istringstream s(hamm_emb_bits);
@@ -300,6 +311,8 @@ void SearchEngine::Index() {
   if ( ! IndexFnExists() ) {
     SendLog("Index", "\nStarting indexing ...");
     SendCommand("Cluster", "_progress reset show");
+    SendProgressMessage("Descriptor", "Starting image indexing");
+
     bool SIFTscale3 = false;
     if ( GetEngineConfigParam("SIFTscale3") == "on" ) {
       SIFTscale3 = true;
@@ -552,6 +565,12 @@ void SearchEngine::ReadConfigFromFile() {
 
 void SearchEngine::SendCommand(std::string sender, std::string command) {
   SendPacket(sender, "command", command);
+}
+
+void SearchEngine::SendProgressMessage(std::string state_name, std::string msg) {
+  std::ostringstream s;
+  s << state_name << " progress " << msg;
+  ViseMessageQueue::Instance()->Push( s.str() );
 }
 
 void SearchEngine::SendProgress(std::string state_name, unsigned long completed, unsigned long total) {

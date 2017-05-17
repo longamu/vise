@@ -117,6 +117,7 @@ public:
   bool EngineConfigExists();
 
   void SendProgress(std::string state_name, unsigned long completed, unsigned long total);
+  void SendProgressMessage(std::string state_name, std::string msg);
   void SendCommand(std::string sender, std::string command);
   void SendLog(std::string sender, std::string log);
   void SendPacket(std::string sender, std::string type, std::string messsage);

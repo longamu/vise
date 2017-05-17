@@ -35,17 +35,8 @@ int main(int argc, char** argv) {
 
   vise_server.Start(port);
 
-  std::string user_input;
-  while ( user_input != "q" ) {
-    std::cout << "\nPress \"q\" + [Enter] key to stop the server : ";
-    std::cin >> user_input;
-  }
-
-  if ( vise_server.Stop() ) {
-    std::cout << "\nBye\n";
-    return 0;
-  } else {
-    std::cerr << "\nFailed to stop server!\n";
-    return -1;
-  }
+  // server is stopped by sending the following HTTP POST request
+  // POST /
+  // shutdown_vise now (the POST data)
+  return 0;
 }

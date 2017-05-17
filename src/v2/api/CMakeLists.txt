@@ -5,6 +5,7 @@ endif (cREGISTER)
 #add_executable( api_v2 api_v2.cpp )
 add_library( api_v2 api_v2.cpp )
 target_link_libraries( api_v2
+    ViseMessageQueue
     clst_centres
     dataset_v2
     feat_standard

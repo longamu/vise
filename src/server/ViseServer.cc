@@ -75,37 +75,37 @@ ViseServer::ViseServer( boost::filesystem::path vise_datadir, boost::filesystem:
   state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_DESCRIPTOR );
-  state_name_list_.push_back( "Descriptor" );
+  state_name_list_.push_back( "Stage-1" );
   state_html_fn_list_.push_back( "Descriptor.html" );
   state_info_list_.push_back( "" );
   state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_CLUSTER );
-  state_name_list_.push_back( "Cluster" );
+  state_name_list_.push_back( "Stage-2" );
   state_html_fn_list_.push_back( "Cluster.html" );
   state_info_list_.push_back( "" );
   state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_ASSIGN );
-  state_name_list_.push_back( "Assign" );
+  state_name_list_.push_back( "Stage-3" );
   state_html_fn_list_.push_back( "Assign.html" );
   state_info_list_.push_back( "" );
   state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_HAMM );
-  state_name_list_.push_back( "Hamm" );
+  state_name_list_.push_back( "Stage-4" );
   state_html_fn_list_.push_back( "Hamm.html" );
   state_info_list_.push_back( "" );
   state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_INDEX );
-  state_name_list_.push_back( "Index" );
+  state_name_list_.push_back( "Stage-5" );
   state_html_fn_list_.push_back( "Index.html" );
   state_info_list_.push_back( "" );
   state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
 
   state_id_list_.push_back( ViseServer::STATE_QUERY );
-  state_name_list_.push_back( "Query" );
+  state_name_list_.push_back( "Ready to Search" );
   state_html_fn_list_.push_back( "Query.html" );
   state_info_list_.push_back( "" );
   state_complexity_model_.push_back( std::vector<double>(4, 0.0) );
@@ -140,6 +140,8 @@ ViseServer::ViseServer( boost::filesystem::path vise_datadir, boost::filesystem:
   std::cout << "\nvise_training_stat_fn_ = " << vise_training_stat_fn_ << std::flush;
 
   LoadStateComplexityModel();
+
+  vise_shutdown_flag_ = false;
 }
 
 ViseServer::~ViseServer() {
@@ -147,7 +149,9 @@ ViseServer::~ViseServer() {
   training_stat_f.close();
 
   // cleanup
-  delete cons_queue_;
+  if ( cons_queue_ ) {
+    delete cons_queue_;
+  }
 
   if ( hamming_emb_ != NULL ) {
     delete hamming_emb_;
@@ -191,6 +195,7 @@ std::string ViseServer::GetStateComplexityInfo() {
     << "<table id=\"engine_overview\">"
     << "<tr><td>Number of images</td><td>" << n << "</td></tr>"
     << "<tr><td>Estimated total training time*</td><td>" << ceil(time) << " min.</td></tr>"
+    << "<tr><td>Estimated memory needed*</td><td>" << "4 GB</td></tr>"
     << "<tr><td>Estimated total disk space needed*</td><td>" << ceil(space) << " MB</td></tr>"
     << "<tr><td>&nbsp;</td><td>&nbsp;</td></tr>"
     << "<tr><td colspan=\"2\">* estimates are based on the following specifications : </td></tr>"
@@ -291,6 +296,9 @@ void ViseServer::Start(unsigned int port) {
 
   boost::asio::io_service io_service;
   boost::asio::ip::tcp::endpoint endpoint( tcp::v4(), port_ );
+
+  //vise_acceptor_ = new boost::asio::ip::tcp::acceptor( io_service , endpoint );
+  //vise_acceptor_->set_option( tcp::acceptor::reuse_address(true) );
   tcp::acceptor acceptor ( io_service , endpoint );
   acceptor.set_option( tcp::acceptor::reuse_address(true) );
 
@@ -307,8 +315,9 @@ void ViseServer::Start(unsigned int port) {
 
   /*  */
   try {
-    while ( 1 ) {
+    while ( !vise_shutdown_flag_ ) {
       boost::shared_ptr<tcp::socket> p_socket( new tcp::socket(io_service) );
+      //vise_acceptor_->accept( *p_socket );
       acceptor.accept( *p_socket );
       boost::thread t( boost::bind( &ViseServer::HandleConnection, this, p_socket ) );
     }
@@ -319,7 +328,6 @@ void ViseServer::Start(unsigned int port) {
 }
 
 bool ViseServer::Stop() {
-  std::cout << "\nServer stopped!";
   return true;
 }
 
@@ -378,6 +386,13 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       // json reply containing current state info.
       std::string state_json = GetStateJsonData();
       SendJsonResponse( state_json, p_socket );
+      p_socket->close();
+      return;
+    }
+
+    if ( http_method_uri == "/favicon.ico" ) {
+      // @todo not implemented yet
+      SendHttp404NotFound( p_socket );
       p_socket->close();
       return;
     }
@@ -465,6 +480,7 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       //  * stop_training_process _NAME_OF_SEARCH_ENGINE_
       std::vector< std::string > tokens;
       SplitString( http_post_data, ' ', tokens);
+
       if ( tokens.size() == 2 ) {
         std::string search_engine_name = tokens.at(1);
         if ( tokens.at(0) == "create_search_engine" ) {
@@ -512,6 +528,13 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
             vise_training_thread_->interrupt();
           } else if ( msg == "continue" ) {
             vise_training_thread_ = new boost::thread( boost::bind( &ViseServer::InitiateSearchEngineTraining, this ) );
+          }
+        } else if ( tokens.at(0) == "shutdown_vise" ) {
+          std::string msg = tokens.at(1);
+          if ( msg == "now" ) {
+            std::cout << "\nShutdown feature not implemented yet!" << std::flush;
+            p_socket->close();
+            return;
           }
         } else {
           // unknown command
@@ -709,6 +732,7 @@ void ViseServer::SendPacket(std::string type, std::string message) {
   std::ostringstream s;
   s << GetCurrentStateName() << " " << type << " " << message;
   ViseMessageQueue::Instance()->Push( s.str() );
+  std::cout << "\nSent packet : " << s.str() << std::flush;
 }
 
 void ViseServer::SendHttpPostResponse(std::string http_post_data, std::string result, boost::shared_ptr<tcp::socket> p_socket) {
@@ -1080,9 +1104,11 @@ void ViseServer::HandleStatePostData( int state_id, std::string http_post_data, 
 // Search engine training
 //
 void ViseServer::InitiateSearchEngineTraining() {
-  SendCommand("_log clear show");
+  //SendCommand("_log clear show");
+  SendCommand("_log clear hide");
   SendCommand("_control_panel clear all");
-  SendCommand("_control_panel add <div id=\"Training_button_stop\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('stop')\">Stop</div>");
+  SendCommand("_control_panel add <div id=\"toggle_log\" class=\"action_button\" onclick=\"_vise_toggle_log()\">Log</div>");
+  //SendCommand("_control_panel add <div id=\"Training_button_stop\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('stop')\">Stop</div>");
 
   // Pre-process
   if ( state_id_ == ViseServer::STATE_PREPROCESS ) {
@@ -1776,8 +1802,6 @@ void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
   assert( GetCurrentStateId() == ViseServer::STATE_QUERY );
   //SendMessage("[" + search_engine_name + "] Loading complete :-)");
   QueryInit();
-
-  SendMessage("Search engine [" + search_engine_.GetName() + "] loaded.");
 
   //SendCommand("_log clear hide");
   //SendCommand("_control_panel clear all");

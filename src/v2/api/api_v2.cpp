@@ -34,6 +34,7 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <fastann.hpp>
 
+#include "ViseMessageQueue.h"
 #include "clst_centres.h"
 #include "dataset_v2.h"
 #include "feat_getter.h"
@@ -290,6 +291,12 @@ void api_v2(std::vector< std::string > argv) {
     
     // start
     boost::asio::io_service io_service;
+
+    std::ostringstream s;
+    //s << "Descriptor log \nDone " << processed_img_count_ << " / " << total_img_count_;
+    s << "LoadSearchEngine message Search engine loaded. Please wait ... ";
+    ViseMessageQueue::Instance()->Push( s.str() );
+
     API_obj.server(io_service, APIport, dsetname, configFn);
     
     // make sure this is deleted before everything which uses it
