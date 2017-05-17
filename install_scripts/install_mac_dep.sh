@@ -1,4 +1,19 @@
-DEP_BASEDIR=$(pwd)"/../../vise_dep/"
+#
+# We assume the following directory tree
+# $HOME/vgg/vise/
+#           |- vise_dep
+#              |- lib/
+#              |- tmp_libsrc/
+#           |- vise_src/vise/
+#              |- vise
+#                 |- src/
+#                 |- install_scripts/
+#                 |- ...
+#           |- vise_data
+#              |- log/
+#              |- search_engines/
+#
+DEP_BASEDIR=$(pwd)"/../../../vise_dep/"
 
 if [ -d "$DEP_BASEDIR" ]; then
     echo "Dependency directory already exists. Re-using this directory!"

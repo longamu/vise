@@ -1,10 +1,27 @@
+#
+# We assume the following directory tree
+# $HOME/vgg/vise/
+#           |- vise_dep
+#              |- lib/
+#              |- tmp_libsrc/
+#           |- vise_src/vise/
+#              |- vise
+#                 |- src/
+#                 |- install_scripts/
+#                 |- ...
+#           |- vise_data
+#              |- log/
+#              |- search_engines/
+#
+DEP_BASEDIR=$(pwd)"/../../../vise_dep/"
+
 BUILD_DIR=$(pwd)"/../build/"
 VISE_ROOTDIR=$(pwd)"/../"
 
-FASTANN_LIBDIR=$VISE_ROOTDIR"../vise_dep/lib/fastann/"
-IMAGEMAGICK_LIBDIR=$VISE_ROOTDIR"../vise_dep/lib/imagemagick/"
-PROTOBUF_LIBDIR=$VISE_ROOTDIR"../vise_dep/lib/protobuf/"
-BOOST_LIBDIR=$VISE_ROOTDIR"../vise_dep/lib/boost/"
+FASTANN_LIBDIR=$VISE_ROOTDIR"../../vise_dep/lib/fastann/"
+IMAGEMAGICK_LIBDIR=$VISE_ROOTDIR"../../vise_dep/lib/imagemagick/"
+PROTOBUF_LIBDIR=$VISE_ROOTDIR"../../vise_dep/lib/protobuf/"
+BOOST_LIBDIR=$VISE_ROOTDIR"../../vise_dep/lib/boost/"
 LOCAL_LIB_DIR="/usr/local/lib"
 VISE_CMAKE_PREFIX_PATH=$FASTANN_LIBDIR";"$IMAGEMAGICK_LIBDIR";"$PROTOBUF_LIBDIR
 
