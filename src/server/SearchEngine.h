@@ -90,6 +90,7 @@ public:
   bool IsEngineNameValid(std::string engine_name);
   void WriteConfigToFile();
   void ReadConfigFromFile();
+  std::string GetImglistFn( unsigned int index );
 
  private:
   std::string engine_name_;

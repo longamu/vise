@@ -186,6 +186,30 @@ function _vise_handle_progress_message(state_name, msg) {
 
     document.getElementById("progress_bar").style.width = progress + "%";
     document.getElementById("progress_text").innerHTML = state_name + " : " + completed + " of " + total;
+
+    var percent = parseInt( (completed / total ) * 100 );
+    console.log("_vise_current_state_name = " + _vise_current_state_name + " : percent = " + percent);
+    switch ( _vise_current_state_name ) {
+      case "Preprocess": // descriptor
+        if ( percent % 25 < 2 ) {
+          _vise_fetch_random_image();
+        } 
+        break;
+
+      case "Stage-1": // descriptor
+        if ( percent % 10 < 2 ) {
+          _vise_fetch_random_image();
+        } 
+        break;
+      case "Stage-2": // cluster
+        _vise_fetch_random_image();
+        break;
+      case "Stage-5":
+        if ( percent % 4 < 1 ) {
+          _vise_fetch_random_image();
+        } 
+        break;
+    }
   } else {
     document.getElementById("progress_text").innerHTML = msg;
   }
@@ -379,6 +403,10 @@ function _vise_update_state_info( json ) {
 
     // reset the progress bar
     _vise_reset_progress_bar();
+
+    if ( _vise_current_state_id > 2 ) {
+      _vise_fetch_random_image();
+    }
   }
 }
 
@@ -417,6 +445,11 @@ function _vise_server_send_get_request(resource_name) {
 
 function _vise_send_msg_to_training_process(msg) {
   _vise_server_send_post_request("msg_to_training_process " + msg);
+}
+
+function _vise_fetch_random_image() {
+  _vise_server.open("GET", VISE_SERVER_ADDRESS + "_random_image");
+  _vise_server.send();
 }
 
 //

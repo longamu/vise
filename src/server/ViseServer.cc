@@ -443,6 +443,25 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       return;
     }
 
+    if ( http_method_uri == "/_random_image" ) {
+      std::cout << "\nsearch_engine_.IsImglistEmpty() = " << search_engine_.IsImglistEmpty() << std::flush;
+      // respond with a random training image
+      if ( !search_engine_.IsImglistEmpty() ) {
+        int index = rand() % search_engine_.GetImglistSize();
+        std::string im_fn = search_engine_.GetImglistFn(index);
+        std::ostringstream s;
+        s << "<div class=\"random_image\"><img src=\"/_static/"
+          << search_engine_.GetName() << "/"
+          << im_fn << "?variant=original\"/></div>";
+        SendHttpResponse( s.str(), p_socket );
+
+        std::cout << "\n\tim_fn = " << im_fn << std::flush;
+        //SendStaticImageResponse(im_fn, p_socket);
+      }
+      p_socket->close();
+      return;
+    }
+
     // request for state html
     // Get /Cluster
     std::vector< std::string > tokens;
@@ -732,7 +751,6 @@ void ViseServer::SendPacket(std::string type, std::string message) {
   std::ostringstream s;
   s << GetCurrentStateName() << " " << type << " " << message;
   ViseMessageQueue::Instance()->Push( s.str() );
-  std::cout << "\nSent packet : " << s.str() << std::flush;
 }
 
 void ViseServer::SendHttpPostResponse(std::string http_post_data, std::string result, boost::shared_ptr<tcp::socket> p_socket) {

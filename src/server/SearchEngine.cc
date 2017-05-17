@@ -702,6 +702,10 @@ unsigned long SearchEngine::GetImglistSize() {
   return imglist_.size();
 }
 
+std::string SearchEngine::GetImglistFn( unsigned int index ) {
+  return imglist_.at(index);
+}
+
 // for debug
 void SearchEngine::PrintEngineConfig() {
   std::cout << "\nShowing configurations for [" << engine_name_ << "] :" << std::endl;
