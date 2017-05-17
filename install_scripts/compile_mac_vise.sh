@@ -40,6 +40,8 @@ else
     echo "Saved environment variable to ~/.bash_profile"
 fi
 
+source ~/.bash_profile
+
 #
 # Compile pypar and dkmeans_relja
 #

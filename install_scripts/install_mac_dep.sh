@@ -64,10 +64,12 @@ fi
 #
 brew install gcc@6
 
+brew upgrade cmake
+
 #
 # Install other dependencies
 #
-brew install libpng libjpeg
+brew install libpng libjpeg openmpi
 
 #
 # Install ImageMagick
