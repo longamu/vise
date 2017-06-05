@@ -17,20 +17,38 @@
 int main(int argc, char** argv) {
   std::cout << "\nVGG Image Search Engine (VISE)";
   std::cout << "\n";
+  if ( argc != 3 ) {
+    std::cout << "\n  Usage: ./vise VISE_ROOT_DIR VISE_DATA_DIR\n" << std::flush;
+    return 0;
+  }
+
   //unsigned int port = 9973;
   unsigned int port = 8080;
 
   Magick::InitializeMagick(*argv);
 
-  std::string user_home = getenv("HOME");
-  boost::filesystem::path home(user_home);
-  boost::filesystem::path vgg = home / "vgg";
-  boost::filesystem::path vise = vgg / "vise";
-  boost::filesystem::path vise_src = vise / "vise_src";
-  boost::filesystem::path vise_data = vise / "vise_data";
-  boost::filesystem::path vise_template = vise_src / "vise/src/server/html_templates/";
+/*
+  std::string vise_src = getenv("VISE_SRC_DIR");
+  std::string data_home = getenv("VISE_DATA_DIR");
+*/
 
-  ViseServer vise_server( vise_data, vise_template );
+  boost::filesystem::path data_home( argv[2] );
+  boost::filesystem::path path_vise_src( argv[1] );
+  boost::filesystem::path vise_template = path_vise_src / "src/server/html_templates/";
+
+  if ( !boost::filesystem::exists(data_home)  || !boost::filesystem::exists(vise_template) ) {
+    if ( !boost::filesystem::exists(data_home) ) {
+      std::cout << "\nVISE_DATA_DIR = " << data_home.string() << " does not exist!" << std::flush;
+    }
+
+    if ( !boost::filesystem::exists(data_home) ) {
+      std::cout << "\nVISE_SOURCE_DIR = " << vise_template.string() << " does not exist!" << std::flush;
+    }
+    std::cout << std::endl;
+    return 0;
+  }
+
+  ViseServer vise_server( data_home, vise_template );
   //vise_server.InitResources( visedata_dir, template_dir );
 
   vise_server.Start(port);

@@ -40,10 +40,10 @@ ENV VGG_ROOT_DIR  = "/opt/vgg/"
 #
 RUN export VISE_ROOT_DIR=$VGG_ROOT_DIR"vise/"
 RUN export VISE_DATA_DIR=$VISE_ROOT_DIR"vise_data/"
-RUN export VISE_SRC_DIR=$VISE_ROOT_DIR"vise_code/"
 RUN export VISE_DEP_DIR=$VISE_ROOT_DIR"build_deps/"
 RUN export VISE_DEP_LIBDIR=$VISE_ROOT_DIR"build_deps/lib/"
 RUN export VISE_DEP_SRCDIR=$VISE_ROOT_DIR"build_deps/tmp_libsrc/"
+RUN mkdir $VGG_ROOT_DIR $VISE_ROOT_DIR $VISE_DEP_DIR $VISE_DATA_DIR
 
 #
 # Install VISE dependencies
@@ -74,11 +74,11 @@ RUN make install
 #
 # Download VISE source : http://vgg.gitlab.io/vise/release/vise-1.0.0-beta.tar.gz
 #
-RUN mkdir $VGG_ROOT_DIR $VISE_ROOT_DIR $VISE_SRC_DIR $VISE_DEP_DIR
 RUN cd $VISE_ROOT_DIR
 RUN curl -o vise-1.0.0-beta.tar.gz http://vgg.gitlab.io/vise/release/vise-1.0.0-beta.tar.gz
 RUN tar -zxf vise-1.0.0-beta.tar.gz
 RUN cd vise-1.0.0-beta
+RUN export VISE_SRC_DIR=`pwd`
 RUN mkdir build
 RUN cd build
 RUN cmake -DCMAKE_PREFIX_PATH=$FASTANN_LIBDIR ../src
