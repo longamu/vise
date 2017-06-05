@@ -68,9 +68,32 @@ MY_EVAL_CONDITION( cREQUIRE_MAGICK cREGISTER )
 ############################## James's FASTANN
 
 ## James's FASTANN (download from robots/software)
-find_package(fastann REQUIRED)
-include_directories( ${fastann_INCLUDE_DIRS} )
+#find_package(fastann REQUIRED)
+#include_directories( ${fastann_INCLUDE_DIRS} )
+## source: forbuild/Findfastann.cmake
+find_path(fastann_INCLUDE_DIR
+  NAMES fastann.hpp
+  PATH_SUFFIXES fastann
+  DOC "The directory where fastann.hpp resides")
 
+find_library(fastann_LIBRARY
+  NAMES fastann
+  DOC "The fastann library")
+
+# handle the QUIETLY and REQUIRED arguments and set FASTANN_FOUND to TRUE if 
+# all listed variables are TRUE
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(fastann DEFAULT_MSG fastann_LIBRARY fastann_INCLUDE_DIR)
+
+if (FASTANN_FOUND)
+  set(fastann_LIBRARIES ${fastann_LIBRARY})
+  set(fastann_INCLUDE_DIRS ${fastann_INCLUDE_DIR})
+endif(FASTANN_FOUND)
+
+mark_as_advanced(
+  fastann_INCLUDE_DIR
+  fastann_LIBRARY)
+include_directories( ${fastann_INCLUDE_DIRS} )
 
 
 ############################## Magick++
