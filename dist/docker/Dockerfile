@@ -83,4 +83,4 @@ RUN mkdir build
 RUN cd build
 RUN cmake -DCMAKE_PREFIX_PATH=$FASTANN_LIBDIR ../src
 RUN make -j8
-RUN ./vise
+RUN ./vise $VISE_SRC_DIR $VISE_DATA_DIR
