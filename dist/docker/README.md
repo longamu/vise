@@ -38,6 +38,9 @@ sudo docker ps -a                            # list all running container
 sudo docker rm 844694571ca0
 
 sudo docker run -it vise bash                # run bash shell in interactive mode
+sudo docker run -p 8080:8080 -it vise bash
+sudo docker rm `sudo docker ps -a -q`
+sudo docker rmi `sudo docker images -a -q` -f
 ```
 
 Abhishek Dutta  
