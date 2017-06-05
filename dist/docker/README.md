@@ -28,9 +28,16 @@ cd /home/tlm/dev/vise/dist/docker
 ls
   Dockerfile  README.md
 
-sudo docker build --no-cache=true -t vise .
+sudo docker build --no-cache=true -t vise .  # build the VISE image
 sudo docker images -a
 sudo docker run vise
+sudo docker run -d vise                      # run VISE image in background
+sudo docker attach vise
+
+sudo docker ps -a                            # list all running container
+sudo docker rm 844694571ca0
+
+sudo docker run -it vise bash                # run bash shell in interactive mode
 ```
 
 Abhishek Dutta  

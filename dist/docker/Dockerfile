@@ -33,9 +33,54 @@ EXPOSE 8080 9971 9972
 #
 # Define environment variables
 #
-ENV VISE_ROOT_DIR="/opt/vise/vise/"
-ENV VISE_DEP_DIR="/opt/vise/build_dep/"
+ENV VGG_ROOT_DIR  = "/opt/vgg/"
 
-CMD ["uname", "-a"]
+#
+# Prepare environment variables
+#
+RUN export VISE_ROOT_DIR=$VGG_ROOT_DIR"vise/"
+RUN export VISE_DATA_DIR=$VISE_ROOT_DIR"vise_data/"
+RUN export VISE_SRC_DIR=$VISE_ROOT_DIR"vise_code/"
+RUN export VISE_DEP_DIR=$VISE_ROOT_DIR"build_deps/"
+RUN export VISE_DEP_LIBDIR=$VISE_ROOT_DIR"build_deps/lib/"
+RUN export VISE_DEP_SRCDIR=$VISE_ROOT_DIR"build_deps/tmp_libsrc/"
+
+#
+# Install VISE dependencies
+# 
+RUN apt-get update
+RUN apt-get install -y curl libpng12-dev libjpeg-dev libopenmpi-dev cmake python python-dev python-pip unzip
+RUN pip install cherrypy numpy pillow cython
+RUN apt-get install -y libmagick++-dev libprotobuf-dev protobuf-compiler libboost-atomic-dev libboost-chrono-dev libboost-filesystem-dev libboost-system-dev libboost-thread-dev libboost-timer-dev
+
+#
+# Install fastann
+#
+RUN export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/"
+RUN mkdir $VISE_DEP_SRCDIR
+RUN cd $VISE_DEP_SRCDIR
+RUN curl -o fastann.zip https://codeload.github.com/philbinj/fastann/zip/master
+RUN unzip fastann.zip
+RUN mv fastann-master fastann
+RUN cd fastann
+RUN mkdir build
+RUN cd build
+RUN export PREFIX=$FASTANN_LIBDIR
+RUN cmake ../
+RUN make -j8
+RUN make install
 
 
+#
+# Download VISE source : http://vgg.gitlab.io/vise/release/vise-1.0.0-beta.tar.gz
+#
+RUN mkdir $VGG_ROOT_DIR $VISE_ROOT_DIR $VISE_SRC_DIR $VISE_DEP_DIR
+RUN cd $VISE_ROOT_DIR
+RUN curl -o vise-1.0.0-beta.tar.gz http://vgg.gitlab.io/vise/release/vise-1.0.0-beta.tar.gz
+RUN tar -zxf vise-1.0.0-beta.tar.gz
+RUN cd vise-1.0.0-beta
+RUN mkdir build
+RUN cd build
+RUN cmake -DCMAKE_PREFIX_PATH=$FASTANN_LIBDIR ../src
+RUN make -j8
+RUN ./vise
