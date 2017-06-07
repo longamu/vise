@@ -43,10 +43,12 @@ sudo time -v docker run --entrypoint -p 8080:8080 -it vise bash -v /home/tlm:/da
 sudo docker run --rm --entrypoint "" -p 8080:8080 -it vise:1.0.0-beta bash
 sudo docker run --rm -p 8080:8080 -it vise:1.0.0-beta
 sudo docker run --rm -p 8080:8080 -v ~/:/home/$USER -it vise:1.0.0-beta
+sudo docker run --env USER=$USER --rm -p 8080:8080 -v ~/:/home/$USER -it vise:1.0.0-beta
 
-sudo docker run --rm -p 8080:8080 -it vise:1.0.0-beta bash -v ~/vgg/:/opt/vgg/ -v ~/:~/:ro
-sudo docker run --rm --entrypoint "" -p 8080:8080 -v ~/vgg/:/opt/vgg/ -it vise:1.0.0-beta bash
 sudo docker run --rm --entrypoint "" -p 8080:8080 -v ~/:/home/$USER -it vise:1.0.0-beta bash
+
+sudo docker run --rm --entrypoint "" -p 8080:8080 -v ~/vgg/:/opt/vgg/ -it vise:1.0.0-beta bash
+
 
 sudo docker rm `sudo docker ps -a -q`
 sudo docker rmi `sudo docker images -a -q` -f

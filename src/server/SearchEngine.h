@@ -46,7 +46,7 @@ public:
 
   void Preprocess();
   void Descriptor();
-  void Cluster();
+  void Cluster( boost::filesystem::path vise_source_code_dir);
   void Assign();
   void Hamm();
   void Index();
@@ -127,7 +127,7 @@ public:
                             const std::vector< std::string > &imlist);
 
   void InitEngineResources( std::string name );
-  void RunClusterCommand();
+  void RunClusterCommand( boost::filesystem::path vise_src_code_dir );
 };
 
 #endif /* _VISE_SEARCH_ENGINE_H */

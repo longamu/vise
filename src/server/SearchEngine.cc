@@ -202,7 +202,7 @@ void SearchEngine::Descriptor() {
 // $ cd src/external/dkmeans_relja/
 // $ python setup.py build
 // $ sudo python setup.py install
-void SearchEngine::Cluster() {
+void SearchEngine::Cluster( boost::filesystem::path vise_src_code_dir ) {
   std::cout << "\n@todo: Message queue size = " << ViseMessageQueue::Instance()->GetSize() << std::flush;
   if ( ! ClstFnExists() ) {
     SendLog("Cluster", "\nStarting clustering of descriptors ...");
@@ -210,15 +210,17 @@ void SearchEngine::Cluster() {
     SendProgressMessage("Descriptor", "Starting clustering of descriptors");
 
     //boost::thread t( boost::bind( &SearchEngine::RunClusterCommand, this ) );
-    RunClusterCommand();
+    RunClusterCommand( vise_src_code_dir );
   } else {
     //SendLog("Cluster", "\nLoaded");
   }
 }
 
-void SearchEngine::RunClusterCommand() {
+void SearchEngine::RunClusterCommand( boost::filesystem::path vise_src_code_dir ) {
   // @todo: avoid relative path and discover the file "compute_clusters.py" automatically
-  std::string cmd = "python ../src/v2/indexing/compute_clusters.py";
+  std::string exec_name = vise_src_code_dir.string() + "/src/v2/indexing/compute_clusters.py";
+  std::string cmd = "python";
+  cmd += " " + exec_name;
   cmd += " " + engine_name_;
   cmd += " " + engine_config_fn_.string();
 

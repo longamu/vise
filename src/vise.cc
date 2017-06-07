@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   std::cout << "\nVGG Image Search Engine (VISE)";
   std::cout << "\n";
   if ( argc != 3 ) {
-    std::cout << "\n  Usage: ./vise VISE_SOURCE_DIR VISE_DATA_DIR\n" << std::flush;
+    std::cout << "\n  Usage: ./vise VISE_SOURCE_CODE_DIR VISE_DATA_DIR\n" << std::flush;
     return 0;
   }
 
@@ -33,11 +33,10 @@ int main(int argc, char** argv) {
 */
 
   boost::filesystem::path data_home( argv[2] );
-  boost::filesystem::path path_vise_src( argv[1] );
-  boost::filesystem::path vise_template = path_vise_src / "src/server/html_templates/";
+  boost::filesystem::path vise_src_code_dir( argv[1] );
 
-  if (!boost::filesystem::exists(vise_template) ) {
-    std::cout << "\nVISE_SOURCE_DIR = " << vise_template.string() << " does not exist!" << std::flush;
+  if (!boost::filesystem::exists(vise_src_code_dir) ) {
+    std::cout << "\nVISE_SOURCE_CODE_DIR = " << vise_src_code_dir.string() << " does not exist!" << std::flush;
     std::cout << std::endl;
     return 0;
   }
@@ -47,7 +46,7 @@ int main(int argc, char** argv) {
     std::cout << "\nCreated VISE_DATA_DIR=" << data_home.string() << std::endl;
   }
 
-  ViseServer vise_server( data_home, vise_template );
+  ViseServer vise_server( data_home, vise_src_code_dir );
   //vise_server.InitResources( visedata_dir, template_dir );
 
   vise_server.Start(port);

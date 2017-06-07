@@ -11,10 +11,11 @@ const int ViseServer::STATE_HAMM;
 const int ViseServer::STATE_INDEX;
 const int ViseServer::STATE_QUERY;
 
-ViseServer::ViseServer( boost::filesystem::path vise_datadir, boost::filesystem::path vise_templatedir ) {
+ViseServer::ViseServer( boost::filesystem::path vise_datadir, boost::filesystem::path vise_src_code_dir ) {
   // set resource names
-  vise_datadir_      = boost::filesystem::path(vise_datadir);
-  vise_templatedir_  = boost::filesystem::path(vise_templatedir);
+  vise_datadir_         = boost::filesystem::path(vise_datadir);
+  vise_source_code_dir_ = boost::filesystem::path(vise_src_code_dir);
+  vise_templatedir_     = vise_source_code_dir_ / "src/server/html_templates/";
 
   if ( ! boost::filesystem::exists( vise_datadir_ ) ) {
     std::cerr << "\nViseServer::ViseServer() : vise_datadir_ does not exist! : "
@@ -1186,7 +1187,7 @@ void ViseServer::InitiateSearchEngineTraining() {
   // Cluster
   if ( state_id_ == ViseServer::STATE_CLUSTER ) {
     boost::timer::cpu_timer t_start;
-    search_engine_.Cluster();
+    search_engine_.Cluster( vise_source_code_dir_ );
     boost::timer::cpu_times elapsed = t_start.elapsed();
 
     AddTrainingStat(search_engine_.GetName(),

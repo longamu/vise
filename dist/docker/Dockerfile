@@ -30,6 +30,8 @@ EXPOSE 8080 9971 9972
 #
 ENV VGG_ROOT_DIR="/opt/ox/vgg/" VISE_ROOT_DIR="/opt/ox/vgg/vise/" VISE_CODE_DIR="/opt/ox/vgg/vise/vise-1.0.0-beta/" VISE_DATA_DIR="/opt/ox/vgg/vise/vise_data/" VISE_DEP_DIR="/opt/ox/vgg/vise/build_deps/" VISE_DEP_LIBDIR="/opt/ox/vgg/vise/build_deps/lib/" VISE_DEP_SRCDIR="/opt/ox/vgg/vise/build_deps/tmp_libsrc/"
 
+WORKDIR $VISE_CODE_DIR
+
 #
 # Prepare environment variables
 #
