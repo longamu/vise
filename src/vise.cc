@@ -22,8 +22,8 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  //unsigned int port = 9973;
-  unsigned int port = 8080;
+  unsigned int port = 9971;
+  //unsigned int port = 8080;
 
   Magick::InitializeMagick(*argv);
 

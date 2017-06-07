@@ -48,7 +48,7 @@ class absAPI {
         virtual ~absAPI() {}
         
         virtual void
-            server(boost::asio::io_service& io_service, unsigned int port, std::string dsetname, std::string configFn);
+            server(boost::asio::io_service& io_service, unsigned int port, std::string dsetname, std::string configFn, std::string vise_src_code_dir);
         
         virtual std::string
             getReply( boost::property_tree::ptree &pt, std::string const &request ) const =0;

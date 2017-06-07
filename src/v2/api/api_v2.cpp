@@ -86,6 +86,9 @@ void api_v2(std::vector< std::string > argv) {
     std::string configFn= "../src/ui/web/config/config.cfg";
     if (argc>3) configFn= argv[3];
     
+    std::string vise_src_code_dir = "";
+    if (argc>4) vise_src_code_dir = argv[4];
+
     configFn= util::expandUser(configFn);
     std::string tempConfigFn= util::getTempFileName();
     pythonCfgToIni( configFn, tempConfigFn );
@@ -297,7 +300,7 @@ void api_v2(std::vector< std::string > argv) {
     s << "LoadSearchEngine message Search engine loaded. Please wait ... ";
     ViseMessageQueue::Instance()->Push( s.str() );
 
-    API_obj.server(io_service, APIport, dsetname, configFn);
+    API_obj.server(io_service, APIport, dsetname, configFn, vise_src_code_dir);
     
     // make sure this is deleted before everything which uses it
     delete consQueue;

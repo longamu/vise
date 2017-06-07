@@ -19,18 +19,15 @@ LABEL name="VGG Image Search Engine" codename="VISE" version="1.0.0" maintainer=
 
 #
 # Define ports used by VISE
-#   VISE trainer/loader : 8080
-#   VISE loaded engine backend  : 9971
-#   VISE loaded engine frontend : 9972
+#   VISE trainer/loader : 9971
+#   VISE loaded engine frontend : 9973
 #
-EXPOSE 8080 9971 9972
+EXPOSE 9971 9973
 
 #
 # Define environment variables
 #
 ENV VGG_ROOT_DIR="/opt/ox/vgg/" VISE_ROOT_DIR="/opt/ox/vgg/vise/" VISE_CODE_DIR="/opt/ox/vgg/vise/vise-1.0.0-beta/" VISE_DATA_DIR="/opt/ox/vgg/vise/vise_data/" VISE_DEP_DIR="/opt/ox/vgg/vise/build_deps/" VISE_DEP_LIBDIR="/opt/ox/vgg/vise/build_deps/lib/" VISE_DEP_SRCDIR="/opt/ox/vgg/vise/build_deps/tmp_libsrc/"
-
-WORKDIR $VISE_CODE_DIR
 
 #
 # Prepare environment variables
@@ -40,7 +37,7 @@ RUN mkdir -p $VGG_ROOT_DIR $VISE_ROOT_DIR $VISE_CODE_DIR $VISE_DATA_DIR $VISE_DE
 #
 # Install VISE dependencies
 # 
-RUN apt-get update && apt-get install -y curl libpng12-dev libjpeg-dev libopenmpi-dev cmake python python-dev python-pip unzip libmagick++-dev libprotobuf-dev protobuf-compiler libboost-atomic-dev libboost-chrono-dev libboost-filesystem-dev libboost-system-dev libboost-thread-dev libboost-timer-dev && pip install cherrypy numpy pillow cython
+RUN apt-get update && apt-get install -y curl libpng12-dev libjpeg-dev cmake ssh openmpi-bin libopenmpi-dev python python-dev python-pip unzip libmagick++-dev libprotobuf-dev protobuf-compiler libboost-atomic-dev libboost-chrono-dev libboost-filesystem-dev libboost-system-dev libboost-thread-dev libboost-timer-dev && pip install cherrypy numpy pillow cython
 
 #
 # Install fastann
@@ -55,6 +52,17 @@ RUN /bin/bash -c 'export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/" ; \
  cd build ; \
  export PREFIX=$FASTANN_LIBDIR ; \
  cmake ../ ; make -j8 ; make install'
+
+#
+# Compile pypar and dkmeans
+#
+RUN /bin/bash -c 'cd $VISE_CODE_DIR"src/external/dkmeans_relja/pypar_2.1.4_94/source" ; \
+  python setup.py build ; \
+  python setup.py install ; \
+  cd $VISE_CODE_DIR"src/external/dkmeans_relja/" ; \
+  python setup.py build ; \
+  python setup.py install'
+)
 
 #
 # Download VISE source : http://vgg.gitlab.io/vise/release/vise-1.0.0-beta.tar.gz

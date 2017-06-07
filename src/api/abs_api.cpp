@@ -114,17 +114,20 @@ absAPI::session( socket_ptr sock ){
 }
 
 
-void InitReljaRetrivalFrontend(std::string dsetname, std::string configFn) {
-  std::cout << "\nLoading frontend " << std::flush;
+void InitReljaRetrivalFrontend(std::string dsetname, std::string configFn, std::string vise_src_code_dir) {
+  // @todo: avoid relative path and discover the file "compute_clusters.py" automatically
+  std::string exec_name = vise_src_code_dir + "/src/ui/web/webserver2.py";
+
+  std::cout << "\nLoading frontend using : " << exec_name << std::flush;
   std::ostringstream s;
-  s << "python ../src/ui/web/webserver2.py 9971";
+  s << "python " << exec_name << " 9973";
   s << " " << dsetname;
   s << " 65521";
   s << " " << configFn;
   s << " true";
 
   FILE *pipe = popen( s.str().c_str(), "r");
-  ViseMessageQueue::Instance()->Push("Query command _redirect http://localhost:9971 1000");
+  ViseMessageQueue::Instance()->Push("Query command _redirect http://localhost:9973 1000");
 
   if ( pipe == NULL ) {
     std::cerr << " [failed]" << std::flush;
@@ -136,7 +139,7 @@ void InitReljaRetrivalFrontend(std::string dsetname, std::string configFn) {
 }
 
 void
-absAPI::server(boost::asio::io_service& io_service, unsigned int port, std::string dsetname, std::string configFn) {
+absAPI::server(boost::asio::io_service& io_service, unsigned int port, std::string dsetname, std::string configFn, std::string vise_src_code_dir) {
 
     std::cout << "\nabsAPI::server() : Waiting for requests on port " << port << std::flush;
 try_again:
@@ -145,7 +148,7 @@ try_again:
         a.set_option(tcp::acceptor::reuse_address(true));
 
 
-        boost::thread t( boost::bind( &InitReljaRetrivalFrontend, dsetname, configFn ) );
+        boost::thread t( boost::bind( &InitReljaRetrivalFrontend, dsetname, configFn, vise_src_code_dir ) );
 
         while (1) {
             socket_ptr sock(new tcp::socket(io_service));

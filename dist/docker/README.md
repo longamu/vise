@@ -43,7 +43,10 @@ sudo time -v docker run --entrypoint -p 8080:8080 -it vise bash -v /home/tlm:/da
 sudo docker run --rm --entrypoint "" -p 8080:8080 -it vise:1.0.0-beta bash
 sudo docker run --rm -p 8080:8080 -it vise:1.0.0-beta
 sudo docker run --rm -p 8080:8080 -v ~/:/home/$USER -it vise:1.0.0-beta
-sudo docker run --env USER=$USER --rm -p 8080:8080 -v ~/:/home/$USER -it vise:1.0.0-beta
+
+sudo docker run --env USER=$USER --rm -p 9971:9971 9973:9973 -v ~/:/home/$USER -it vise:1.0.0-beta
+
+sudo docker run --env USER=$USER --rm -p 8080:8080 -v ~/:/home/$USER -d vise:1.0.0-beta
 
 sudo docker run --rm --entrypoint "" -p 8080:8080 -v ~/:/home/$USER -it vise:1.0.0-beta bash
 

@@ -2057,5 +2057,6 @@ void ViseServer::InitReljaRetrivalBackend() {
   param.push_back("65521");
   param.push_back( search_engine_.GetName() );
   param.push_back( search_engine_.GetEngineConfigFn().string() );
+  param.push_back( vise_source_code_dir_.string() );
   api_v2( param );
 }
