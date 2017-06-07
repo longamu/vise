@@ -54,17 +54,6 @@ RUN /bin/bash -c 'export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/" ; \
  cmake ../ ; make -j8 ; make install'
 
 #
-# Compile pypar and dkmeans
-#
-RUN /bin/bash -c 'cd $VISE_CODE_DIR"src/external/dkmeans_relja/pypar_2.1.4_94/source" ; \
-  python setup.py build ; \
-  python setup.py install ; \
-  cd $VISE_CODE_DIR"src/external/dkmeans_relja/" ; \
-  python setup.py build ; \
-  python setup.py install'
-)
-
-#
 # Download VISE source : http://vgg.gitlab.io/vise/release/vise-1.0.0-beta.tar.gz
 #
 RUN /bin/bash -c 'export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/" ; \
@@ -72,7 +61,19 @@ RUN /bin/bash -c 'export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/" ; \
  curl -o vise-1.0.0-beta.tar.gz http://vgg.gitlab.io/vise/release/vise-1.0.0-beta.tar.gz ; \
  tar -zxf vise-1.0.0-beta.tar.gz ; \
  mkdir build ; \
- cd build ; \
+#
+# Compile pypar and dkmeans
+#
+ cd $VISE_CODE_DIR"src/external/dkmeans_relja/pypar_2.1.4_94/source" ; \
+ python setup.py build ; \
+ python setup.py install ; \
+ cd $VISE_CODE_DIR"src/external/dkmeans_relja/" ; \
+ python setup.py build ; \
+ python setup.py install ; \
+#
+# Compile VISE
+#
+ cd $VISE_CODE_DIR"build/" ; \
  cmake -DCMAKE_PREFIX_PATH=$FASTANN_LIBDIR ../src ; \
  make -j8'
 
