@@ -28,7 +28,7 @@ cd /home/tlm/dev/vise/dist/docker
 ls
   Dockerfile  README.md
 
-sudo docker build --no-cache=true -t vise .  # build the VISE image
+sudo time -v docker build --no-cache=true -t vise:1.0.0-beta .  # build the VISE image
 sudo docker images -a
 sudo docker run vise
 sudo docker run -d vise                      # run VISE image in background
@@ -39,8 +39,28 @@ sudo docker rm 844694571ca0
 
 sudo docker run -it vise bash                # run bash shell in interactive mode
 sudo docker run -p 8080:8080 -it vise bash
+sudo time -v docker run --entrypoint -p 8080:8080 -it vise bash -v /home/tlm:/data/images # mounting fs
+sudo docker run --rm --entrypoint "" -p 8080:8080 -it vise:1.0.0-beta bash
+sudo docker run --rm -p 8080:8080 -it vise:1.0.0-beta
+sudo docker run --rm -p 8080:8080 -v ~/:/home/$USER -it vise:1.0.0-beta
+
+sudo docker run --rm -p 8080:8080 -it vise:1.0.0-beta bash -v ~/vgg/:/opt/vgg/ -v ~/:~/:ro
+sudo docker run --rm --entrypoint "" -p 8080:8080 -v ~/vgg/:/opt/vgg/ -it vise:1.0.0-beta bash
+sudo docker run --rm --entrypoint "" -p 8080:8080 -v ~/:/home/$USER -it vise:1.0.0-beta bash
+
 sudo docker rm `sudo docker ps -a -q`
 sudo docker rmi `sudo docker images -a -q` -f
+
+sudo docker volume ls
+sudo docker create -v ~/ox/vgg --name vgg-shared-store vise:1.0.0-beta /bin/true
+sudo docker volume rm $(sudo docker volume ls -f dangling=true -q)
+
+sudo docker save --output vise-1.0.0-beta.tar vise:1.0.0-beta
+```
+
+## Publishing image to gitlab
+```
+sudo docker login --username thelinuxmaniac registry.gitlab.com
 ```
 
 Abhishek Dutta  
