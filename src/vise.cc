@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   std::cout << "\nVGG Image Search Engine (VISE)";
   std::cout << "\n";
   if ( argc != 3 ) {
-    std::cout << "\n  Usage: ./vise VISE_ROOT_DIR VISE_DATA_DIR\n" << std::flush;
+    std::cout << "\n  Usage: ./vise VISE_SOURCE_DIR VISE_DATA_DIR\n" << std::flush;
     return 0;
   }
 
@@ -36,16 +36,15 @@ int main(int argc, char** argv) {
   boost::filesystem::path path_vise_src( argv[1] );
   boost::filesystem::path vise_template = path_vise_src / "src/server/html_templates/";
 
-  if ( !boost::filesystem::exists(data_home)  || !boost::filesystem::exists(vise_template) ) {
-    if ( !boost::filesystem::exists(data_home) ) {
-      std::cout << "\nVISE_DATA_DIR = " << data_home.string() << " does not exist!" << std::flush;
-    }
-
-    if ( !boost::filesystem::exists(data_home) ) {
-      std::cout << "\nVISE_SOURCE_DIR = " << vise_template.string() << " does not exist!" << std::flush;
-    }
+  if (!boost::filesystem::exists(vise_template) ) {
+    std::cout << "\nVISE_SOURCE_DIR = " << vise_template.string() << " does not exist!" << std::flush;
     std::cout << std::endl;
     return 0;
+  }
+
+  if ( !boost::filesystem::exists(data_home) ) {
+    boost::filesystem::create_directories( data_home );
+    std::cout << "\nCreated VISE_DATA_DIR=" << data_home.string() << std::endl;
   }
 
   ViseServer vise_server( data_home, vise_template );
