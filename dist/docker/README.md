@@ -52,7 +52,7 @@ sudo docker run --rm --entrypoint "" -p 8080:8080 -v ~/:/home/$USER -it vise:1.0
 
 sudo docker run --rm --entrypoint "" -p 8080:8080 -v ~/vgg/:/opt/vgg/ -it vise:1.0.0-beta bash
 
-
+sudo docker stop `sudo docker ps -a -q`
 sudo docker rm `sudo docker ps -a -q`
 sudo docker rmi `sudo docker images -a -q` -f
 
@@ -66,6 +66,14 @@ sudo docker save --output vise-1.0.0-beta.tar vise:1.0.0-beta
 ## Publishing image to gitlab
 ```
 sudo docker login --username thelinuxmaniac registry.gitlab.com
+sudo docker build -t registry.gitlab.com/vgg/vise:1.0.0-beta .
+sudo docker push registry.gitlab.com/vgg/vise
+```
+
+## Fetching image from gitlab
+```
+sudo docker login --username thelinuxmaniac registry.gitlab.com
+docker pull registry.gitlab.com/vgg/vise/image:latest
 ```
 
 Abhishek Dutta  
