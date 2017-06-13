@@ -125,29 +125,6 @@ class ViseServer {
   std::string state_complexity_info_;
   std::string complexity_model_assumption_;
 
-  // search engine query
-  spatialVerifV2 *spatial_verif_v2_;
-  spatialRetriever *spatial_retriever_;
-  multiQuery *multi_query_;
-  multiQueryMax *multi_query_max_;
-  datasetAbs *dataset_;
-  sequentialConstructions *cons_queue_;
-  hamming *hamming_emb_;
-  embedderFactory *emb_factory_;
-  clstCentres *clst_centres_;
-  fastann::nn_obj<float> *nn_;
-  featGetter *feat_getter_;
-  softAssigner *soft_assigner_;
-  retrieverFromIter *base_retriever_;
-  protoDbFile *dbFidx_file_;
-  protoDbFile *dbIidx_file_;
-  protoDbInRamStartDisk *dbFidx_;
-  protoDbInRamStartDisk *dbIidx_;
-  protoIndex *fidx_;
-  protoIndex *iidx_;
-  tfidfV2 *tfidf_;
-  bool useHamm;
-
   boost::system::error_code error_;
 
   // state maintainanace
@@ -163,35 +140,10 @@ class ViseServer {
   // search engine training
   void InitiateSearchEngineTraining();
 
-  // search engine query
-  void HandleQueryGetRequest(std::string http_method_uri, boost::shared_ptr<tcp::socket> p_socket);
-  void QueryServeImgList( unsigned int page_no,
-                          unsigned int per_page_im_count,
-                          boost::shared_ptr<tcp::socket> p_socket );
-  void QuerySearchImageRegion(std::string query_img_fn,
-                              unsigned int x0,
-                              unsigned int y0,
-                              unsigned int x1,
-                              unsigned int y1,
-                              boost::shared_ptr<tcp::socket> p_socket);
-  void QueryCompareImage(std::string im1fn,
-                         std::string im2fn,
-                         std::string x0y0x1y1_str,
-                         std::string H_str,
-                         boost::shared_ptr<tcp::socket> p_socket);
 
-  void QueryTransformImage(Magick::Image &im, const std::map< std::string, std::string > &resource_args);
   void SendStaticImageResponse(boost::filesystem::path im_fn, boost::shared_ptr<tcp::socket> p_socket);
-  void SendImageResponse(Magick::Image &im, std::string content_type, boost::shared_ptr<tcp::socket> p_socket);
 
   void QueryInit();
-  void QueryLoadSearchIndex();
-
-  void QueryTest();
-  void HomographyTransform( double H[],
-                            double   x0, double   y0, double   x1, double   y1,
-                            unsigned int &tx0, unsigned int &ty0, unsigned int &tx1, unsigned int &ty1 );
-  void HomographyPointTransform( double H[], const double x, const double y, double &xt, double &yt );
 
   // HTTP connection handler
   void HandleConnection(boost::shared_ptr<tcp::socket> p_socket);

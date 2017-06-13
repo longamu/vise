@@ -10,7 +10,6 @@ ViseMessageQueue* ViseMessageQueue::Instance() {
 }
 
 void ViseMessageQueue::Push( const std::string &d ) {
-  //boost::lock_guard<boost::mutex> guard(mtx_);
   boost::mutex::scoped_lock lock(mtx_);
   messages_.push( d );
   lock.unlock();

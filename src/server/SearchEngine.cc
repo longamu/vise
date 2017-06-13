@@ -10,13 +10,6 @@ SearchEngine::SearchEngine() {
   acceptable_img_ext_.insert( ".pgm" );
   acceptable_img_ext_.insert( ".pnm" );
   acceptable_img_ext_.insert( ".ppm" );
-
-  /*
-  uint32_t n_desc;
-  uint32_t desc_dim;
-  GetTrainDescSize("/home/tlm/vise/search_engines/ox5k/training_data/train_descs.e3bin", n_desc, desc_dim);
-  std::cout << "\nn_desc=" << n_desc << ", desc_dim=" << desc_dim << std::flush;
-  */
 }
 
 void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
@@ -135,9 +128,10 @@ void SearchEngine::Preprocess() {
     }
 
     SendLog("Preprocess", "[Done]");
+    // this is needed to unblock the ViseMessageQueue (sometimes)
+    // @todo improve the design of ViseMessageQueue to avoid such blocked state
     std::cout << "\n@todo: Message queue size = " << ViseMessageQueue::Instance()->GetSize() << std::flush;
 
-    //if ( ! boost::filesystem::exists( imglist_fn_ ) ) {
     WriteImageListToFile( imglist_fn_.string(), imglist_ );
     SendLog("Preprocess", "\nWritten image list to : [" + imglist_fn_.string() + "]" );
   }
@@ -156,11 +150,6 @@ void SearchEngine::Descriptor() {
     std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
 
     int32_t trainNumDescs;
-    /*
-    std::stringstream s;
-    s << GetEngineConfigParam("trainNumDescs");
-    s >> trainNumDescs;
-    */
 
     // @todo : find a better place to define these constants
     unsigned int DESCRIPTORS_PER_IMAGE = 1000;
@@ -209,10 +198,7 @@ void SearchEngine::Cluster( boost::filesystem::path vise_src_code_dir ) {
     SendCommand("Cluster", "_progress reset show");
     SendProgressMessage("Descriptor", "Starting clustering of descriptors");
 
-    //boost::thread t( boost::bind( &SearchEngine::RunClusterCommand, this ) );
     RunClusterCommand( vise_src_code_dir );
-  } else {
-    //SendLog("Cluster", "\nLoaded");
   }
 }
 
@@ -257,8 +243,6 @@ void SearchEngine::RunClusterCommand( boost::filesystem::path vise_src_code_dir 
     }
     pclose( pipe );
     SendCommand("Cluster", "_progress reset hide");
-  } else {
-    //SendLog("Cluster", "\nFailed to execute python script for clustering: \n\t $" + cmd);
   }
 }
 
@@ -277,8 +261,6 @@ void SearchEngine::Assign() {
                                      useRootSIFT,
                                      GetEngineConfigParam("descFn"),
                                      GetEngineConfigParam("assignFn"));
-  } else {
-    //SendLog("Assign", "\nLoaded");
   }
 }
 
@@ -304,8 +286,6 @@ void SearchEngine::Hamm() {
                                GetEngineConfigParam("assignFn"),
                                GetEngineConfigParam("hammFn"),
                                hammEmbBits);
-  } else {
-    //SendLog("Hamm", "\nLoaded");
   }
 }
 
@@ -362,8 +342,6 @@ void SearchEngine::Index() {
                       embFactory);
 
     delete embFactory;
-  } else {
-    //SendLog("Index", "\nLoaded");
   }
 }
 
@@ -706,14 +684,4 @@ unsigned long SearchEngine::GetImglistSize() {
 
 std::string SearchEngine::GetImglistFn( unsigned int index ) {
   return imglist_.at(index);
-}
-
-// for debug
-void SearchEngine::PrintEngineConfig() {
-  std::cout << "\nShowing configurations for [" << engine_name_ << "] :" << std::endl;
-  std::map<std::string, std::string>::iterator it;
-  for ( it = engine_config_.begin(); it != engine_config_.end(); ++it) {
-    std::cout << it->first << " = " << it->second << std::endl;
-  }
-  std::cout << std::flush;
 }
