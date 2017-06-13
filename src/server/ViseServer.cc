@@ -197,6 +197,7 @@ std::string ViseServer::GetStateComplexityInfo() {
     << "<tr><td>Number of images</td><td>" << n << "</td></tr>"
     << "<tr><td>Estimated total training time*</td><td>" << ceil(time) << " min.</td></tr>"
     << "<tr><td>Estimated memory needed*</td><td>" << "4 GB</td></tr>"
+    << "<tr><td>Estimated search engine runtime memory needed*</td><td>" << "1 GB</td></tr>"
     << "<tr><td>Estimated total disk space needed*</td><td>" << ceil(space) << " MB</td></tr>"
     << "<tr><td>&nbsp;</td><td>&nbsp;</td></tr>"
     << "<tr><td colspan=\"2\">* estimates are based on the following specifications : </td></tr>"
@@ -364,8 +365,8 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       // debug
       SendCommand("_progress show");
       for ( unsigned int i=0; i<101; i++ ) {
-        SendProgress( "Main", i, 100 );
-        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
+      SendProgress( "Main", i, 100 );
+      boost::this_thread::sleep(boost::posix_time::milliseconds(20));
       }
       SendCommand("_progress hide");
       */
@@ -526,22 +527,32 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
           return;
           // send control message to set loaded engine name
         } else if ( tokens.at(0) == "load_search_engine" ) {
-            if ( search_engine_.GetName() == search_engine_name ) {
-              SendHttpPostResponse( http_post_data, "Search engine already loaded!", p_socket );
-              SendCommand(""); // @todo: this is needed to wakeup the messaging system! But why?
-              SendCommand("_state update_now");
+          if ( search_engine_.GetName() == search_engine_name ) {
+            SendHttpPostResponse( http_post_data, "Search engine already loaded!", p_socket );
+            SendCommand(""); // @todo: this is needed to wakeup the messaging system! But why?
+            SendCommand("_state update_now");
+          } else {
+            if ( SearchEngineExists( search_engine_name ) ) {
+              SendMessage("Loading search engine [" + search_engine_name + "] ...");
+              LoadSearchEngine( search_engine_name );
+              SendHttpPostResponse( http_post_data, "Loaded search engine", p_socket );
             } else {
-              if ( SearchEngineExists( search_engine_name ) ) {
-                SendMessage("Loading search engine [" + search_engine_name + "] ...");
-                LoadSearchEngine( search_engine_name );
-                SendHttpPostResponse( http_post_data, "Loaded search engine", p_socket );
-              } else {
-                SendHttpPostResponse( http_post_data, "Search engine does not exist", p_socket );
-                SendMessage("Search engine does not exists!");
-              }
+              SendHttpPostResponse( http_post_data, "Search engine does not exist", p_socket );
+              SendMessage("Search engine does not exists!");
             }
-            p_socket->close();
+          }
+          p_socket->close();
+          return;
+        } else if ( tokens.at(0) == "delete_search_engine" ) {
+          if ( SearchEngineExists( search_engine_name ) ) {
+            if ( SearchEngineDelete( search_engine_name ) ) {
+              SendMessage("Deleted search engine [" + search_engine_name + "]");
+              SendCommand("_get _vise_index.html");
+            } else {
+              SendMessage("Failed to delete search engine [" + search_engine_name + "]");
+            }
             return;
+          }
         } else if ( tokens.at(0) == "msg_to_training_process" ) {
           std::string msg = tokens.at(1);
           if ( msg == "stop" ) {
@@ -825,16 +836,21 @@ void ViseServer::HandleStateGetRequest( std::string resource_name,
          GetCurrentStateId() == ViseServer::STATE_QUERY ) {
       return;
       /*
-      if ( resource_args.empty() ) {
+        if ( resource_args.empty() ) {
         std::cout << "\nViseServer::HandleStateGetRequest() : sending query" << std::flush;
         SendCommand("_state hide");
         QueryServeImgList( 0, 20, p_socket );
         return;
-      }
+        }
       */
     } else {
       switch( state_id ) {
       case ViseServer::STATE_SETTING:
+        ReplaceString( state_html_list_.at(state_id), "__SEARCH_ENGINE_NAME__", search_engine_.GetName() );
+        ReplaceString( state_html_list_.at(state_id),
+                       "__DEFAULT_IMAGE_PATH__",
+                       (std::string(getenv("HOME")) + "/vgg/mydata/images/") ); // @todo: will be removed in future
+
         SendCommand("_state show");
         break;
       case ViseServer::STATE_INFO:
@@ -1149,12 +1165,12 @@ void ViseServer::InitiateSearchEngineTraining() {
     }
   }
   /*
-  if ( vise_training_thread_->interruption_requested() ) {
+    if ( vise_training_thread_->interruption_requested() ) {
     SendLog("\nStopped training process on user request");
     SendCommand("_control_panel clear all");
     SendCommand("_control_panel add <div id=\"Training_button_continue\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('continue')\">Continue</div>");
     return;
-  }
+    }
   */
 
   // Descriptor
@@ -1177,13 +1193,13 @@ void ViseServer::InitiateSearchEngineTraining() {
     }
   }
   /*
-  if ( vise_training_thread_->interruption_requested() ) {
+    if ( vise_training_thread_->interruption_requested() ) {
     SendLog("\nStopped training process on user request");
     SendCommand("_control_panel clear all");
     SendCommand("_control_panel add <div id=\"Training_button_continue\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('continue')\">Continue</div>");
     return;
-  }
-*/
+    }
+  */
   // Cluster
   if ( state_id_ == ViseServer::STATE_CLUSTER ) {
     boost::timer::cpu_timer t_start;
@@ -1204,12 +1220,12 @@ void ViseServer::InitiateSearchEngineTraining() {
     }
   }
   /*
-  if ( vise_training_thread_->interruption_requested() ) {
+    if ( vise_training_thread_->interruption_requested() ) {
     SendLog("\nStopped training process on user request");
     SendCommand("_control_panel clear all");
     SendCommand("_control_panel add <div id=\"Training_button_continue\" class=\"action_button\" onclick=\"_vise_send_msg_to_training_process('continue')\">Continue</div>");
     return;
-  }
+    }
   */
 
   // Assign
@@ -1488,8 +1504,8 @@ void ViseServer::QueryInit() {
   /*
   // construct dataset
   dataset_ = new datasetV2( search_engine_.GetEngineConfigParam("dsetFn"),
-                            search_engine_.GetEngineConfigParam("databasePath"),
-                            search_engine_.GetEngineConfigParam("docMapFindPath") );
+  search_engine_.GetEngineConfigParam("databasePath"),
+  search_engine_.GetEngineConfigParam("docMapFindPath") );
 
   // load the search index in separate thread
   // while the user browses image list and prepares search area
@@ -1751,11 +1767,11 @@ void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
   ResetToInitialState();
 
   /*
-  SendMessage("Loading search engine " + search_engine_name + " ...");
+    SendMessage("Loading search engine " + search_engine_name + " ...");
 
-  SendCommand("_log clear show");
-  SendCommand("_control_panel clear all");
-  SendCommand("_control_panel add <div id=\"LoadSearchEngine_button_continue\" class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Continue</div>");
+    SendCommand("_log clear show");
+    SendCommand("_control_panel clear all");
+    SendCommand("_control_panel add <div id=\"LoadSearchEngine_button_continue\" class=\"action_button\" onclick=\"_vise_server_send_state_post_request('Info', 'proceed')\">Continue</div>");
   */
   search_engine_.Init( search_engine_name, vise_enginedir_ );
   if ( !UpdateState() ) {
@@ -1833,11 +1849,13 @@ void ViseServer::LoadSearchEngine( std::string search_engine_name ) {
 //
 void ViseServer::GenerateViseIndexHtml() {
   std::ostringstream s;
-  s << "<div id=\"create_engine_panel\">";
-  s << "<input id=\"vise_search_engine_name\" name=\"vise_search_engine_name\" value=\"engine_name\" onclick=\"document.getElementById('vise_search_engine_name').value=''\" size=\"20\" autocomplete=\"off\">";
-  s << "<div class=\"action_button\" onclick=\"_vise_create_search_engine()\">&nbsp;&nbsp;Create</div>";
-  s << "</div>";
-  s << "<div id=\"load_engine_panel\">";
+
+  s << "<div id=\"create_engine_panel\">"
+    << "<input id=\"vise_search_engine_name\" name=\"vise_search_engine_name\" value=\"engine_name\" onclick=\"document.getElementById('vise_search_engine_name').value=''\" size=\"20\" autocomplete=\"on\" />"
+    << "<div class=\"action_button\" onclick=\"_vise_create_search_engine()\">&nbsp;&nbsp;Create</div>"
+    << "<div class=\"action_button\" style=\"color: red;\" onclick=\"_vise_delete_search_engine()\">&nbsp;&nbsp;Delete</div></div>"
+    << "<div id=\"load_engine_panel\"><h3>Existing Search Engines</h3>"
+    << "<div id=\"create_engine_panel\">";
 
   // iterate through all directories in vise_enginedir_
   boost::filesystem::directory_iterator dir_it( vise_enginedir_ ), end_it;
@@ -2012,6 +2030,33 @@ bool ViseServer::SearchEngineExists( std::string search_engine_name ) {
       }
     }
     ++dir_it;
+  }
+  return false;
+}
+
+bool ViseServer::SearchEngineDelete( std::string engine_name ) {
+  // major security risk: validate that search_engine_name is really a engine name
+  // and not something like name/../../../../etc/passwd
+  // docker running as root is capable of deleting everything. So be careful!
+  // @todo: revisit this and ensure safety of user data
+  std::size_t space = engine_name.find(' ');
+  std::size_t asterix = engine_name.find('*');
+  std::size_t qmark = engine_name.find('?');
+  std::size_t fslash = engine_name.find('/');
+  std::size_t bslash = engine_name.find('\\');
+  std::size_t dot = engine_name.find('.');
+
+  if ( space  == std::string::npos ||
+       asterix== std::string::npos ||
+       qmark  == std::string::npos ||
+       bslash == std::string::npos ||
+       dot    == std::string::npos ||
+       fslash == std::string::npos ) {
+    boost::filesystem::path engine_path = vise_enginedir_ / engine_name;
+    boost::filesystem::remove_all( engine_path, error_ );
+    if ( !error_ ) {
+      return true;
+    }
   }
   return false;
 }

@@ -232,19 +232,6 @@ class ViseServer {
   void InitReljaRetrival();
   void InitReljaRetrivalBackend();
 
-  // @todo: move to ViseServer.cc ( do not know how! )
-  template<typename T> void ParseCsvString( const std::string csv, std::vector< T > &d ) {
-    d.clear();
-
-    std::istringstream s( csv );
-    char comma;
-    T value;
-    while ( s >> value ) {
-      d.push_back( value );
-      s >> comma;
-    }
-  }
-
   // for logging statistics
   boost::filesystem::path vise_training_stat_fn_;
 
@@ -279,6 +266,7 @@ class ViseServer {
   bool Restart();
 
   bool SearchEngineExists( std::string search_engine_name );
+  bool SearchEngineDelete( std::string search_engine_name );
 };
 
 #endif /* _VISE_SERVER_H */

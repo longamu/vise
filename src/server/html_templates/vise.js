@@ -67,6 +67,7 @@ function _vise_init() {
   // initially hide footer and log
   document.getElementById("footer").style.display = "none";
   document.getElementById("log").style.display = "none";
+  document.getElementById("footer_panel").style.display = "none";
 
   /*
   // @todo allow graceful shutdown of VISE server
@@ -188,7 +189,6 @@ function _vise_handle_progress_message(state_name, msg) {
     document.getElementById("progress_text").innerHTML = state_name + " : " + completed + " of " + total;
 
     var percent = parseInt( (completed / total ) * 100 );
-    console.log("_vise_current_state_name = " + _vise_current_state_name + " : percent = " + percent);
     switch ( _vise_current_state_name ) {
       case "Preprocess": // descriptor
         if ( percent % 25 < 2 ) {
@@ -243,9 +243,13 @@ function _vise_handle_command(sender, command_str) {
   //console.log("sender = " + sender + " : command_str = " + command_str);
   // command_str = "_state update_now"
   // command_str = "_control_panel remove Info_proceed_button"
-  var first_spc = command_str.indexOf(' ', 0);
-  var cmd = command_str.substr(0, first_spc);
-  var param = command_str.substr(first_spc+1);
+  var cmd = command_str;
+  var param;
+  if ( command_str.includes(' ') ) {
+    var first_spc = command_str.indexOf(' ', 0);
+    cmd = command_str.substr(0, first_spc);
+    param = command_str.substr(first_spc+1);
+  }
 
   switch ( cmd ) {
     case "_state":
@@ -255,9 +259,11 @@ function _vise_handle_command(sender, command_str) {
           break;
         case "show":
           document.getElementById("footer").style.display = "block";
+          document.getElementById("footer_panel").style.display = "block";
           break;
         case "hide":
           document.getElementById("footer").style.display = "none";
+          document.getElementById("footer_panel").style.display = "none";
           break;
       }
       break;
@@ -310,6 +316,10 @@ function _vise_handle_command(sender, command_str) {
           window.location.href = VISE_SERVER_ADDRESS;
           break;
       }
+      break;
+
+    case "_get":
+      _vise_server_send_get_request(param);
       break;
 
     default:
@@ -428,6 +438,15 @@ function _vise_load_search_engine(name) {
   _vise_server_send_post_request("load_search_engine " + name);
 }
 
+function _vise_delete_search_engine() {
+  var search_engine_name = document.getElementById('vise_search_engine_name').value;
+  var confirm_message = "Are you sure you want to delete \"" + search_engine_name + "\"?\nWARNING: deleted search engine cannot be recovered!";
+  var confirm_delete = confirm(confirm_message);
+  if ( confirm_delete ) {
+    _vise_server_send_post_request("delete_search_engine " + search_engine_name);
+  }
+}
+
 function _vise_server_send_post_request(post_data) {
   _vise_server.open("POST", VISE_SERVER_ADDRESS);
   _vise_server.send(post_data);
@@ -457,19 +476,16 @@ function _vise_fetch_random_image() {
 //
 function _vise_send_setting_data() {
   var postdata = [];
-  var vise_settings = document.getElementById("vise_setting");
-  if ( typeof vise_settings !== 'undefined' && vise_settings !== null ) {
-    var setting_param = vise_settings.getElementsByClassName("vise_setting_param");
+  var setting_param = document.getElementsByClassName("vise_setting_param");
 
-    for ( var i = 0; i < setting_param.length; i++) {
-      var param_name  = setting_param[i].name;
-      var param_value = setting_param[i].value;
-      postdata.push( param_name + "=" + param_value );
-    }
-    var postdata_str = postdata.join('\n');
-
-    _vise_server_send_state_post_request( _vise_current_state_name, postdata_str );
+  for ( var i = 0; i < setting_param.length; i++) {
+    var param_name  = setting_param[i].name;
+    var param_value = setting_param[i].value;
+    postdata.push( param_name + "=" + param_value );
   }
+  var postdata_str = postdata.join('\n');
+
+  _vise_server_send_state_post_request( _vise_current_state_name, postdata_str );
 }
 
 //
