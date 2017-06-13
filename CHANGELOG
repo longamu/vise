@@ -1,3 +1,6 @@
+## [1.0.0] - June 15, 2017
+ * a web based user interface to index new images
+
 ## [0.0.2] - March 16, 2017
  * updated source code and cmake files to allow compilation in Mac OS
  * mostly used by @Giles Bergel (Seebibyte project ambassador) to demonstrate potential users

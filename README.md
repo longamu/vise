@@ -1,14 +1,18 @@
 # VGG Image Search Engine (VISE)
 
-This tool allows you to search a large database of images and is developed and 
-maintained by the [Visual Geometry Group](http://www.robots.ox.ac.uk/~vgg/) at 
-Oxford University.
+VGG Image Search Engine (VISE) is an open source project developed at the Visual 
+Geometry Group and released under the BSD-2 clause license. This standalone 
+application can be used to make a large collection of images searchable by 
+using image regions as query.
 
-The original codebase (called `relja_retrival`) was developed by Relja 
-Arandjelovic during his DPhil / Postdoc at the Visual Geometry Group, Department 
-of Engineering Science, University of Oxford in Sep. 2014. The current codebase 
+VISE builds on the C++ codebase (relja_retrieval, Sep. 2014) developed by 
+Relja Arandjelovic during his DPhil / Postdoc at the Visual Geometry Group, 
+Department of Engineering Science, University of Oxford. The current codebase 
 is developed and maintained by [Abhishek Dutta](adutta@robots.ox.ac.uk).
+
+This work is supported by EPSRC programme grant Seebibyte: Visual Search for 
+the Era of Big Data ([EP/M013774/1](http://www.seebibyte.org/index.html)).
+
 
 Abhishek Dutta  
 Mar. 10, 2017
-
