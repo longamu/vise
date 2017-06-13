@@ -1,7 +1,0 @@
-package rr;
-
-option optimize_for = SPEED;
-
-message uint32vec {
-    repeated uint32 v = 1 [packed=true];
-}
