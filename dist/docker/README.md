@@ -28,7 +28,7 @@ cd /home/tlm/dev/vise/dist/docker
 ls
   Dockerfile  README.md
 
-sudo time -v docker build --no-cache=true -t vise:1.0.0-beta .  # build the VISE image
+sudo time -v docker build --no-cache=true -t vise:1.0.0 .  # build the VISE image
 sudo docker images -a
 sudo docker run vise
 sudo docker run -d vise                      # run VISE image in background
@@ -66,7 +66,7 @@ sudo docker save --output vise-1.0.0-beta.tar vise:1.0.0-beta
 ## Publishing image to gitlab
 ```
 sudo docker login --username thelinuxmaniac registry.gitlab.com
-sudo docker build -t registry.gitlab.com/vgg/vise:1.0.0-beta .
+sudo docker build -t registry.gitlab.com/vgg/vise:1.0.0 .
 sudo docker push registry.gitlab.com/vgg/vise
 ```
 
