@@ -40,23 +40,20 @@ Now, execute the following scripts to run VISE:
 ```
 
 ### MacOS
- 1. Install docker
-
+ * Install docker
 ![Docker Website: to download docker for MacOS](docs/help/docker/img/docker_website_mac_download.png)
-
 ![To install, drag and drop docker file to Applications](docs/help/docker/img/docker_drop_to_applications.png)
-
 ![To install, drag and drop docker file to Applications](docs/help/docker/img/docker_taskbar_status.png)
 
- 2. Download and extract VISE archive from http://www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip
+ * Download and extract VISE archive from http://www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip
  
 ![Download and extract the VISE archive: vise_docker-1.0.0.zip](docs/help/docker/img/extracted_vise_archive.png)
 
- 3. Click the following scripts :
+ * The following scripts are provided:
+  * Click `macos_load.command` (only the first time) script to load the VISE image container
+  * Click `macos_start.command` to start the VISE (or, Image Matcher) tool
+  * Click `macos_stop.command` to stop it (do not forget)
 ![Download and extract the VISE archive: vise_docker-1.0.0.zip](docs/help/docker/img/extracted_vise_archive.png)
-   * Click `macos_load.command` (only the first time) script to load the VISE image container
-   * Click `macos_start.command` to start the VISE (or, Image Matcher) tool
-   * Click `macos_stop.command` to stop it (do not forget)
 
 ## Compiling from source code
 Coming soon. Meanwhile, you can look at the [dockerfile](https://gitlab.com/vgg/vise/blob/master/dist/docker/Dockerfile) for some inspiration.
