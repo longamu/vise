@@ -1,17 +1,18 @@
 # Installation
 VISE can be installed in two ways:
- * Docker image :
-   * There is no need to install or compile any libraries. All the dependencies come pre-installed and pre-compiled.
-   * This method requires running docker (and hence VISE) as root (i.e. Administration) which may not be safe.
-
- * Source code :
-   * This method requires user to compile and install all the dependant libraries (Boost, Imagemagick, cmake, fastann)
-   * The compiled VISE binaries can be executed by any user (i.e. non Administrative account) and hence is safer.
+ * [Docker image](#docker-based-installation)
+   * [Ubuntu](#ubuntu)
+   * [MacOS](#macos)
+ * [Source code](#compiling-from-source-code)
+   * Coming soon. Meanwhile, you can look at the [dockerfile](https://gitlab.com/vgg/vise/blob/master/dist/docker/Dockerfile) for some inspiration.
 
 For users without prior knowledge of compiling and installing libraries, we recommend the Docker image based method while 
 for more advanced users, we advise to compile VISE from source code.
 
 ## Docker based installation
+   * There is no need to install or compile any libraries. All the dependencies come pre-installed and pre-compiled.
+   * This method requires running docker (and hence VISE) as root (i.e. Administration) which may not be safe.
+
 ### Ubuntu
  1. Install docker : based on instructions at [docker website](https://docs.docker.com/engine/installation/linux/ubuntu/#install-using-the-repository)
 ```
@@ -56,7 +57,8 @@ Now, execute the following scripts to run VISE:
 ![Download and extract the VISE archive: vise_docker-1.0.0.zip](docs/help/docker/img/extracted_vise_archive.png)
 
 ## Compiling from source code
-Coming soon. Meanwhile, you can look at the [dockerfile](https://gitlab.com/vgg/vise/blob/master/dist/docker/Dockerfile) for some inspiration.
+ * This method requires user to compile and install all the dependant libraries (Boost, Imagemagick, cmake, fastann)
+ * The compiled VISE binaries can be executed by any user (i.e. non Administrative account) and hence is safer.
 
 
 Abhishek Dutta  
