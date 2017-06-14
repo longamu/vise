@@ -1,9 +1,9 @@
 # VGG Image Search Engine (VISE)
 
-VGG Image Search Engine (VISE) is an open source project developed at the Visual 
-Geometry Group and released under the BSD-2 clause license. This standalone 
-application can be used to make a large collection of images searchable by 
-using image regions as query.
+[VGG Image Search Engine](www.robots.ox.ac.uk/~vgg/software/vise) (VISE) is an 
+open source project developed at the Visual Geometry Group and released under 
+the BSD-2 clause license. This standalone application can be used to make a 
+large collection of images searchable by using image regions as query.
 
 VISE builds on the C++ codebase (relja_retrieval, Sep. 2014) developed by 
 Relja Arandjelovic during his DPhil / Postdoc at the Visual Geometry Group, 
