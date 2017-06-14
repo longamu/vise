@@ -32,7 +32,7 @@ ENV VGG_ROOT_DIR="/opt/ox/vgg/" VISE_ROOT_DIR="/opt/ox/vgg/vise/" VISE_CODE_DIR=
 #
 # Prepare environment variables
 #
-RUN mkdir -p $VGG_ROOT_DIR $VISE_ROOT_DIR $VISE_CODE_DIR $VISE_DEP_DIR $VISE_DEP_SRCDIR $VISE_DEP_LIBDIR
+RUN mkdir -p $VGG_ROOT_DIR $VISE_ROOT_DIR $VISE_DEP_DIR $VISE_DEP_SRCDIR $VISE_DEP_LIBDIR
 
 #
 # Install VISE dependencies
@@ -58,8 +58,9 @@ RUN /bin/bash -c 'export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/" ; \
  cd $VISE_ROOT_DIR ; \
 # curl -o vise-1.0.0.tar.gz https://gitlab.com/vgg/vise/raw/release/vise-1.0.0.tar.gz ; \
 # tar -zxf vise-1.0.0.tar.gz ; cd vise-1.0.0 ; mkdir build ; \
+#
  git clone -b master --single-branch https://gitlab.com/vgg/vise.git ; \
- mv vise/ vise-1.0.0; cd vise-1.0.0 ; mkdir build ; \
+ mv vise/ vise-1.0.0 ; cd vise-1.0.0 ; mkdir build ; \
 #
 # Compile pypar and dkmeans (needed for clustering)
 #
@@ -79,4 +80,4 @@ RUN /bin/bash -c 'export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/" ; \
  cmake -DCMAKE_PREFIX_PATH=$FASTANN_LIBDIR ../src ; \
  make -j8'
 
-ENTRYPOINT $VISE_CODE_DIR"build/vise" $VISE_CODE_DIR /home/$USER/vgg/vise/
+#ENTRYPOINT $VISE_CODE_DIR"build/vise" $VISE_CODE_DIR /home/$USER/vgg/vise/

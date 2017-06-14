@@ -357,11 +357,8 @@ bool SearchEngine::EngineConfigExists() {
 }
 
 void SearchEngine::CreateFileList() {
-
-  boost::filesystem::path dir(GetEngineConfigParam("imagePath"));
-  std::cout << "\nOriginal dir = " << dir.string() << std::endl;
-  dir = boost::filesystem::canonical(dir); // resolve symbolic links, if any
-  std::cout << "\nCannonical dir = " << dir.string() << std::endl;
+  boost::filesystem::path user_dir(GetEngineConfigParam("imagePath"));
+  boost::filesystem::path dir = boost::filesystem::canonical(user_dir); // resolve symbolic links, if any
 
   imglist_.clear();
   imglist_fn_original_size_.clear();
@@ -385,7 +382,6 @@ void SearchEngine::CreateFileList() {
       }
 
       if ( acceptable_img_ext_.count( fn_ext ) == 1 ) {
-        std::cout << "\n\t - " << p.filename().string() << std::flush;
         imglist_.push_back( rel_fn.string() );
         imglist_fn_original_size_.push_back( boost::filesystem::file_size( p ) );
         imglist_fn_transformed_size_.push_back( 0 );
