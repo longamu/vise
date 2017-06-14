@@ -80,4 +80,4 @@ RUN /bin/bash -c 'export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/" ; \
  cmake -DCMAKE_PREFIX_PATH=$FASTANN_LIBDIR ../src ; \
  make -j8'
 
-#ENTRYPOINT $VISE_CODE_DIR"build/vise" $VISE_CODE_DIR /home/$USER/vgg/vise/
+ENTRYPOINT $VISE_CODE_DIR"build/vise" $VISE_CODE_DIR /home/$USER/vgg/vise/
