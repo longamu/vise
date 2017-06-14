@@ -1354,7 +1354,7 @@ void ViseServer::AddTrainingStat(std::string dataset_name, std::string state_nam
 extern void api_v2(std::vector< std::string > argv);
 void ViseServer::InitReljaRetrival() {
   boost::thread backend( boost::bind( &ViseServer::InitReljaRetrivalBackend, this ) );
- 
+
   backend.join();
 }
 

@@ -359,6 +359,7 @@ bool SearchEngine::EngineConfigExists() {
 void SearchEngine::CreateFileList() {
 
   boost::filesystem::path dir(GetEngineConfigParam("imagePath"));
+  dir = boost::filesystem::canonical(dir); // resolve symbolic links, if any
 
   //std::cout << "\nShowing directory contents of : " << dir.string() << std::endl;
   imglist_.clear();
