@@ -467,8 +467,8 @@ function _vise_send_msg_to_training_process(msg) {
 }
 
 function _vise_fetch_random_image() {
-  _vise_server.open("GET", VISE_SERVER_ADDRESS + "_random_image");
-  _vise_server.send();
+  //_vise_server.open("GET", VISE_SERVER_ADDRESS + "_random_image");
+  //_vise_server.send();
 }
 
 //
