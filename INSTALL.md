@@ -31,23 +31,28 @@ sudo apt-get install docker-ce=17.03.0~ce-0~ubuntu-xenial
 wget http://www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip
 unzip vise_docker-1.0.0.zip
 cd vise_docker-1.0.0/
-
-./linux_load.sh  # load VISE docker image
+```
+Now, execute the following scripts to run VISE:
+```
+./linux_load.sh  # load VISE docker image (first time only)
 ./linux_start.sh # to start the docker container
 ./linux_stop.sh  # to stop container (do not forget)
 ```
 
 ### MacOS
  1. Install docker
-![Docker Website: to download docker for MacOS](doc/help/docker/docker_website_mac_download.png)
-![To install, drag and drop docker file to Applications](doc/help/docker/docker_drop_to_applications.png)
-![To install, drag and drop docker file to Applications](doc/help/docker/docker_taskbar_status.png)
+
+![Docker Website: to download docker for MacOS](docs/help/docker/img/docker_website_mac_download.png)
+
+![To install, drag and drop docker file to Applications](docs/help/docker/img/docker_drop_to_applications.png)
+
+![To install, drag and drop docker file to Applications](docs/help/docker/img/docker_taskbar_status.png)
 
  2. Download and extract VISE archive from ./linux_load.sh
-![Download and extract the VISE archive: vise_docker-1.0.0.zip](doc/help/docker/extracted_vise_archive.png)
+![Download and extract the VISE archive: vise_docker-1.0.0.zip](docs/help/docker/img/extracted_vise_archive.png)
 
  3. Load VISE docker image and Start/Stop the VISE container to use this application.
-![Download and extract the VISE archive: vise_docker-1.0.0.zip](doc/help/docker/extracted_vise_archive.png)
+![Download and extract the VISE archive: vise_docker-1.0.0.zip](docs/help/docker/img/extracted_vise_archive.png)
    * Click `macos_load.command` (only the first time) script to load the VISE image container
    * Click `macos_start.command` to start the VISE (or, Image Matcher) tool
    * Click `macos_stop.command` to stop it (do not forget)
