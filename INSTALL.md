@@ -26,12 +26,15 @@ apt-cache madison docker-ce
 sudo apt-get install docker-ce=17.03.0~ce-0~ubuntu-xenial
 ```
 
- 2. Download and extract VISE archive from www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip
+ 2. Download and extract VISE archive from http://www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip
 ```
-wget www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip
+wget http://www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip
 unzip vise_docker-1.0.0.zip
 cd vise_docker-1.0.0/
-./load.sh
+
+./linux_load.sh  # load VISE docker image
+./linux_start.sh # to start the docker container
+./linux_stop.sh  # to stop container (do not forget)
 ```
 
 ### MacOS
@@ -40,7 +43,7 @@ cd vise_docker-1.0.0/
 ![To install, drag and drop docker file to Applications](doc/help/docker/docker_drop_to_applications.png)
 ![To install, drag and drop docker file to Applications](doc/help/docker/docker_taskbar_status.png)
 
- 2. Download and extract VISE archive from www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip
+ 2. Download and extract VISE archive from ./linux_load.sh
 ![Download and extract the VISE archive: vise_docker-1.0.0.zip](doc/help/docker/extracted_vise_archive.png)
 
  3. Load VISE docker image and Start/Stop the VISE container to use this application.
@@ -50,23 +53,8 @@ cd vise_docker-1.0.0/
    * Click `macos_stop.command` to stop it (do not forget)
 
 ## Compiling from source code
-### Ubuntu
+Coming soon. Meanwhile, you can look at the [dockerfile](https://gitlab.com/vgg/vise/blob/master/dist/docker/Dockerfile) for some inspiration.
 
-### MacOS
 
-### Building image from Dockerfile
-Ensure that you have docker installed as described above.
-
-```
-cd VISE_SOURCE/dist/docker
-sudo docker build --rm --no-cache=true -t vise:1.0.0 .  # build the VISE image
-sudo docker images -a                                   # to see the list of docker images
-sudo docker run --env USER=$USER --env HOME=$HOME --rm -p 9971:9971 -p 9973:9973 -v ~/:/home/$USER -it vise:1.0.0 ## to run docker image (for Linux)
-sudo docker run --env USER=$USER --env HOME=$HOME -p 9971:9971 -p 9973:9973 -v ~/:/Users/$USER -d vise:1.0.0      ## to run docker image (for MacOS)
-```
-
-Alternatively, you can also pull the docker image from gitlab as follows:
-```
-sudo docker login --username YOUR_GITLAB_USERNAME registry.gitlab.com
-docker pull registry.gitlab.com/vgg/vise/vise:1.0.0
-```
+Abhishek Dutta  
+14 June 2017

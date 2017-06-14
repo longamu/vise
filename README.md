@@ -13,6 +13,9 @@ is developed and maintained by [Abhishek Dutta](adutta@robots.ox.ac.uk).
 This work is supported by EPSRC programme grant Seebibyte: Visual Search for 
 the Era of Big Data ([EP/M013774/1](http://www.seebibyte.org/index.html)).
 
+## Installation
+See [INSTALL](INSTALL.md) for more details.
+
 
 Abhishek Dutta  
 Mar. 10, 2017
