@@ -37,7 +37,7 @@ RUN mkdir -p $VGG_ROOT_DIR $VISE_ROOT_DIR $VISE_CODE_DIR $VISE_DEP_DIR $VISE_DEP
 #
 # Install VISE dependencies
 # 
-RUN apt-get update && apt-get install -y curl libpng12-dev libjpeg-dev cmake ssh openmpi-bin libopenmpi-dev python python-dev python-pip unzip libmagick++-dev libprotobuf-dev protobuf-compiler libboost-atomic-dev libboost-chrono-dev libboost-filesystem-dev libboost-system-dev libboost-thread-dev libboost-timer-dev && pip install cherrypy numpy pillow cython
+RUN apt-get update && apt-get install -y curl libpng12-dev libjpeg-dev cmake ssh openmpi-bin libopenmpi-dev python python-dev python-pip unzip libmagick++-dev libprotobuf-dev protobuf-compiler libboost-atomic-dev libboost-chrono-dev libboost-filesystem-dev libboost-system-dev libboost-thread-dev libboost-timer-dev libcairo2 libcairo2-dev && pip install cherrypy numpy pillow cython
 
 #
 # Compile dependencies (fastann, pypar, etc) and then compile VISE
@@ -59,11 +59,16 @@ RUN /bin/bash -c 'export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/" ; \
  curl -o vise-1.0.0.tar.gz https://gitlab.com/vgg/vise/raw/release/vise-1.0.0.tar.gz ; \
  tar -zxf vise-1.0.0.tar.gz ; cd vise-1.0.0 ; mkdir build ; \
 #
-# Compile pypar and dkmeans
+# Compile pypar and dkmeans (needed for clustering)
 #
  cd $VISE_CODE_DIR"src/external/dkmeans_relja/pypar_2.1.4_94/source" ; \
  python setup.py build ; python setup.py install ; \
  cd $VISE_CODE_DIR"src/external/dkmeans_relja/" ; \
+ python setup.py build ; python setup.py install ; \
+#
+# Compile jpdraw (needed to draw regions and lines in search results)
+#
+ cd $VISE_CODE_DIR"src/external/jp_draw" ; \
  python setup.py build ; python setup.py install ; \
 #
 # Compile VISE

@@ -28,7 +28,7 @@ cd /home/tlm/dev/vise/dist/docker
 ls
   Dockerfile  README.md
 
-sudo time -v docker build --no-cache=true -t vise:1.0.0 .  # build the VISE image
+sudo time -v docker build --rm --no-cache=true -t vise:1.0.0 .  # build the VISE image
 sudo docker images -a
 sudo docker run vise
 sudo docker run -d vise                      # run VISE image in background

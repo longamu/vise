@@ -54,4 +54,19 @@ cd vise_docker-1.0.0/
 
 ### MacOS
 
+### Building image from Dockerfile
+Ensure that you have docker installed as described above.
 
+```
+cd VISE_SOURCE/dist/docker
+sudo docker build --rm --no-cache=true -t vise:1.0.0 .  # build the VISE image
+sudo docker images -a                                   # to see the list of docker images
+sudo docker run --env USER=$USER --env HOME=$HOME --rm -p 9971:9971 -p 9973:9973 -v ~/:/home/$USER -it vise:1.0.0 ## to run docker image (for Linux)
+sudo docker run --env USER=$USER --env HOME=$HOME -p 9971:9971 -p 9973:9973 -v ~/:/Users/$USER -d vise:1.0.0      ## to run docker image (for MacOS)
+```
+
+Alternatively, you can also pull the docker image from gitlab as follows:
+```
+sudo docker login --username YOUR_GITLAB_USERNAME registry.gitlab.com
+docker pull registry.gitlab.com/vgg/vise/vise:1.0.0
+```
