@@ -37,7 +37,7 @@ RUN mkdir -p $VGG_ROOT_DIR $VISE_ROOT_DIR $VISE_CODE_DIR $VISE_DEP_DIR $VISE_DEP
 #
 # Install VISE dependencies
 # 
-RUN apt-get update && apt-get install -y curl libpng12-dev libjpeg-dev cmake ssh openmpi-bin libopenmpi-dev python python-dev python-pip unzip libmagick++-dev libprotobuf-dev protobuf-compiler libboost-atomic-dev libboost-chrono-dev libboost-filesystem-dev libboost-system-dev libboost-thread-dev libboost-timer-dev libcairo2 libcairo2-dev && pip install cherrypy numpy pillow cython
+RUN apt-get update && apt-get install -y curl libpng12-dev libjpeg-dev cmake ssh openmpi-bin libopenmpi-dev python python-dev python-pip unzip libmagick++-dev libprotobuf-dev protobuf-compiler libboost-atomic-dev libboost-chrono-dev libboost-filesystem-dev libboost-system-dev libboost-thread-dev libboost-timer-dev libcairo2 libcairo2-dev git && pip install cherrypy numpy pillow cython
 
 #
 # Compile dependencies (fastann, pypar, etc) and then compile VISE
@@ -56,8 +56,10 @@ RUN /bin/bash -c 'export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/" ; \
 # Download VISE source
 #
  cd $VISE_ROOT_DIR ; \
- curl -o vise-1.0.0.tar.gz https://gitlab.com/vgg/vise/raw/release/vise-1.0.0.tar.gz ; \
- tar -zxf vise-1.0.0.tar.gz ; cd vise-1.0.0 ; mkdir build ; \
+# curl -o vise-1.0.0.tar.gz https://gitlab.com/vgg/vise/raw/release/vise-1.0.0.tar.gz ; \
+# tar -zxf vise-1.0.0.tar.gz ; cd vise-1.0.0 ; mkdir build ; \
+ git clone -b master --single-branch https://gitlab.com/vgg/vise.git ; \
+ mv vise/ vise-1.0.0; cd vise-1.0.0 ; mkdir build ; \
 #
 # Compile pypar and dkmeans (needed for clustering)
 #
