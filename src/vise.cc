@@ -49,6 +49,9 @@ int main(int argc, char** argv) {
     std::cout << "\nCreated VISE_DATA_DIR=" << data_home.string() << std::endl;
   }
 
+  std::cout << "\nVISE_SRC_CODE_DIR = " << vise_src_code_dir.string();
+  std::cout << "\nVISE_DATA_DIR     = " << data_home.string() << std::flush;
+
   ViseServer vise_server( data_home, vise_src_code_dir );
   //vise_server.InitResources( visedata_dir, template_dir );
 
