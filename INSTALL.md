@@ -48,10 +48,11 @@ Now, execute the following scripts to run VISE:
 
 ![To install, drag and drop docker file to Applications](docs/help/docker/img/docker_taskbar_status.png)
 
- 2. Download and extract VISE archive from ./linux_load.sh
+ 2. Download and extract VISE archive from http://www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip
+ 
 ![Download and extract the VISE archive: vise_docker-1.0.0.zip](docs/help/docker/img/extracted_vise_archive.png)
 
- 3. Load VISE docker image and Start/Stop the VISE container to use this application.
+ 3. Click the following scripts :
 ![Download and extract the VISE archive: vise_docker-1.0.0.zip](docs/help/docker/img/extracted_vise_archive.png)
    * Click `macos_load.command` (only the first time) script to load the VISE image container
    * Click `macos_start.command` to start the VISE (or, Image Matcher) tool
