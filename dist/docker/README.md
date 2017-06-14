@@ -29,6 +29,8 @@ ls
   Dockerfile  README.md
 
 sudo time -v docker build --rm --no-cache=true -t vise:1.0.0 .  # build the VISE image
+sudo time -v docker build --rm --no-cache=true -t vise_tmp:1.0.0 .  # build the VISE image
+
 sudo docker images -a
 sudo docker run vise
 sudo docker run -d vise                      # run VISE image in background
@@ -63,6 +65,7 @@ sudo docker create -v ~/ox/vgg --name vgg-shared-store vise:1.0.0-beta /bin/true
 sudo docker volume rm $(sudo docker volume ls -f dangling=true -q)
 
 sudo docker save --output vise-1.0.0.tar vise:1.0.0
+sudo docker save --output vise-1.0.0.tar registry.gitlab.com/vgg/vise:1.0.0
 ```
 
 ## Publishing image to gitlab
@@ -75,7 +78,7 @@ sudo docker push registry.gitlab.com/vgg/vise
 ## Fetching image from gitlab
 ```
 sudo docker login --username thelinuxmaniac registry.gitlab.com
-docker pull registry.gitlab.com/vgg/vise/image:latest
+docker pull registry.gitlab.com/vgg/vise:1.0.0
 ```
 
 Abhishek Dutta  
