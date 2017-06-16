@@ -41,20 +41,18 @@ Now, execute the following scripts to run VISE:
 ```
 
 ### MacOS
- * Install docker
-![Docker Website: to download docker for MacOS](docs/help/docker/img/docker_website_mac_download.png)
-![To install, drag and drop docker file to Applications](docs/help/docker/img/docker_drop_to_applications.png)
-![To install, drag and drop docker file to Applications](docs/help/docker/img/docker_taskbar_status.png)
+ * Install docker as shown in these screenshots:
+   * [Visit docker website to download docker for MacOS](docs/help/docker/img/docker_website_mac_download.png)
+   * [To install, drag and drop docker file to Applications](docs/help/docker/img/docker_drop_to_applications.png)
+   * [Confirm that Docker is running](docs/help/docker/img/docker_taskbar_status.png)
 
  * Download and extract VISE archive from http://www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip
- 
-![Download and extract the VISE archive: vise_docker-1.0.0.zip](docs/help/docker/img/extracted_vise_archive.png)
+   * [Screenshot of extracted folder: vise_docker-1.0.0.zip](docs/help/docker/img/extracted_vise_archive.png)
 
  * The following scripts are provided:
   * Click `macos_load.command` (only the first time) script to load the VISE image container
   * Click `macos_start.command` to start the VISE (or, Image Matcher) tool
   * Click `macos_stop.command` to stop it (do not forget)
-![Download and extract the VISE archive: vise_docker-1.0.0.zip](docs/help/docker/img/extracted_vise_archive.png)
 
 ## Compiling from source code
  * This method requires user to compile and install all the dependant libraries (Boost, Imagemagick, cmake, fastann)
