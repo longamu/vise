@@ -16,6 +16,8 @@ the Era of Big Data ([EP/M013774/1](http://www.seebibyte.org/index.html)).
 ## Installation
 See [INSTALL](INSTALL.md) for more details.
 
+## User Guide
+See [User Guide](UserGuide.md) for more details.
 
 Abhishek Dutta  
 Mar. 10, 2017
