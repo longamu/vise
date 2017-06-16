@@ -24,3 +24,7 @@ This guide assumes that you have already [installed VISE](INSTALL.md).
    * Now, you will see a list of images ranked according to a score (higher score for better matching results)
    * Click *Detailed matches* to see the details of matched image
    * You can compare the query image region with region in search result using *Image Comparison* link at the bottom of this page
+
+   
+Abhishek Dutta  
+16 June 2017
