@@ -64,6 +64,7 @@ Note: MacOS may warn about running scripts downloaded from internet (or unknown 
 ## Known Issues
 ### MacOS
  * `open /vise-1.0.0.tar: no such file or directory` (reported and solved by Paul Trafford)
+
 update the `macos_load.command` so that dirname command returns correct script directory path.
 ```
 SCRIPT_DIR=$(dirname "$0") 
