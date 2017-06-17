@@ -17,7 +17,7 @@ This guide assumes that you have already [installed VISE](INSTALL.md).
    * [Stage-1](docs/help/vise/img/vise_training_stage1.png)
    * [Stage-4](docs/help/vise/img/vise_training_stage4.png)
 
- 7. Once this process completed, you will be automatically forwarded to this URL [http://localhost:9971](http://localhost:9971) as shown in [this screenshot(docs/help/vise/img/vise_load_ox5k.png) -- where the list of images contain your images.
+ 7. Once this process completed, you will be automatically forwarded to this URL [http://localhost:9971](http://localhost:9971) as shown in [this screenshot](docs/help/vise/img/vise_load_ox5k.png) -- where the list of images contain your images.
    * Click on any of the images shown in the list
    * Using mouse, define a rectangular region in the selected image (click and drag to draw a region)
    * Press *Search* button at the bottom of the page
