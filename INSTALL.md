@@ -5,6 +5,7 @@ VISE can be installed in two ways:
    * [MacOS](#macos)
  * [Source code](#compiling-from-source-code)
    * Coming soon. Meanwhile, you can look at the [dockerfile](https://gitlab.com/vgg/vise/blob/master/dist/docker/Dockerfile) for some inspiration.
+ * [Known Issues](#known-issues)
 
 For users without prior knowledge of compiling and installing libraries, we recommend the Docker image based method while 
 for more advanced users, we advise to compile VISE from source code.
@@ -53,10 +54,20 @@ Now, execute the following scripts to run VISE:
   * Click `macos_load.command` (only the first time) script to load the VISE image container
   * Click `macos_start.command` to start the VISE (or, Image Matcher) tool
   * Click `macos_stop.command` to stop it (do not forget)
+ 
+Note: MacOS may warn about running scripts downloaded from internet (or unknown developer).
 
 ## Compiling from source code
  * This method requires user to compile and install all the dependant libraries (Boost, Imagemagick, cmake, fastann)
  * The compiled VISE binaries can be executed by any user (i.e. non Administrative account) and hence is safer.
+
+## Known Issues
+### MacOS
+ * `open /vise-1.0.0.tar: no such file or directory` (reported and solved by Paul Trafford)
+update the `macos_load.command` so that dirname command returns correct script directory path.
+```
+SCRIPT_DIR=$(dirname "$0") 
+```
 
 
 Abhishek Dutta  
