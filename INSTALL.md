@@ -51,11 +51,11 @@ Now, execute the following scripts to run VISE:
    * [Screenshot of extracted folder: vise_docker-1.0.0.zip](docs/help/docker/img/extracted_vise_archive.png)
 
  * The following scripts are provided:
-  * Click `macos_load.command` (only the first time) script to load the VISE image container
-  * Click `macos_start.command` to start the VISE (or, Image Matcher) tool
-  * Click `macos_stop.command` to stop it (do not forget)
+  * Click `macos_load.command` (only required the first time you run the application) script to load the VISE image container
+  * Click `macos_start.command` to start the VISE (also known as Image Matcher) tool
+  * Click `macos_stop.command` to stop it. Do not forget to run this command when your session ends, or VISE will continue to run in the background.
  
-Note: MacOS may warn about running scripts downloaded from internet (or unknown developer).
+Note: MacOS may warn about running an application downloaded from the internet or an unknown developer. This is a default MacOS security feature: it can be bypassed by holding down the Control key and selecting Open: this will bring up a dialogue box permitting you to open the script. 
 
 ## Compiling from source code
  * This method requires user to compile and install all the dependant libraries (Boost, Imagemagick, cmake, fastann)
