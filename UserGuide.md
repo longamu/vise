@@ -8,7 +8,7 @@ This guide assumes that you have already [installed VISE](INSTALL.md).
 
  3. Create a new search engine by typing in the search engine name and pressing the *Create* button as shown in [this screenshot](docs/help/vise/img/vise_training_create_search_engine.png)
 
- 4. You will now be taken to the *Setting* page. Copy all your images -- that you wish to make search-able -- to `$HOME/vgg/mydata/images/` folder as shown in [this screenshot](docs/help/vise/img/vise_training_setting.png). Before pressing the *Submit* button, ensure that all the images are copied correctly in the folder. For example, for MacOS users, this folder can be `/Users/abhishek/vgg/mydata/images/` while for Linux users, this folder can be `/home/abhishek/vgg/mydata/images/`.
+ 4. You will now be taken to the *Setting* page. Copy all your images -- that you wish to make search-able -- to `$HOME/vgg/mydata/images/` folder as shown in [this screenshot](docs/help/vise/img/vise_training_setting.png). Your images *must* be in this folder for VISE to work (you mmay need to create it when running for the first time). Before pressing the *Submit* button, ensure that all the images are copied correctly in the folder. For example, for MacOS users, this folder must be `/Users/abhishek/vgg/mydata/images/` while for Linux users, this folder can be `/home/abhishek/vgg/mydata/images/`.
 
  5. Now you will see an information page which contains the disk-space, memory and time required to make the images searchable as shown in [this screenshot](docs/help/vise/img/vise_training_info.png). If you are happy with these details, proceed ahead by pressing *Proceed*.
 
