@@ -70,6 +70,3 @@ update the `macos_load.command` so that dirname command returns correct script d
 SCRIPT_DIR=$(dirname "$0") 
 ```
 
-
-Abhishek Dutta  
-14 June 2017
