@@ -28,7 +28,7 @@ apt-cache madison docker-ce
 sudo apt-get install docker-ce=17.03.0~ce-0~ubuntu-xenial
 ```
 
- 2. Download and extract VISE archive from http://www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip
+ 2. Download and extract VISE archive from http://www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip . Start `terminal` application and issue the following commands:
 ```
 wget http://www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.0.zip
 unzip vise_docker-1.0.0.zip
