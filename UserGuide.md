@@ -24,3 +24,15 @@ This guide assumes that you have already [installed VISE](INSTALL.md).
    * Now, you will see a list of images ranked according to a score (higher score for better matching results)
    * Click *Detailed matches* to see the details of matched image
    * You can compare the query image region with region in search result using *Image Comparison* link at the bottom of this page
+
+## Known Issues
+ * Create search engine stops responding
+It could be due to one of the following :
+   * `macos_stop.command` (or `linux_stop.sh`) script was not invoked to stop the docker container. You have to now manually stop and remove the docker container as shown below.
+   * Once you have loaded a search engine, you cannot create a new search engine or load an existing search engine. In order to do that, you MUST stop the search engine (as shown below) and start VISE again.
+```
+sudo docker ps -a       # shows the id of active docker containers
+sudo docker stop REPLACE_WITH_VISE_CONTAINER_ID
+sudo docker rm REPLACE_WITH_VISE_CONTAINER_ID
+```
+
