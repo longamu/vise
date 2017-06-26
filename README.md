@@ -19,5 +19,12 @@ See [INSTALL](INSTALL.md) for more details.
 ## User Guide
 See [User Guide](UserGuide.md) for more details.
 
+## Open Source Ecosystem
+This is an open source project and you can be a part of its development by 
+reporting bugs, feature requests at [Issues](https://gitlab.com/vgg/vise/issues). You can 
+also help by improving the [INSTALL](https://gitlab.com/vgg/vise/blob/master/INSTALL.md) 
+and [User Guide](https://gitlab.com/vgg/vise/blob/master/UserGuide.md) based on your experience 
+of installing and using VISE.
+
 Abhishek Dutta  
 Mar. 10, 2017
