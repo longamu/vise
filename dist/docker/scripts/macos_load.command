@@ -12,7 +12,7 @@ else
     echo "(Note: this may take some time)"
     echo "--------------------------------------------------"
     echo ""
-    SCRIPT_DIR=$(dirname $0)
+    SCRIPT_DIR=$(dirname "$0")
 
     sudo docker load --input "${SCRIPT_DIR}/vise-1.0.0.tar" --quiet
 fi
