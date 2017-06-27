@@ -200,8 +200,8 @@ class doSearch:
             # results
             
             if emailFeedback: js_imageNames= [];
-            
-            for (rank, docIDres, score, H) in results:
+
+            for (rank, docIDres, score, metadata, H) in results:
                 
                 boxArg="xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f" % (xl,xu,yl,yu);
                 if H!=None:
@@ -226,6 +226,7 @@ class doSearch:
                     <td>
                         name: %s<br>
                         score: %.6f<br>
+                        metadata: %s<br>
                         %s
                     </td>
                     <td width="210" align="center">
@@ -238,7 +239,7 @@ class doSearch:
                     </td>
                 </tr>
                 <tr><td colspan="4"><hr style="border:dashed; border-width:1px 0 0 0;"></td></tr>
-                """ % (rank+1, hiddenPath, score, \
+                """ % (rank+1, hiddenPath, score, metadata, \
                        detailedMatches, \
                        docIDres, docIDres, boxArg , \
                        tickBox );

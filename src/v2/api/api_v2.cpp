@@ -56,6 +56,8 @@ No usage or redistribution is allowed without explicit permission.
 #include "tfidf_v2.h"
 #include "util.h"
 
+#include "ImageMetadata.h"
+
 /*
 int main(int argc, char* argv[]){
     MPI_INIT_ENV
@@ -79,56 +81,56 @@ void api_v2(std::vector< std::string > argv) {
     int APIport= 35200;
     if (argc>1) APIport= atoi(argv[1].c_str());
     std::cout<<"APIport= "<<APIport<<"\n";
-    
+
     std::string dsetname= "oxMini20_v2";
     if (argc>2) dsetname= argv[2];
-    
+
     std::string configFn= "../src/ui/web/config/config.cfg";
     if (argc>3) configFn= argv[3];
-    
+
     std::string vise_src_code_dir = "";
     if (argc>4) vise_src_code_dir = argv[4];
 
     configFn= util::expandUser(configFn);
     std::string tempConfigFn= util::getTempFileName();
     pythonCfgToIni( configFn, tempConfigFn );
-    
+
     boost::property_tree::ptree pt;
     boost::property_tree::ini_parser::read_ini(tempConfigFn, pt);
-    
+
     // ------------------------------------ read config
-    
+
     std::string const dsetFn= util::expandUser(pt.get<std::string>( dsetname+".dsetFn" ));
     boost::optional<std::string> const clstFn= pt.get_optional<std::string>( dsetname+".clstFn" );
     std::string const iidxFn= util::expandUser(pt.get<std::string>( dsetname+".iidxFn" ));
     std::string const fidxFn= util::expandUser(pt.get<std::string>( dsetname+".fidxFn" ));
     std::string const wghtFn= util::expandUser(pt.get<std::string>( dsetname+".wghtFn" ));
     boost::optional<std::string> const trainFilesPrefix= pt.get_optional<std::string>( util::expandUser( dsetname+".trainFilesPrefix" ));
-    
+
     boost::optional<uint32_t> const hammEmbBits= pt.get_optional<uint32_t>( dsetname+".hammEmbBits" );
     bool const useHamm= hammEmbBits.is_initialized();
-    
+
     std::string const docMapFindPath= pt.get<std::string>( dsetname+".docMapFindPath", "" );
     boost::optional<std::string> const docMapReplacePath= pt.get_optional<std::string>( dsetname+".docMapReplacePath" );
     std::string databasePath= pt.get<std::string>( dsetname+".databasePath", "");
     ASSERT( !(docMapReplacePath.is_initialized() && databasePath.length()>0) );
     if (docMapReplacePath.is_initialized())
         databasePath= *docMapReplacePath;
-    
+
     bool useRootSIFT= pt.get<bool>(dsetname+".RootSIFT", true);
-    
+
     remove(tempConfigFn.c_str());
-    
+
     datasetV2 dset( dsetFn, databasePath, docMapFindPath ); // needed for register
-    
+
     std::cout<<dset.getFn( 0 )<<"\n";;
-    
-    
+
+
     sequentialConstructions *consQueue= new sequentialConstructions();
-    
-    
+
+
     // Set up forward index
-    
+
     #if 0
         protoDbFile dbFidx_file(fidxFn);
         protoDbInRam dbFidx(dbFidx_file);
@@ -137,15 +139,15 @@ void api_v2(std::vector< std::string > argv) {
         boost::function<protoDb*()> fidxInRamConstructor= boost::lambda::bind(
             boost::lambda::new_ptr<protoDbInRam>(),
             boost::cref(*dbFidx_file) );
-        
+
         protoDbInRamStartDisk dbFidx( *dbFidx_file, fidxInRamConstructor, true, consQueue );
     #endif
-    
+
     protoIndex fidx(dbFidx, false);
-    
-    
+
+
     // Set up inverted index
-    
+
     #if 0
         protoDbFile dbIidx_file(iidxFn);
         protoDbInRam dbIidx(dbIidx_file);
@@ -154,27 +156,27 @@ void api_v2(std::vector< std::string > argv) {
         boost::function<protoDb*()> iidxInRamConstructor= boost::lambda::bind(
             boost::lambda::new_ptr<protoDbInRam>(),
             boost::cref(*dbIidx_file) );
-        
+
         protoDbInRamStartDisk dbIidx( *dbIidx_file, iidxInRamConstructor, true, consQueue );
-        
+
     #endif
-    
+
     protoIndex iidx(dbIidx, false);
-    
-    
+
+
     // start the construction of inRam stuff
     consQueue->start();
-    
-    
+
+
     // feature getter / assigner
-    
+
     featGetter *featGetter_obj= NULL;
     clstCentres *clstCentres_obj= NULL;
     fastann::nn_obj<float> const *nn= NULL;
     softAssigner *SA= NULL;
-    
+
     if (clstFn.is_initialized()){
-        
+
         // feature getter
         bool SIFTscale3= pt.get<bool>( dsetname+".SIFTscale3", true);
         featGetter_obj= new featGetter_standard( (
@@ -182,17 +184,17 @@ void api_v2(std::vector< std::string > argv) {
             std::string((useRootSIFT ? "rootsift" : "sift")) +
             std::string(SIFTscale3 ? "-scale3" : "")
             ).c_str() );
-        
+
         // clusters
         std::cout<<"apiV2::main: Loading cluster centres\n";
         double t0= timing::tic();
         clstCentres_obj= new clstCentres( util::expandUser(*clstFn).c_str(), true );
 	//std::cout<<"Yes:"<<clstFn<<'\n';
         std::cout<<"apiV2::main: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
-        
+
         std::cout<<"apiV2::main: Constructing NN search object\n";
         t0= timing::tic();
-        
+
         nn=
         #if 1
             fastann::nn_obj_build_kdtree(
@@ -206,7 +208,7 @@ void api_v2(std::vector< std::string > argv) {
                 clstCentres_obj->numDims);
         #endif
         std::cout<<"apiV2::main: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
-        
+
         // soft assigner
         if (!useHamm) {
             if (useRootSIFT)
@@ -234,8 +236,8 @@ void api_v2(std::vector< std::string > argv) {
 
 
     }
-    
-    
+
+
     // embedder
     embedderFactory *embFactory= NULL;
     if (useHamm){
@@ -243,12 +245,12 @@ void api_v2(std::vector< std::string > argv) {
         std::string const trainFilesPrefix= util::expandUser(pt.get<std::string>( dsetname+".trainFilesPrefix" ));
         //std::string const trainHammFn= trainFilesPrefix + util::uintToShortStr(vocSize) + "_hamm" + boost::lexical_cast<std::string>(*hammEmbBits) + ".v2bin";
         std::string const trainHammFn= trainFilesPrefix + "hamm.v2bin";
-        
+
         embFactory= new hammingEmbedderFactory(trainHammFn, *hammEmbBits);
     }
     else
         embFactory= new noEmbedderFactory;
-    
+
     // create retrievers
     retrieverFromIter *baseRetriever;
     hamming *hammingObj= NULL;
@@ -256,7 +258,7 @@ void api_v2(std::vector< std::string > argv) {
         &iidx, &fidx, wghtFn,
         featGetter_obj, nn, SA);
         // but need SA too featGetter_obj, nn);
-    
+
     if (useHamm){
         hammingObj= new hamming(
             tfidfObj,
@@ -272,26 +274,30 @@ void api_v2(std::vector< std::string > argv) {
     spatialVerifV2 spatVerifObj(
         *baseRetriever, &iidx, &fidx, true,
         featGetter_obj, nn, clstCentres_obj);
-    
+
     // multiple queries
-    
+
     multiQueryMax mqOrig( spatVerifObj );
     mqFilterOutliers *mqFilter= NULL;
     multiQuery *mq;
-    
+
     if (hammingObj!=NULL){
         mqFilter= new mqFilterOutliers(
                         mqOrig,
                         spatVerifObj,
                         *dynamic_cast<hammingEmbedderFactory const *>(embFactory) );
         mq= mqFilter;
-    } else
+    } else {
         mq= &mqOrig;
-    
+    }
+
+    // ImageMetadata
+    boost::filesystem::path metadata_fn("/home/tlm/vgg/vise/search_engines/15c_bt/training_data/image_annotations.csv");
+    ImageMetadata::Instance()->LoadMetadata( metadata_fn );
+
     // API object
-    
-    API API_obj( spatVerifObj, mq, dset );
-    
+    API API_obj( spatVerifObj, mq, dset);
+
     // start
     boost::asio::io_service io_service;
 
@@ -301,16 +307,16 @@ void api_v2(std::vector< std::string > argv) {
     ViseMessageQueue::Instance()->Push( s.str() );
 
     API_obj.server(io_service, APIport, dsetname, configFn, vise_src_code_dir);
-    
+
     // make sure this is deleted before everything which uses it
     delete consQueue;
-    
+
     if (hammingObj!=NULL){
         delete hammingObj;
         delete mqFilter;
     }
     delete embFactory;
-    
+
     if (clstCentres_obj!=NULL){
         delete nn;
         delete clstCentres_obj;
@@ -318,6 +324,5 @@ void api_v2(std::vector< std::string > argv) {
         if (!useHamm)
             delete SA;
     }
-    
-}
 
+}

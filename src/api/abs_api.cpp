@@ -100,12 +100,12 @@ absAPI::session( socket_ptr sock ){
 
     } else {
 
-//         std::cout<< timing::getTimeString() <<" Request= "<<request<<"\n";
+         std::cout<< timing::getTimeString() <<" Request= "<<request<<"\n";
 //        std::cout<< timing::getTimeString() <<" Request= "<< request.substr(0,300) << ( request.length()>300 ? " (...) \n" : "\n" ) ;
 
         reply= getReply(pt, request);
 
-//         std::cout<<"Response= "<<reply<<"\n";
+         std::cout<<"Response= "<<reply<<"\n";
 //        std::cout<<"Response= "<< reply.substr(0,300) << ( reply.length()>300 ? " (...) \n" : "\n" ) ;
         std::cout<<timing::getTimeString()<<" Request - DONE ("<< timing::toc(t0) <<" ms)\n";
     }

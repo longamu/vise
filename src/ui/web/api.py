@@ -386,11 +386,13 @@ class resultParser:
             
             docID= int(attrs.get("docID"));
             score= float(attrs.get("score"));
+            metadata= attrs.get("metadata");
+
             if "H" in attrs:
                 H=attrs.get("H");
             else:
                 H= None;
-            self.results.append( (rank, docID,score,H) );
+            self.results.append( (rank, docID,score,metadata,H) );
             
             self.currRank+=1;
 

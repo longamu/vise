@@ -52,6 +52,16 @@ int main(int argc, char** argv) {
   std::cout << "\nVISE_SRC_CODE_DIR = " << vise_src_code_dir.string();
   std::cout << "\nVISE_DATA_DIR     = " << data_home.string() << std::flush;
 
+  /*
+  // debug : ImageMetadata
+  boost::filesystem::path metadata_fn("/home/tlm/vgg/vise/search_engines/15c_bt/training_data/image_annotations.csv");
+  ImageMetadata imd(metadata_fn);
+  double x0y0x1y1[4] = {410, 500, 560, 900};
+  std::string metadata;
+  imd.GetImageMetadata( "ia00150400_02012307_h8v.jpg", x0y0x1y1, 0.6, metadata);
+  std::cout << "\n" << metadata << std::flush;
+  */
+
   ViseServer vise_server( data_home, vise_src_code_dir );
   //vise_server.InitResources( visedata_dir, template_dir );
 
