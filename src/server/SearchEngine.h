@@ -101,6 +101,7 @@ public:
   boost::filesystem::path original_imgdir_;
   boost::filesystem::path transformed_imgdir_;
   boost::filesystem::path imglist_fn_;
+  boost::filesystem::path preprocess_log_fn_;
   std::vector< std::string > imglist_;
   std::vector< unsigned int > imglist_fn_original_size_;
   std::vector< unsigned int > imglist_fn_transformed_size_;

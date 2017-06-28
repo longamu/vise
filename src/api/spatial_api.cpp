@@ -45,7 +45,7 @@ void HomographyPointTransform( double H[], const double x, const double y, doubl
 
 void HomographyTransform( double H[],
                           double   x0, double   y0, double   x1, double   y1,
-                          unsigned int &tx0, unsigned int &ty0, unsigned int &tx1, unsigned int &ty1) {
+                          double &tx0, double &ty0, double &tx1, double &ty1) {
 
   double x_H_tx[4] = {0.0, 0.0, 0.0, 0.0};
   double y_H_tx[4] = {0.0, 0.0, 0.0, 0.0};
@@ -55,10 +55,10 @@ void HomographyTransform( double H[],
   HomographyPointTransform( H, x1   , y1   , x_H_tx[2], y_H_tx[2] );
   HomographyPointTransform( H, x0   , y1   , x_H_tx[3], y_H_tx[3] );
 
-  tx0 = (unsigned int) *std::min_element( x_H_tx, x_H_tx+3 );
-  ty0 = (unsigned int) *std::min_element( y_H_tx, y_H_tx+3 );
-  tx1 = (unsigned int) *std::max_element( x_H_tx, x_H_tx+3 );
-  ty1 = (unsigned int) *std::max_element( y_H_tx, y_H_tx+3 );
+  tx0 = (double) *std::min_element( x_H_tx, x_H_tx+3 );
+  ty0 = (double) *std::min_element( y_H_tx, y_H_tx+3 );
+  tx1 = (double) *std::max_element( x_H_tx, x_H_tx+3 );
+  ty1 = (double) *std::max_element( y_H_tx, y_H_tx+3 );
   //std::cout << "\nViseServer::HomographyTransform() : tx0=" << tx0 << ", ty0=" << ty0 << ", tx1=" << tx1 << ", ty1=" << ty1 << std::flush;
 }
 
@@ -125,7 +125,8 @@ API::ReturnAnnotatedResults( std::vector<indScorePair> const &queryRes, std::map
     docID= queryRes[iRes].first;
     siftScore = queryRes[iRes].second;
 
-    std::string metadata = "";
+    std::string metadata_str = "";
+    std::string metadata_region_str = "";
     if ( Hs!=NULL && Hs->count( docID ) ){
       Hs->find( docID )->second.exportToDoubleArray( h );
       Hstr= (boost::format( "H=\"%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\"" )
@@ -135,22 +136,22 @@ API::ReturnAnnotatedResults( std::vector<indScorePair> const &queryRes, std::map
       // document_fn = ? (find document filename)
       boost::filesystem::path res_full_fn( dataset_->getFn( docID ) );
       std::string res_fn = dataset_->getInternalFn( docID );
-      std::cout << "\n\n\tdocid = " << docID << " : " << res_fn << std::flush;
+      //std::cout << "\n\n\tdocid = " << docID << " : " << res_fn << std::flush;
 
       // determine the region corresponding to H : result_region
       //get (x0,y0) and (x1,y1) for original query image
       double x0 = query.xl; double y0 = query.yl;
       double x1 = query.xu; double y1 = query.yu;
 
-      unsigned int tx0, ty0, tx1, ty1; // contains the match region transformed to result image space
+      double tx0, ty0, tx1, ty1; // contains the match region transformed to result image space
       HomographyTransform( h, x0,  y0,  x1,  y1, tx0, ty0, tx1, ty1);
 
-      std::cout << "\n\tHstr = " << Hstr << std::flush;
-      std::cout << "\n\t(x0,y0) = (" << x0 << "," << y0 << ") (x1,y1) = (" << x1 << "," << y1 << ")" << std::flush;
-      std::cout << "\n\t(tx0,ty0) = (" << tx0 << "," << ty0 << ") (tx1,ty1) = (" << tx1 << "," << ty1 << ")" << std::flush;
+      //std::cout << "\n\tHstr = " << Hstr << std::flush;
+      //std::cout << "\n\t(x0,y0) = (" << x0 << "," << y0 << ") (x1,y1) = (" << x1 << "," << y1 << ")" << std::flush;
+      //std::cout << "\n\t(tx0,ty0) = (" << tx0 << "," << ty0 << ") (tx1,ty1) = (" << tx1 << "," << ty1 << ")" << std::flush;
 
-      double tx0y0x1y1[4] = {tx0, ty0, tx1, ty1};
-      ImageMetadata::Instance()->GetImageMetadata( res_fn, tx0y0x1y1, 0.5, metadata);
+      ImageMetadata::Instance()->GetImageMetadata( res_fn, tx0, ty0, tx1, ty1, 0.5, metadata_str, metadata_region_str);
+      //std::cout << "\n\n\tmetadata = " << metadata << std::flush;
       // read annotation.csv, locate record for document_fn
       // check if any region in annotations overlap with result_region,
       // if yes, store the region attribute in metadata
@@ -159,16 +160,18 @@ API::ReturnAnnotatedResults( std::vector<indScorePair> const &queryRes, std::map
       Hstr= "";
     }
 
-    output+= (boost::format( "<result rank=\"%d\" docID=\"%d\" score=\"%.4f\" metadata=\"%s\" %s/>" )
+    output+= (boost::format( "<result rank=\"%d\" docID=\"%d\" score=\"%.4f\" metadata=\"%s\" metadata_region=\"%s\" %s />" )
               % iRes
               % docID
               % siftScore
-              % metadata
+              % metadata_str
+              % metadata_region_str
               % Hstr
               ).str();
   }
 
   output+= "</results>";
+  std::cout << "\n\nResponse = \n" << output << std::flush;
 }
 
 

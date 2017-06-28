@@ -76,6 +76,7 @@ class API:
         parser= xml.parsers.expat.ParserCreate();
         resultParser_obj= resultParser();
         parser.StartElementHandler= resultParser_obj.startHandler;
+
         parser.Parse(reply,1);
         
         results= resultParser_obj.results;
@@ -386,16 +387,21 @@ class resultParser:
             
             docID= int(attrs.get("docID"));
             score= float(attrs.get("score"));
-            metadata= attrs.get("metadata");
+
+            if "metadata" in attrs:
+              metadata= attrs.get("metadata");
+              metadata_region= attrs.get("metadata_region");
+            else:
+              metadata = None;
+              metadata_region = None;
 
             if "H" in attrs:
                 H=attrs.get("H");
             else:
                 H= None;
-            self.results.append( (rank, docID,score,metadata,H) );
+            self.results.append( (rank, docID,score,metadata,metadata_region,H) );
             
             self.currRank+=1;
-
 
 
 class matchesParser:

@@ -293,7 +293,9 @@ void api_v2(std::vector< std::string > argv) {
 
     // ImageMetadata
     boost::filesystem::path metadata_fn("/home/tlm/vgg/vise/search_engines/15c_bt/training_data/image_annotations.csv");
+    boost::filesystem::path preprocess_fn("/home/tlm/vgg/vise/search_engines/15c_bt/training_data/preprocess_log.csv");
     ImageMetadata::Instance()->LoadMetadata( metadata_fn );
+    ImageMetadata::Instance()->LoadPreprocessData( preprocess_fn );
 
     // API object
     API API_obj( spatVerifObj, mq, dset);
