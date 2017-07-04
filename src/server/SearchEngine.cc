@@ -93,17 +93,28 @@ void SearchEngine::Preprocess() {
             s << transformed_img_width;
             unsigned int new_width;
             s >> new_width;
-            unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
 
-            Magick::Geometry resize = Magick::Geometry(new_width, new_height);
-            im.zoom( resize );
+            if ( new_width < size.width() ) {
+              unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
 
-            im.write( dest_fn.string() );
-            imglist_fn_transformed_size_.at(i) = boost::filesystem::file_size(dest_fn.string().c_str());
+              Magick::Geometry resize = Magick::Geometry(new_width, new_height);
+              im.zoom( resize );
 
-            // to avoid overflow of the message queue
-            if ( (i % 5) == 0 ) {
-              SendProgress( "Preprocess", i+1, imglist_.size() );
+              im.write( dest_fn.string() );
+              imglist_fn_transformed_size_.at(i) = boost::filesystem::file_size(dest_fn.string().c_str());
+              // to avoid overflow of the message queue
+              if ( (i % 5) == 0 ) {
+                SendProgress( "Preprocess", i+1, imglist_.size() );
+              }
+            } else {
+              // copy the original image since original image is already smaller than requested size
+              boost::filesystem::copy_file( src_fn, dest_fn );
+              imglist_fn_transformed_size_.at(i) = imglist_fn_original_size_.at(i);
+
+              // to avoid overflow of the message queue
+              if ( (i % 50) == 0 ) {
+                SendProgress( "Preprocess", i+1, imglist_.size() );
+              }
             }
           } else {
             // just copy the files
