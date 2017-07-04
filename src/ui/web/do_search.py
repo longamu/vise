@@ -223,7 +223,8 @@ class doSearch:
                 ## convert metadata to HTML
                 metadata_html = "";
                 if metadata != None:
-                  boxArg+= "&metadata_region=" + metadata_region;
+                  if metadata_region != "":
+                    boxArg+= "&metadata_region=" + metadata_region;
                   metadata_tokens = metadata.split("__SEP__");
                   for metadata_i in metadata_tokens :
                     keyval = metadata_i.split("__KEYVAL_SEP__");

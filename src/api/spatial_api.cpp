@@ -171,7 +171,7 @@ API::ReturnAnnotatedResults( std::vector<indScorePair> const &queryRes, std::map
   }
 
   output+= "</results>";
-  std::cout << "\n\nResponse = \n" << output << std::flush;
+  //std::cout << "\n\nResponse = \n" << output << std::flush;
 }
 
 

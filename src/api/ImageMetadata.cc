@@ -124,10 +124,10 @@ void ImageMetadata::GetImageMetadata(std::string image_fn,
     ry1 = ry1 * sy;
 
     for ( unsigned int i=0; i < it->second.size(); i++ ) {
-      std::cout << "\n  Region " << (i+1) << std::flush;
+      //std::cout << "\n  Region " << (i+1) << std::flush;
       //it->second.at(i).PrintRegionMetadata();
       double iou = it->second.at(i).IOU( rx0, ry0, rx1, ry1 );
-      std::cout << "\n  IOU = " << iou << std::flush;
+      //std::cout << "\n  IOU = " << iou << std::flush;
 
       if ( iou >= overlap_threshold ) {
         it->second.at(i).GetMetadataString( metadata_str );
@@ -141,7 +141,7 @@ void ImageMetadata::GetImageMetadata(std::string image_fn,
         s << (int) mx0 << "," << (int) my0 << "," << (int) mx1 << "," << (int) my1;
         metadata_region_str = s.str();
 
-        std::cout << "(** Matched thresdhold = " << overlap_threshold << ")";
+        //std::cout << "(** Matched thresdhold = " << overlap_threshold << ")";
         break;
       }
       std::cout << std::endl;
@@ -299,8 +299,8 @@ void ImageRegionMetadata::GetMetadataString(std::string& metadata_string) {
 
 // compute intersection over union
 double ImageRegionMetadata::IOU(double rx0, double ry0, double rx1, double ry1) {
-  printf("\n  region = %f,%f,%f,%f", region_[0], region_[1], region_[2], region_[3]);
-  printf("\n  query  = %f,%f,%f,%f", rx0, ry0, rx1, ry1);
+  //printf("\n  region = %f,%f,%f,%f", region_[0], region_[1], region_[2], region_[3]);
+  //printf("\n  query  = %f,%f,%f,%f", rx0, ry0, rx1, ry1);
 
   // intersection
   double ix0 = fmax( region_[0], rx0 );
@@ -313,6 +313,6 @@ double ImageRegionMetadata::IOU(double rx0, double ry0, double rx1, double ry1) 
   double union_area1 = fabs( (region_[2] - region_[0]) * (region_[3] - region_[1]) );
   double union_area2 = fabs( (rx1 - rx0) * (ry1 - ry0) );
   double union_area = union_area1 + union_area2 - intersection_area;
-  std::cout << "\n  intersection = " << intersection_area << ", union = " << union_area << std::flush;
+  //std::cout << "\n  intersection = " << intersection_area << ", union = " << union_area << std::flush;
   return intersection_area / union_area;
 }
