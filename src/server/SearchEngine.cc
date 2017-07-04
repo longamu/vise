@@ -381,7 +381,14 @@ void SearchEngine::CreateFileList() {
         std::tolower( fn_ext.at(i), locale );
       }
 
-      if ( acceptable_img_ext_.count( fn_ext ) == 1 ) {
+      // avoid hidden filenames
+      bool filename_starts_with_dot = false;
+      if ( p.filename().string()[0] == '.' ) {
+        filename_starts_with_dot = true;
+      }
+
+      if ( acceptable_img_ext_.count( fn_ext ) == 1 &&
+           !filename_starts_with_dot) {
         imglist_.push_back( rel_fn.string() );
         imglist_fn_original_size_.push_back( boost::filesystem::file_size( p ) );
         imglist_fn_transformed_size_.push_back( 0 );

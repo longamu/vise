@@ -12,6 +12,8 @@ ViseMessageQueue* ViseMessageQueue::Instance() {
 void ViseMessageQueue::Push( const std::string &d ) {
   boost::mutex::scoped_lock lock(mtx_);
   messages_.push( d );
+  std::cout << "\nViseMessageQueue::Push() : pushed msg = [" << d << "] "
+            << ", messages_.size()=" << messages_.size() << std::flush;
   lock.unlock();
   queue_condition_.notify_one();
 }

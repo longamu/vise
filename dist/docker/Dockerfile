@@ -56,12 +56,12 @@ RUN /bin/bash -c 'export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/" ; \
 # Download VISE source
 #
  cd $VISE_ROOT_DIR ; \
- curl -o vise-1.0.0.tar.gz https://gitlab.com/vgg/vise/raw/release/vise-1.0.0.tar.gz ; \
- tar -zxf vise-1.0.0.tar.gz ; cd vise-1.0.0 ; mkdir build ; \
+# curl -o vise-1.0.1.tar.gz https://gitlab.com/vgg/vise/raw/release/vise-1.0.1.tar.gz ; \
+# tar -zxf vise-1.0.1.tar.gz ; cd vise-1.0.1 ; mkdir build ; \
 #
 # uncomment the lines below if you wish to try out the latest master branch (may not be stable)
-# git clone -b master --single-branch https://gitlab.com/vgg/vise.git ; \
-# mv vise/ vise-1.0.0 ; cd vise-1.0.0 ; mkdir build ; \
+git clone -b master --single-branch https://gitlab.com/vgg/vise.git ; \
+mv vise/ vise-1.0.1 ; cd vise-1.0.1 ; mkdir build ; \
 #
 #
 # Compile pypar and dkmeans (needed for clustering)

@@ -260,18 +260,25 @@ bool ViseServer::Stop() {
 }
 
 void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
-  char http_buffer[1024];
+  //char http_buffer[1024];
+  char http_buffer[2048];
 
   // get the http_method : {GET, POST, ...}
   size_t len = p_socket->read_some(boost::asio::buffer(http_buffer), error_);
   if ( error_ ) {
-    std::cerr << "\nViseServer::HandleConnection() : error using read_some()\n"
-              << error_.message() << std::flush;
+    std::cerr << "\nViseServer::HandleConnection() : error using read_some(), error=["
+              << error_.message() << "], closing connection." << std::flush;
+    p_socket->close();
+    return;
   }
   std::string http_method  = std::string(http_buffer, 4);
   std::string http_request = std::string(http_buffer, len);
   std::string http_method_uri;
   ExtractHttpResource(http_request, http_method_uri);
+
+  std::cout << "\nViseServer::HandleConnection() : "
+            << "[" << http_method << "] " << http_method_uri
+            << " (read " << len << " bytes)" << std::flush;
 
   if ( http_method == "GET " ) {
     if ( http_method_uri == "" ) {
@@ -331,7 +338,13 @@ void ViseServer::HandleConnection(boost::shared_ptr<tcp::socket> p_socket) {
       //
       // @todo: improve this design of message queue
 
+      std::cout << "\n[Thread " << boost::this_thread::get_id() << "] : "
+                << "blocked by ViseMessageQueue::Instance()->BlockingPop()"
+                << " (ViseMessageQueue::GetSize() = " << ViseMessageQueue::Instance()->GetSize() << ")" << std::flush;
       std::string msg = ViseMessageQueue::Instance()->BlockingPop();
+      std::cout << "\n[Thread " << boost::this_thread::get_id() << "] : "
+                << "unblocked with msg = [" << msg << "]"
+                << " (ViseMessageQueue::GetSize() = " << ViseMessageQueue::Instance()->GetSize() << ")" << std::flush;
       SendRawResponse( "text/plain", msg, p_socket );
       p_socket->close();
       return;
