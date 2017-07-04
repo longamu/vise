@@ -5,11 +5,11 @@ echo "Uninstalling VISE (docker image and data files)   "
 echo "--------------------------------------------------"
 
 if [[ $(sudo docker images vise:1.0.0 -q) ]]; then
-    sudo docker stop `sudo docker ps --filter ancestor=registry.gitlab.com/vgg/vise/vise:1.0.1 -q`
-    sudo docker rm `sudo docker ps --filter ancestor=registry.gitlab.com/vgg/vise/vise:1.0.1 -q`
+    sudo docker stop `sudo docker ps --filter ancestor=vise:1.0.1 -q`
+    sudo docker rm `sudo docker ps --filter ancestor=vise:1.0.1 -q`
 
     echo "Removing docker image ..."
-    sudo docker rmi `sudo docker images vise:1.0.0 -q` -f
+    sudo docker rmi `sudo docker images vise:1.0.1 -q` -f
 fi
 
 VISE_DIR=$HOME"/vgg/vise"

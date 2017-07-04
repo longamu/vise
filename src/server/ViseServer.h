@@ -188,6 +188,7 @@ class ViseServer {
   boost::filesystem::path vise_training_stat_fn_;
 
   std::ofstream training_stat_f;
+  std::ofstream training_log_f;
   void AddTrainingStat(std::string dataset_name, std::string state_name, unsigned long time_sec, unsigned long space_bytes);
 
  public:

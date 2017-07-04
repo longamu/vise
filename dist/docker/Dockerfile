@@ -3,7 +3,7 @@
 # (VISE).
 #
 # Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
-# Date: 05 June 2017
+# Date: 04 July 2017
 #
 
 #
@@ -15,7 +15,7 @@ FROM debian:jessie
 #
 # Define image labels
 #
-LABEL name="VGG Image Search Engine" codename="VISE" version="1.0.0" maintainer="Abhishek Dutta <adutta@robots.ox.ac.uk>" description="VGG Image Search Engine (VISE) enables image instance based search of a large collection of images."
+LABEL name="VGG Image Search Engine" codename="VISE" version="1.0.1" maintainer="Abhishek Dutta <adutta@robots.ox.ac.uk>" description="VGG Image Search Engine (VISE) enables image instance based search of a large collection of images."
 
 #
 # Define ports used by VISE
@@ -27,7 +27,7 @@ EXPOSE 9971 9973
 #
 # Define environment variables
 #
-ENV VGG_ROOT_DIR="/opt/ox/vgg/" VISE_ROOT_DIR="/opt/ox/vgg/vise/" VISE_CODE_DIR="/opt/ox/vgg/vise/vise-1.0.0/" VISE_DEP_DIR="/opt/ox/vgg/vise/build_deps/" VISE_DEP_LIBDIR="/opt/ox/vgg/vise/build_deps/lib/" VISE_DEP_SRCDIR="/opt/ox/vgg/vise/build_deps/tmp_libsrc/"
+ENV VGG_ROOT_DIR="/opt/ox/vgg/" VISE_ROOT_DIR="/opt/ox/vgg/vise/" VISE_CODE_DIR="/opt/ox/vgg/vise/vise-1.0.1/" VISE_DEP_DIR="/opt/ox/vgg/vise/build_deps/" VISE_DEP_LIBDIR="/opt/ox/vgg/vise/build_deps/lib/" VISE_DEP_SRCDIR="/opt/ox/vgg/vise/build_deps/tmp_libsrc/"
 
 #
 # Prepare environment variables

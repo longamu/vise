@@ -138,7 +138,17 @@ ViseServer::ViseServer( boost::filesystem::path vise_datadir, boost::filesystem:
   if ( append_csv_header ) {
     training_stat_f << "date,time,dataset_name,img_count,state_name,time_sec,space_bytes";
   }
-  std::cout << "\nvise_training_stat_fn_ = " << vise_training_stat_fn_ << std::flush;
+  std::cout << "\nTraining time statistics being saved to : " << vise_training_stat_fn_ << std::flush;
+
+  boost::filesystem::path training_log_fn = vise_logdir_ / "training.log";
+  std::cout << "\nTraining log being saved to : " << training_log_fn.string() << std::flush;
+  training_log_f.open( training_log_fn.string().c_str(), std::ofstream::out);
+  std::time_t t = std::time(NULL);
+  char date_str[100];
+  std::strftime(date_str, sizeof(date_str), "%a, %d %b %Y %H:%M:%S %Z", std::gmtime(&t));
+  training_log_f << "Log date : " << date_str << std::endl;
+  std::cout.rdbuf( training_log_f.rdbuf());
+  std::cerr.rdbuf( training_log_f.rdbuf());
 
   LoadStateComplexityModel();
 
@@ -148,6 +158,7 @@ ViseServer::ViseServer( boost::filesystem::path vise_datadir, boost::filesystem:
 ViseServer::~ViseServer() {
   // for logging statistics
   training_stat_f.close();
+  training_log_f.close();
 }
 
 std::string ViseServer::GetStateComplexityInfo() {

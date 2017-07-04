@@ -25,7 +25,7 @@ if [ ! -h "${HOME}/Desktop/vgg" ]; then
   ln -s "${VGG_DIR}" "${HOME}/Desktop/vgg"
 fi
 
-if [[ $(sudo docker images -q registry.gitlab.com/vgg/vise/vise:1.0.1) ]]; then
+if [[ $(sudo docker images -q vise:1.0.1) ]]; then
     echo "--------------------------------------------------"
     echo "VISE Docker image is already loaded."
     echo "Recall that you have to run the load script only once"
