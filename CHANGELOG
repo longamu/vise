@@ -1,3 +1,8 @@
+## [1.0.1] - July 05, 2017
+ * fixed issues with load, start, stop and uninstall scripts
+ * debugging log saved to $HOME/vgg/vise/log/training.log
+ * user images are resized *only* if > 1024px
+
 ## [1.0.0] - June 15, 2017
  * a web based user interface to index new images
 

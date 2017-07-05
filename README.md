@@ -13,6 +13,10 @@ is developed and maintained by [Abhishek Dutta](adutta@robots.ox.ac.uk).
 This work is supported by EPSRC programme grant Seebibyte: Visual Search for 
 the Era of Big Data ([EP/M013774/1](http://www.seebibyte.org/index.html)).
 
+## Downloads
+ * [vise-1.0.1.zip](http://www.robots.ox.ac.uk/~vgg/software/vise/downloads/docker/vise_docker-1.0.1.zip) : VISE docker image and execution scripts
+ * https://gitlab.com/vgg/vise/ : source code repository
+
 ## Installation
 See [INSTALL](INSTALL.md) for more details.
 

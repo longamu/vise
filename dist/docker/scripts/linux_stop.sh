@@ -1,7 +1,7 @@
 #!/bin/bash
 echo ""
 echo "--------------------------------------------------"
-echo "Shutting down all docker containers"
+echo "Shutting down VISE 1.0.1 docker container"
 echo "(This may take some time)"
 echo "--------------------------------------------------"
 echo ""

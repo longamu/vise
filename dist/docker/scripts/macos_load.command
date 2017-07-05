@@ -1,7 +1,7 @@
 #!/bin/bash
 
 VGG_DIR="$HOME/vgg"
-VGG_MYDATA_DIR="$HOME/vgg/mydata"
+VGG_MYDATA_DIR="$HOME/vgg/mydata/images"
 VGG_VISE_DIR="$HOME/vgg/vise"
 
 if [ ! -d "${VGG_DIR}" ]; then
@@ -33,7 +33,7 @@ if [[ $(sudo docker images -q vise:1.0.1) ]]; then
 else 
     echo ""
     echo "--------------------------------------------------"
-    echo "Loading VISE docker image ..."
+    echo "Loading VISE 1.0.1 docker image ..."
     echo "(Note: this may take some time)"
     echo "--------------------------------------------------"
     echo ""

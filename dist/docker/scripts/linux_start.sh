@@ -1,16 +1,16 @@
 #!/bin/bash
 
-if [[ $(sudo docker ps --filter ancestor=vise:1.0.1 -q) ]]; then
+if [[ $(sudo docker ps --filter ancestor=vise:1.0.1 -a -q) ]]; then
     echo "--------------------------------------------------"
     echo "Stopping past sessions of VISE (may take some time)..."
     echo "--------------------------------------------------"
-    sudo docker stop `sudo docker ps --filter ancestor=vise:1.0.1 -q`
-    sudo docker rm `sudo docker ps --filter ancestor=vise:1.0.1 -q`
+    sudo docker stop `sudo docker ps --filter ancestor=vise:1.0.1 -a -q`
+    sudo docker rm `sudo docker ps --filter ancestor=vise:1.0.1 -a -q`
 fi
 
 echo ""
 echo "--------------------------------------------------"
-echo "Starting VISE ..."
+echo "Starting VISE 1.0.1 ..."
 echo "--------------------------------------------------"
 
 # open web browser
