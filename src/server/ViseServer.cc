@@ -827,6 +827,7 @@ void ViseServer::InitiateSearchEngineTraining() {
   SendCommand("_log clear hide");
   SendCommand("_control_panel clear all");
   SendCommand("_control_panel add <div id=\"toggle_log\" class=\"action_button\" onclick=\"_vise_toggle_log()\">Log</div>");
+    SendCommand("_control_panel add &nbsp;&nbsp;<div id=\"refresh_log\" class=\"action_button\" onclick=\"_vise_refresh_log()\">Refresh</div>");
 
   // Pre-process
   if ( state_id_ == ViseServer::STATE_PREPROCESS ) {

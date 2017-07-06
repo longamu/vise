@@ -355,6 +355,14 @@ function _vise_toggle_log() {
   }
 }
 
+function _vise_refresh_log() {
+  _vise_messenger.abort();
+
+  // create a connection for next message
+  _vise_messenger.open("GET", VISE_MESSENGER_ADDRESS);
+  _vise_messenger.send();
+}
+
 function _vise_handle_control_panel_command(command) {
   // command_str = "remove Info_proceed_button"
   var first_spc = command.indexOf(' ', 0);

@@ -4,13 +4,28 @@ echo "--------------------------------------------------"
 echo "Uninstalling VISE 1.0.1 (docker image and data files)   "
 echo "--------------------------------------------------"
 
-if [[ $(sudo docker images vise:1.0.0 -a -q) ]]; then
-    echo "Stopping VISE 1.0.1 docker container ..."
-    sudo docker stop `sudo docker ps --filter ancestor=vise:1.0.1 -a -q`
-    sudo docker rm `sudo docker ps --filter ancestor=vise:1.0.1 -a -q`
+if [ "$(uname)" == "Darwin" ]; then
+  # Mac OS X platform
+  if [[ $(docker images vise:1.0.0 -a -q) ]]; then
+      echo "Stopping VISE 1.0.1 docker container ..."
+      docker stop `docker ps --filter ancestor=vise:1.0.1 -a -q`
+      docker rm `docker ps --filter ancestor=vise:1.0.1 -a -q`
 
-    echo "Removing VISE 1.0.1 docker image ..."
-    sudo docker rmi `sudo docker images vise:1.0.1 -a -q` -f
+      echo "Removing VISE 1.0.1 docker image ..."
+      docker rmi `docker images vise:1.0.1 -a -q` -f
+  fi
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+  # GNU/Linux platform
+  if [[ $(sudo docker images vise:1.0.0 -a -q) ]]; then
+      echo "Stopping VISE 1.0.1 docker container ..."
+      sudo docker stop `sudo docker ps --filter ancestor=vise:1.0.1 -a -q`
+      sudo docker rm `sudo docker ps --filter ancestor=vise:1.0.1 -a -q`
+
+      echo "Removing VISE 1.0.1 docker image ..."
+      sudo docker rmi `sudo docker images vise:1.0.1 -a -q` -f
+  fi
+else
+  echo "This platform is not supported by VISE"
 fi
 
 VISE_DIR=$HOME"/vgg/vise"

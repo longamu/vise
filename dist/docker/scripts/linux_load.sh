@@ -25,20 +25,40 @@ if [ ! -h "${HOME}/Desktop/vgg" ]; then
   ln -s "${VGG_DIR}" "${HOME}/Desktop/vgg"
 fi
 
-if [[ $(sudo docker images -q vise:1.0.1) ]]; then
-    echo "--------------------------------------------------"
-    echo "VISE Docker image is already loaded."
-    echo "Recall that you have to run the load script only once"
-    echo "--------------------------------------------------"
-else 
-    echo ""
-    echo "--------------------------------------------------"
-    echo "Loading VISE 1.0.1 docker image ..."
-    echo "(Note: this may take some time)"
-    echo "--------------------------------------------------"
-    echo ""
-    SCRIPT_DIR=$(dirname "$0")
+if [ "$(uname)" == "Darwin" ]; then
+  if [[ $(docker images -q vise:1.0.1) ]]; then
+      echo "--------------------------------------------------"
+      echo "VISE Docker image is already loaded."
+      echo "Recall that you have to run the load script only once"
+      echo "--------------------------------------------------"
+  else 
+      echo ""
+      echo "--------------------------------------------------"
+      echo "Loading VISE 1.0.1 docker image ..."
+      echo "(Note: this may take some time)"
+      echo "--------------------------------------------------"
+      echo ""
+      SCRIPT_DIR=$(dirname "$0")
 
-    sudo docker load --input "${SCRIPT_DIR}/vise-1.0.1.tar"
+      docker load --input "${SCRIPT_DIR}/vise-1.0.1.tar"
+  fi
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+  if [[ $(sudo docker images -q vise:1.0.1) ]]; then
+      echo "--------------------------------------------------"
+      echo "VISE Docker image is already loaded."
+      echo "Recall that you have to run the load script only once"
+      echo "--------------------------------------------------"
+  else 
+      echo ""
+      echo "--------------------------------------------------"
+      echo "Loading VISE 1.0.1 docker image ..."
+      echo "(Note: this may take some time)"
+      echo "--------------------------------------------------"
+      echo ""
+      SCRIPT_DIR=$(dirname "$0")
 
+      sudo docker load --input "${SCRIPT_DIR}/vise-1.0.1.tar"
+  fi
+else
+  echo "This platform is not supported by VISE"
 fi

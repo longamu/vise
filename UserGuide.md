@@ -26,7 +26,7 @@ This guide assumes that you have already [installed VISE](INSTALL.md).
    * You can compare the query image region with region in search result using *Image Comparison* link at the bottom of this page
 
 ## Known Issues
- * Create search engine stops responding
+ * Create search engine stops responding (fixed in vise-1.0.1)
 It could be due to one of the following :
    * `macos_stop.command` (or `linux_stop.sh`) script was not invoked to stop the docker container. You have to now manually stop and remove the docker container as shown below.
    * Once you have loaded a search engine, you cannot create a new search engine or load an existing search engine. In order to do that, you MUST stop the search engine (as shown below) and start VISE again.
@@ -35,4 +35,12 @@ sudo docker ps -a       # shows the id of active docker containers
 sudo docker stop REPLACE_WITH_VISE_CONTAINER_ID
 sudo docker rm REPLACE_WITH_VISE_CONTAINER_ID
 ```
+
+ * Indexing process stops responding
+During the indexing process, the web based user interface may stop showing the progress of each indexing stages. See [this issue](https://gitlab.com/vgg/vise/issues/11) for more details and updates. We are still working to fix this issue and for now you can try these:
+   * Run the stop scripts to cancel the current process and restart indexing (quite frustrating because you lose all the indexing done so far)
+   * We have noticed that although the user interface stops to show progress of the indexing process, the actual indexing is happening in the background. You can monitor the log file located in `$HOME/vgg/vise/log/training.log` to see if the file is being updated with log messages. If yes, you can let the indexing process finish in background and when it is done, the search result page will be automatically shown.
+
+Last updated: 06 July 2017  
+Abhishek Dutta
 
