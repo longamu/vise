@@ -2,6 +2,7 @@
  * fixed issues with load, start, stop and uninstall scripts
  * debugging log saved to $HOME/vgg/vise/log/training.log
  * user images are resized *only* if > 1024px
+ * added Refresh button to indexing page to deal with unresponsive pages (temporary fix)
 
 ## [1.0.0] - June 15, 2017
  * a web based user interface to index new images
