@@ -6,7 +6,7 @@ echo "--------------------------------------------------"
 
 if [ "$(uname)" == "Darwin" ]; then
   # Mac OS X platform
-  if [[ $(docker images vise:1.0.0 -a -q) ]]; then
+  if [[ $(docker images vise:1.0.1 -a -q) ]]; then
       echo "Stopping VISE 1.0.1 docker container ..."
       docker stop `docker ps --filter ancestor=vise:1.0.1 -a -q`
       docker rm `docker ps --filter ancestor=vise:1.0.1 -a -q`
@@ -16,7 +16,7 @@ if [ "$(uname)" == "Darwin" ]; then
   fi
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   # GNU/Linux platform
-  if [[ $(sudo docker images vise:1.0.0 -a -q) ]]; then
+  if [[ $(sudo docker images vise:1.0.1 -a -q) ]]; then
       echo "Stopping VISE 1.0.1 docker container ..."
       sudo docker stop `sudo docker ps --filter ancestor=vise:1.0.1 -a -q`
       sudo docker rm `sudo docker ps --filter ancestor=vise:1.0.1 -a -q`

@@ -4,7 +4,7 @@ echo "--------------------------------------------------"
 echo "Uninstalling VISE 1.0.1 (docker image and data files)   "
 echo "--------------------------------------------------"
 
-if [[ $(sudo docker images vise:1.0.0 -a -q) ]]; then
+if [[ $(sudo docker images vise:1.0.1 -a -q) ]]; then
     echo "Stopping VISE 1.0.1 docker container ..."
     sudo docker stop `sudo docker ps --filter ancestor=vise:1.0.1 -a -q`
     sudo docker rm `sudo docker ps --filter ancestor=vise:1.0.1 -a -q`

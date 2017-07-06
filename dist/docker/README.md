@@ -63,8 +63,8 @@ sudo docker volume ls
 sudo docker create -v ~/ox/vgg --name vgg-shared-store vise:1.0.0-beta /bin/true
 sudo docker volume rm $(sudo docker volume ls -f dangling=true -q)
 
-sudo docker save --output vise-1.0.0.tar vise:1.0.0
-sudo docker save --output vise-1.0.0.tar registry.gitlab.com/vgg/vise:1.0.0
+sudo docker save --output vise-1.0.1.tar vise:1.0.1
+sudo docker save --output vise-1.0.1.tar registry.gitlab.com/vgg/vise:1.0.1
 ```
 
 ## Publishing image to gitlab
