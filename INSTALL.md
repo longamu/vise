@@ -15,14 +15,14 @@ for more advanced users, we advise to compile VISE from source code.
    * This method requires running docker (and hence VISE) as root (i.e. Administration) which may not be safe.
 
 ### Ubuntu
- 1. Install docker : based on instructions at [docker website](https://docs.docker.com/engine/installation/linux/ubuntu/#install-using-the-repository)
+ 1. Install docker : These docker installation instructions apply to Ubuntu 16.04 (xenial) release. For other releases, please refer to instructions at [docker website](https://docs.docker.com/engine/installation/linux/ubuntu/#install-using-the-repository)
 ```
 sudo apt-get remove docker docker-engine
 sudo apt autoremove
-sudo apt-get install     apt-transport-https     ca-certificates     curl     software-properties-common
+sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo apt-key fingerprint 0EBFCD88
-sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/ubuntu (lsb_release -cs) stable"
+sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 sudo apt-get update
 apt-cache madison docker-ce
 sudo apt-get install docker-ce=17.03.0~ce-0~ubuntu-xenial
@@ -61,12 +61,6 @@ Note: MacOS may warn about running an application downloaded from the internet o
  * This method requires user to compile and install all the dependant libraries (Boost, Imagemagick, cmake, fastann)
  * The compiled VISE binaries can be executed by any user (i.e. non Administrative account) and hence is safer.
 
-## Known Issues
-### MacOS
- * `open /vise-1.0.0.tar: no such file or directory` (reported and solved by Paul Trafford)
 
-update the `macos_load.command` so that dirname command returns correct script directory path.
-```
-SCRIPT_DIR=$(dirname "$0") 
-```
-
+Once the installation is complete, please follow the [User Guide](UserGuide.md) 
+for further instructions.
