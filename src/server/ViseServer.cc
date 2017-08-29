@@ -732,7 +732,7 @@ void ViseServer::HandleStateGetRequest( std::string resource_name,
         ReplaceString( state_html_list_.at(state_id), "__SEARCH_ENGINE_NAME__", search_engine_.GetName() );
         ReplaceString( state_html_list_.at(state_id),
                        "__DEFAULT_IMAGE_PATH__",
-                       (std::string(getenv("HOME")) + "/vgg/mydata/images/") ); // @todo: will be removed in future
+                       "/opt/ox/vgg/vise/data/training_images/" ); // @todo: will be removed in future
 
         SendCommand("_state show");
         break;
@@ -827,7 +827,7 @@ void ViseServer::InitiateSearchEngineTraining() {
   SendCommand("_log clear hide");
   SendCommand("_control_panel clear all");
   SendCommand("_control_panel add <div id=\"toggle_log\" class=\"action_button\" onclick=\"_vise_toggle_log()\">Log</div>");
-    SendCommand("_control_panel add &nbsp;&nbsp;<div id=\"refresh_log\" class=\"action_button\" onclick=\"_vise_refresh_log()\">Refresh</div>");
+    SendCommand("_control_panel add &nbsp;&nbsp;|&nbsp;&nbsp;<div id=\"refresh_log\" class=\"action_button\" onclick=\"_vise_refresh_log()\">Refresh</div>");
 
   // Pre-process
   if ( state_id_ == ViseServer::STATE_PREPROCESS ) {
