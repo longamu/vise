@@ -25,7 +25,7 @@
  this tool.
 
 ### Step 3 : Install oxvgg/vise
- In the Kitematic tool, enter the following search keyword: **oxvgg**. This will 
+ In the Kitematic tool, enter **oxvgg** in the search toolbar. This will 
  show all the docker containers released by the Visual Geometry Group (VGG) as 
  shown below:
  
@@ -36,10 +36,38 @@
  
  <img src="docs/help/kitematic/windows/Kitematic_downloading_image_vise.png" width="400"/>
  
+ After the download is complete, the VISE container will start automatically as 
+ shown below :
  
+ <img src="docs/help/kitematic/windows/Kitematic_vise_first_run.png" width="400"/>
  
 ### Step 4 : Configure ports and volume
-### Step 5 : Run oxvgg/vise
+Ensure that VISE container is running (*RUNNING* will appear in the top side of 
+kitematic window, if not, press the *START* button). Click **Settings** (near 
+top-right corner) and click on **Hostname / Ports** tab to show the port 
+configuration panel. Edit and **Save** the published port so that the docker 
+port `9971` maps to `localhost:9971` and port `9973` maps to `localhost:9973`.
+Don't forget to press **Save** after you update the ports.
 
-Once the installation is complete, please follow the [User Guide](UserGuide.md) 
-to train VISE for searching your own image collections.
+ <img src="docs/help/kitematic/windows/Kitematic_vise_configure_ports.png" width="400"/>
+ 
+Click the **Volumes** panel to show the Configure Volumes panel. The VISE 
+application uses the following two folders:
+ * `/opt/ox/vgg/vise/application_data` : This is the folder where VISE stores all its internal application files
+ * `/opt/ox/vgg/mydata/images` : This is the folder where user will be asked to copy their personal images that needs to be indexed and made searchable
+
+As a user, you can map these docker folders to any local folder in your computer.
+For this guide, we assume that you configure volumes as shown below:
+
+ <img src="docs/help/kitematic/windows/Kitematic_vise_configure_volumes.png" width="400"/>
+
+### Step 5 : Run oxvgg/vise
+Press **Stop** followed by **Start** to restart the container. Now visit 
+[http://localhost:9971](http://localhost:9971) in you web browser and follow 
+the [User Guide](UserGuide.md) to train VISE for searching your own image collections.
+
+Ensure that your Kitematic tool shows something similar to the screenshot below:
+
+ <img src="docs/help/kitematic/windows/Kitematic_vise_running.png" width="400"/>
+
+
