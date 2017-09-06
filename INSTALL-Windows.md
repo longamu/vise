@@ -11,7 +11,7 @@
  computer.
  
  The VISE application requires access to your local disk to store application 
- data and load the training images. Open docker settings and in "Shared Drives" 
+ data and load the training images. Start docker, open docker settings and in "Shared Drives" 
  menu, select "C" (or any other drive) as shown below:
  
  <img src="docs/help/kitematic/windows/Docker_settings_shared_drive.png" width="300"/>
