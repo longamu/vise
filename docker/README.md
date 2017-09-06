@@ -17,6 +17,7 @@ sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/u
 sudo apt-get update
 apt-cache madison docker-ce
 sudo apt-get install docker-ce=17.03.0~ce-0~ubuntu-xenial
+sudo apt-get install docker-ce=17.06.0~ce-0~ubuntu
 ```
 
 ## Building VISE image
@@ -78,6 +79,13 @@ sudo docker push registry.gitlab.com/vgg/vise
 ```
 sudo docker login --username thelinuxmaniac registry.gitlab.com
 docker pull registry.gitlab.com/vgg/vise:1.0.0
+```
+
+## Publishing image to dockerhub
+```
+sudo docker build --no-cache=true -t oxvgg/vise .
+sudo docker login
+sudo docker push oxvgg/vise
 ```
 
 Abhishek Dutta  

@@ -16,10 +16,10 @@
 
 int main(int argc, char** argv) {
 
-  std::cout << "\nVGG Image Search Engine (VISE)";
+  std::cout << "VGG Image Search Engine (VISE)";
   std::cout << "\nversion 1.0.2\n";
-  std::cout << "\nAuthor: Abhishek Dutta <adutta@robots.ox.ac.uk>, May 2017\n";
-  std::cout << "\nVISE builds on the \"relja_retrival\" (Sep. 2014) C++ codebase \nauthored by Relja Arandjelovic <relja@robots.ox.ac.uk> during \nhis DPhil / Postdoc at the Visual Geometry Group in the \nDepartment of Engineering Science, University of Oxford." << std::endl;
+  //std::cout << "\nAuthor: Abhishek Dutta <adutta@robots.ox.ac.uk>, May 2017\n";
+  //std::cout << "\nVISE builds on the \"relja_retrival\" (Sep. 2014) C++ codebase \nauthored by Relja Arandjelovic <relja@robots.ox.ac.uk> during \nhis DPhil / Postdoc at the Visual Geometry Group in the \nDepartment of Engineering Science, University of Oxford." << std::endl;
 
   if ( argc != 4 ) {
     std::cout << "\n  Usage: ./vise VISE_SOURCE_CODE_DIR VISE_APPLICATION_DATA_DIR VISE_TRAINING_IMAGES_DIR\n" << std::flush;
@@ -51,9 +51,9 @@ int main(int argc, char** argv) {
     std::cout << "\nCreated VISE_APPLICATION_DATA_DIR=" << vise_application_data_dir.string() << std::endl;
   }
 
-  std::cout << "\nVISE_SRC_CODE_DIR = " << vise_src_code_dir.string();
-  std::cout << "\nVISE_APPLICATION_DATA_DIR = " << vise_application_data_dir.string() << std::flush;
-  std::cout << "\nVISE_TRAINING_IMAGES_DIR = " << vise_training_images_dir.string() << std::flush;
+  //std::cout << "\nVISE_SRC_CODE_DIR = " << vise_src_code_dir.string();
+  //std::cout << "\nVISE_APPLICATION_DATA_DIR = " << vise_application_data_dir.string() << std::flush;
+  //std::cout << "\nVISE_TRAINING_IMAGES_DIR = " << vise_training_images_dir.string() << std::flush;
 
   ViseServer vise_server( vise_application_data_dir, vise_training_images_dir, vise_src_code_dir );
   //vise_server.InitResources( visedata_dir, template_dir );

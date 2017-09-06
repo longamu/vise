@@ -24,7 +24,7 @@ LABEL name="VGG Image Search Engine" codename="VISE" version="1.0.2" maintainer=
 #
 EXPOSE 9971 9973
 
-VOLUME /opt/ox/vgg/vise/application_data /opt/ox/vgg/mydata/images
+VOLUME /opt/ox/vgg/vise/application_data/ /opt/ox/vgg/mydata/images/
 
 #
 # Define environment variables

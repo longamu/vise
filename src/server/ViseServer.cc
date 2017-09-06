@@ -141,10 +141,10 @@ ViseServer::ViseServer( boost::filesystem::path vise_application_data_dir,
   if ( append_csv_header ) {
     training_stat_f << "date,time,dataset_name,img_count,state_name,time_sec,space_bytes";
   }
-  std::cout << "\nTraining time statistics being saved to : " << vise_training_stat_fn_ << std::flush;
+  //std::cout << "\nTraining time statistics being saved to : " << vise_training_stat_fn_ << std::flush;
 
   boost::filesystem::path training_log_fn = vise_logdir_ / "training.log";
-  std::cout << "\nTraining log being saved to : " << training_log_fn.string() << std::flush;
+  //std::cout << "\nTraining log being saved to : " << training_log_fn.string() << std::flush;
   training_log_f.open( training_log_fn.string().c_str(), std::ofstream::out);
   std::time_t t = std::time(NULL);
   char date_str[100];
