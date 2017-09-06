@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
   std::cout << "\nAuthor: Abhishek Dutta <adutta@robots.ox.ac.uk>, May 2017\n";
   std::cout << "\nVISE builds on the \"relja_retrival\" (Sep. 2014) C++ codebase \nauthored by Relja Arandjelovic <relja@robots.ox.ac.uk> during \nhis DPhil / Postdoc at the Visual Geometry Group in the \nDepartment of Engineering Science, University of Oxford." << std::endl;
 
-  if ( argc != 3 ) {
-    std::cout << "\n  Usage: ./vise VISE_SOURCE_CODE_DIR VISE_DATA_DIR\n" << std::flush;
+  if ( argc != 4 ) {
+    std::cout << "\n  Usage: ./vise VISE_SOURCE_CODE_DIR VISE_APPLICATION_DATA_DIR VISE_TRAINING_IMAGES_DIR\n" << std::flush;
     return 0;
   }
 
@@ -35,8 +35,9 @@ int main(int argc, char** argv) {
   std::string data_home = getenv("VISE_DATA_DIR");
 */
 
-  boost::filesystem::path data_home( argv[2] );
   boost::filesystem::path vise_src_code_dir( argv[1] );
+  boost::filesystem::path vise_application_data_dir( argv[2] );
+  boost::filesystem::path vise_training_images_dir( argv[3] );
 
   if (!boost::filesystem::exists(vise_src_code_dir) ) {
     std::cout << "\nVISE_SOURCE_CODE_DIR = " << vise_src_code_dir.string() << " does not exist!" << std::flush;
@@ -44,15 +45,16 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  if ( !boost::filesystem::exists(data_home) ) {
-    boost::filesystem::create_directories( data_home );
-    std::cout << "\nCreated VISE_DATA_DIR=" << data_home.string() << std::endl;
+  if ( !boost::filesystem::exists(vise_application_data_dir) ) {
+    boost::filesystem::create_directories( vise_application_data_dir );
+    std::cout << "\nCreated VISE_APPLICATION_DATA_DIR=" << vise_application_data_dir.string() << std::endl;
   }
 
   std::cout << "\nVISE_SRC_CODE_DIR = " << vise_src_code_dir.string();
-  std::cout << "\nVISE_DATA_DIR     = " << data_home.string() << std::flush;
+  std::cout << "\nVISE_APPLICATION_DATA_DIR = " << vise_application_data_dir.string() << std::flush;
+  std::cout << "\nVISE_TRAINING_IMAGES_DIR = " << vise_training_images_dir.string() << std::flush;
 
-  ViseServer vise_server( data_home, vise_src_code_dir );
+  ViseServer vise_server( vise_application_data_dir, vise_training_images_dir, vise_src_code_dir );
   //vise_server.InitResources( visedata_dir, template_dir );
 
   vise_server.Start(port);

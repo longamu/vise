@@ -112,6 +112,7 @@ class ViseServer {
 
   // resource dir
   boost::filesystem::path vise_datadir_;
+  boost::filesystem::path vise_training_images_dir_;
   boost::filesystem::path vise_source_code_dir_;
   boost::filesystem::path vise_templatedir_;
   boost::filesystem::path vise_logdir_;
@@ -203,7 +204,9 @@ class ViseServer {
   static const int STATE_INDEX      =  8;
   static const int STATE_QUERY      =  9;
 
-  ViseServer( boost::filesystem::path vise_datadir, boost::filesystem::path vise_src_code_dir );
+  ViseServer( boost::filesystem::path vise_application_data_dir, 
+              boost::filesystem::path vise_training_images_dir, 
+              boost::filesystem::path vise_src_code_dir );
   ~ViseServer();
 
   std::string GetCurrentStateName();

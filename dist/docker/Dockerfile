@@ -24,7 +24,7 @@ LABEL name="VGG Image Search Engine" codename="VISE" version="1.0.1" maintainer=
 #
 EXPOSE 9971 9973
 
-VOLUME /opt/ox/vgg/vise/data
+VOLUME /opt/ox/vgg/vise/application_data /opt/ox/vgg/mydata/images
 
 #
 # Define environment variables
@@ -84,4 +84,4 @@ mv vise/ vise-1.0.1 ; cd vise-1.0.1 ; mkdir build ; \
  cmake -DCMAKE_PREFIX_PATH=$FASTANN_LIBDIR ../src ; \
  make -j8'
 
-ENTRYPOINT $VISE_CODE_DIR"build/vise" $VISE_CODE_DIR /opt/ox/vgg/vise/data/
+ENTRYPOINT $VISE_CODE_DIR"build/vise" $VISE_CODE_DIR /opt/ox/vgg/vise/application_data/ /opt/ox/vgg/mydata/images/

@@ -11,9 +11,12 @@ const int ViseServer::STATE_HAMM;
 const int ViseServer::STATE_INDEX;
 const int ViseServer::STATE_QUERY;
 
-ViseServer::ViseServer( boost::filesystem::path vise_datadir, boost::filesystem::path vise_src_code_dir ) {
+ViseServer::ViseServer( boost::filesystem::path vise_application_data_dir, 
+                        boost::filesystem::path vise_training_images_dir, 
+                        boost::filesystem::path vise_src_code_dir ) {
   // set resource names
-  vise_datadir_         = boost::filesystem::path(vise_datadir);
+  vise_datadir_         = boost::filesystem::path(vise_application_data_dir);
+  vise_training_images_dir_ = boost::filesystem::path(vise_training_images_dir);
   vise_source_code_dir_ = boost::filesystem::path(vise_src_code_dir);
   vise_templatedir_     = vise_source_code_dir_ / "src/server/html_templates/";
 
@@ -732,7 +735,7 @@ void ViseServer::HandleStateGetRequest( std::string resource_name,
         ReplaceString( state_html_list_.at(state_id), "__SEARCH_ENGINE_NAME__", search_engine_.GetName() );
         ReplaceString( state_html_list_.at(state_id),
                        "__DEFAULT_IMAGE_PATH__",
-                       "/opt/ox/vgg/vise/data/training_images/" ); // @todo: will be removed in future
+                       vise_training_images_dir_.string() ); // @todo: will be removed in future
 
         SendCommand("_state show");
         break;
