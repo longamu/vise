@@ -2,11 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>VISE 1.0.0</title>
+    <title>VISE</title>
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VGG Image Search Engine (VISE)">
     <link rel="stylesheet" type="text/css" href="vise.css">
-<!--
+
+    <!--
+    Development of VIA is supported by the EPSRC programme grant
+    Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1).
+    Using Google Analytics, we record the usage of this application.
+    This data is used in reporting of this programme grant.
+    -->
     <script type="text/javascript">
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -17,7 +23,7 @@
       ga('set', 'page', '/vise-1.0.0');
       ga('send', 'pageview');
     </script>
--->
+
   </head>
   <body onload="_vise_init()">
     <div id="header">
@@ -32,7 +38,7 @@
 
       <div id="progress_panel">
         <div id="progress_box">
-          <span id="progress_text">Completed 20/100</span>
+          <span id="progress_text"></span>
           <div  id="progress_bar"></div>
         </div>
       </div>
