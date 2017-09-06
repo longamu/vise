@@ -17,6 +17,7 @@
 int main(int argc, char** argv) {
 
   std::cout << "\nVGG Image Search Engine (VISE)";
+  std::cout << "\nversion 1.0.2\n";
   std::cout << "\nAuthor: Abhishek Dutta <adutta@robots.ox.ac.uk>, May 2017\n";
   std::cout << "\nVISE builds on the \"relja_retrival\" (Sep. 2014) C++ codebase \nauthored by Relja Arandjelovic <relja@robots.ox.ac.uk> during \nhis DPhil / Postdoc at the Visual Geometry Group in the \nDepartment of Engineering Science, University of Oxford." << std::endl;
 
