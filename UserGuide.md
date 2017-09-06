@@ -9,14 +9,10 @@ This guide assumes that you have already [installed VISE](INSTALL.md) and it is 
  3. You will now be taken to the *Setting* page. Copy all your images to the 
  folder as instructed:
   * If you are running VISE using `macos_start.command` script, this will be the 
-   $HOME/vgg/mydata/images/ folder as shown in [this screenshot](docs/help/vise/img/vise_training_setting.png). 
+   `$HOME/vgg/mydata/images/` folder as shown in [this screenshot](docs/help/vise/img/vise_training_setting.png). 
   * If you are running VISE using *Docker and Kitematic*, this will be the local 
    folder that was mapped to `/opt/ox/vgg/mydata/images` as described in [Installation guide for Windows](INSTALL-Windows.md)
    
- Note that your images *must* be in this folder for VISE to work (you may need to create it when running for the first time). 
- Before pressing the *Submit* button, ensure that all the images are copied correctly in the folder. 
- For example, for MacOS users, this folder must be `/Users/abhishek/vgg/mydata/images/` while for Linux users, this folder can be `/home/abhishek/vgg/mydata/images/`.
-
  4. Now you will see an information page which contains the disk-space, memory and time required to make the images searchable as shown in [this screenshot](docs/help/vise/img/vise_training_info.png). If you are happy with these details, proceed ahead by pressing *Proceed*.
 
  5. The main process of making images searchable begins now. This process involves going through different stages: Preprocessing, Stage-1 ... Stage-5. as shown in these screenshots:
