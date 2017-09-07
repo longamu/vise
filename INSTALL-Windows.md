@@ -70,4 +70,6 @@ Ensure that your Kitematic tool shows something similar to the screenshot below:
 
  <img src="docs/help/kitematic/windows/Kitematic_vise_running.png" width="400"/>
 
-
+### Step 6 : Stopping oxvgg/vise
+In the Kitematic tool, click on **oxvgg/vise** on left hand side panel and 
+press **Stop** button to stop the VISE container.
