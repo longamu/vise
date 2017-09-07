@@ -6,12 +6,11 @@ This guide assumes that you have already [installed VISE](INSTALL.md) and it is 
 
  2. Create a new search engine by typing in the search engine name and pressing the *Create* button as shown in [this screenshot](docs/help/vise/img/vise_training_create_search_engine.png)
 
- 3. You will now be taken to the *Setting* page. Copy all your images to the 
- folder as instructed:
-  * If you are running VISE using `macos_start.command` script, this will be the 
-   `$HOME/vgg/mydata/images/` folder as shown in [this screenshot](docs/help/vise/img/vise_training_setting.png). 
-  * If you are running VISE using *Docker and Kitematic*, this will be the local 
-   folder that was mapped to `/opt/ox/vgg/mydata/images` as described in [Installation guide for Windows](INSTALL-Windows.md)
+ 3. You will now be taken to the *Setting* page. Copy all your images to the local folder 
+that maps to the docker folder `/opt/ox/vgg/mydata/images`. For MacOS and 
+Windows users, this folder is the local folder that was mapped to 
+`/opt/ox/vgg/mydata/images` as described in *Step 4* of the installation guide for 
+[MacOS](INSTALL-MacOS.md) and [Windows](INSTALL-Windows.md).
    
  4. Now you will see an information page which contains the disk-space, memory and time required to make the images searchable as shown in [this screenshot](docs/help/vise/img/vise_training_info.png). If you are happy with these details, proceed ahead by pressing *Proceed*.
 
