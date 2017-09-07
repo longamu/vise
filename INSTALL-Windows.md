@@ -63,7 +63,7 @@ For this guide, we assume that you configure volumes as shown below:
 
 ### Step 5 : Run oxvgg/vise
 Press **Stop** followed by **Start** to restart the container. Now visit 
-[http://localhost:9971](http://localhost:9971) in you web browser and follow 
+[http://localhost:9971](http://localhost:9971) in a web browser and follow 
 the [User Guide](UserGuide.md) to train VISE for searching your own image collections.
 
 Ensure that your Kitematic tool shows something similar to the screenshot below:
