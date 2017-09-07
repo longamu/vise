@@ -18,7 +18,9 @@ the Era of Big Data ([EP/M013774/1](http://www.seebibyte.org/index.html)).
  * https://gitlab.com/vgg/vise/ : source code repository
 
 ## Installation
-See [INSTALL](INSTALL.md) for more details.
+ * [Linux](INSTALL-Linux.md)
+ * [MacOS](INSTALL-MacOS.md)
+ * [Windows](INSTALL-Windows.md)
 
 ## User Guide
 See [User Guide](UserGuide.md) for more details.
