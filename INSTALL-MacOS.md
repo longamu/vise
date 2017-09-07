@@ -2,16 +2,15 @@
 
 ### Step 1 : Install Docker
  Download [Docker-CE for MacOS](https://store.docker.com/editions/community/docker-ce-desktop-mac) 
- and install the docker application just like you install any other Windows 
- application. The [installation instructions](hhttps://docs.docker.com/docker-for-mac/install/) 
- guide at docker website provides more details about the installation process.
+ and install the Docker application. The [installation instructions](hhttps://docs.docker.com/docker-for-mac/install/) 
+ provide more details about the installation process.
  
- The VISE docker image has been built using **docker version 17.06.0**. 
- Please ensure that you install the same (or superior) version of docker in your 
+ The VISE Docker image has been built using **docker version 17.06.0**. 
+ Please ensure that you install the same (or superior) version of Docker in your 
  computer.
  
  The VISE application requires access to your local disk to store application 
- data and load the training images. Start docker, click on the docker icon in
+ data and load the training images. Start Docker, click on the Docker icon in
  the status bar (top right corner), click *Preferences* and in *File Sharing* 
  menu (on the top), ensure that `/Users` is added to the list as shown below:
 
@@ -20,24 +19,23 @@
  
 ### Step 2 : Install and Open Kitematic
  [Kitematic](https://kitematic.com/) is a tool that provides a graphical user 
- interface to load, start, stop and configure docker containers. Click on the 
- docker icon in the status bar (top right corner) and click *Kitematic* to 
+ interface to load, start, stop and configure Docker 'containers' (analogous to applications).
+ Click on the Docker icon in the status bar (top right corner) and click *Kitematic* to 
  download and install Kitematic for MacOS. Alternatively, you can [download and 
- install](https://www.docker.com/products/docker-toolbox) just like you install 
- any other application in MacOS.
+ install](https://www.docker.com/products/docker-toolbox) Kitematic as part of Docker Toolbox.
  
- Once this tool is installed, click on the docker icon in the status bar (top 
- right corner) and click *Kitematic* to run this tool.
+ Once this tool is installed, click on the Docker icon in the status bar (top 
+ right corner) and click *Kitematic*.
 
 ### Step 3 : Install oxvgg/vise
  In the Kitematic tool, enter **oxvgg** in the search toolbar. This will 
- show all the docker containers released by the Visual Geometry Group (VGG) as 
+ show all the Docker containers released by the Visual Geometry Group (VGG) as 
  shown below:
  
  <img src="docs/help/kitematic/macos/Kitematic_search_oxvgg.png" width="400"/>
  
  Click **Create** button in the bottom right corner of the box panel corresponding 
- to VISE. This will start download of the VISE container (may take few minutes).
+ to VISE. This will download  the VISE container (it may take a few minutes).
  
  <img src="docs/help/kitematic/macos/Kitematic_downloading_image_vise.png" width="400"/>
  
@@ -47,7 +45,7 @@
  <img src="docs/help/kitematic/macos/Kitematic_vise_first_run.png" width="400"/>
  
 ### Step 4 : Configure ports and volume
-Ensure that VISE container is running (*RUNNING* will appear in the top side of 
+Ensure that the VISE container is running (*RUNNING* will appear in the top side of 
 kitematic window, if not, press the *START* button). Click **Settings** (near 
 top-right corner) and click on **Hostname / Ports** tab to show the port 
 configuration panel. Edit and **Save** the published port so that the docker 
@@ -61,7 +59,8 @@ application uses the following two folders:
  * `/opt/ox/vgg/vise/application_data` : This is the folder where VISE stores all its internal application files
  * `/opt/ox/vgg/mydata/images` : This is the folder where user will be asked to copy their personal images that needs to be indexed and made searchable
 
-As a user, you can map these docker folders to any local folder in your computer.
+As a user, you can map these Docker folders (which are ordinarily invisible in the Mac Finder)
+to any local folder in your computer.
 For this guide, we assume that you configure volumes as shown below:
 
  <img src="docs/help/kitematic/macos/Kitematic_vise_configure_volumes.png" width="400"/>
