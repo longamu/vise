@@ -3,6 +3,8 @@
 This guide assumes that you have already [installed VISE](INSTALL.md) and it is running. 
 
  1. Open [http://localhost:9971](http://localhost:9971) in a web browser as shown in [this screenshot](docs/help/vise/img/vise_home.png)
+   * **Do not open `localhost:9971` in multiple browser windows**. Just use a single browser window
+   * Once you have trained a search engine or loaded a search engine, **you cannot load or train another search engine unless you restart VISE through Kitematic** and revisit [http://localhost:9971](http://localhost:9971).
 
  2. Create a new search engine by typing in the search engine name and pressing the *Create* button as shown in [this screenshot](docs/help/vise/img/vise_training_create_search_engine.png)
 
