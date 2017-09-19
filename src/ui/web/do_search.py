@@ -221,26 +221,30 @@ class doSearch:
                 if emailFeedback: js_imageNames.append( hiddenPath );
                 
                 ## convert metadata to HTML
-                metadata_html = "";
+                metadata_html = "<table style=\"width:100%\; font-size:small; border-collapse:collapse; border: 1px solid #ccc;\">";
                 if metadata != None:
                   if metadata_region != "":
                     boxArg+= "&metadata_region=" + metadata_region;
                   metadata_tokens = metadata.split("__SEP__");
-                  for metadata_i in metadata_tokens :
-                    keyval = metadata_i.split("__KEYVAL_SEP__");
-                    if len(keyval) == 2:
-                      metadata_html += "&nbsp;&nbsp;<span style=\"font-size: small;\" title=\"" + keyval[1] + "\">" + keyval[0] + "<br>";
+                  if len(metadata_tokens) != 1:
+                    for metadata_i in metadata_tokens :
+                      keyval = metadata_i.split("__KEYVAL_SEP__");
+                      if len(keyval) == 2:
+                        metadata_html += "<tr><td style=\"border: 1px solid #ccc; padding: 4px;\">" + keyval[0] + "</td><td style=\"border: 1px solid #ccc;padding: 4px;\">" + keyval[1] + "</td></tr>";
+                  else:
+                    metadata_html += "<tr><td colspan=\"2\">Not available!</td></tr>";
 
+                metadata_html += "</table>";
                 body+= """
                 <tr>
-                    <td>%d</td>
+                    <td valign=\"top\">%d</td>
                     <td>
                         name: %s<br>
                         score: %.6f<br>
-                        <span style=\"color:blue;\">metadata</span>: <br>%s
-                        %s
+                        %s<br>
+                        <span style=\"color:blue;\">Manually annotated metadata</span>: <br>%s
                     </td>
-                    <td width="210" align="center">
+                    <td valign=\"top\" width="210" align="center">
                         <a href="search?docID=%d">
                             <img src="getImage?docID=%s&width=200&%s">
                         </a>
@@ -250,8 +254,7 @@ class doSearch:
                     </td>
                 </tr>
                 <tr><td colspan="4"><hr style="border:dashed; border-width:1px 0 0 0;"></td></tr>
-                """ % (rank+1, hiddenPath, score, metadata_html, \
-                       detailedMatches, \
+                """ % (rank+1, hiddenPath, score, detailedMatches, metadata_html, \
                        docIDres, docIDres, boxArg , \
                        tickBox );
             

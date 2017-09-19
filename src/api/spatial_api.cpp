@@ -74,8 +74,8 @@ API::returnResults( std::vector<indScorePair> const &queryRes, std::map<uint32_t
   std::string Hstr;
 
   // for recording results
-  std::ofstream f;
-  f.open("/mnt/data2/Yujie/data/BBC/results.txt",std::ios::app);
+  //std::ofstream f;
+  //f.open("/mnt/data2/Yujie/data/BBC/results.txt",std::ios::app);
 
   for (uint32_t iRes= startFrom; (iRes < queryRes.size()) && (iRes < startFrom+numberToReturn); ++iRes){
     docID= queryRes[iRes].first;
@@ -94,7 +94,7 @@ API::returnResults( std::vector<indScorePair> const &queryRes, std::map<uint32_t
               % Hstr
               ).str();
 
-    f<<docID<<'\n';
+    //f<<docID<<'\n';
   }
 
   output+= "</results>";
@@ -105,7 +105,7 @@ API::returnResults( std::vector<indScorePair> const &queryRes, std::map<uint32_t
 
 
   //fscore<<siftScore<<'\n';
-  f.close();
+  //f.close();
   //fscore.close();
 }
 

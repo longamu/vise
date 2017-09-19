@@ -20,6 +20,9 @@ void ImageMetadata::LoadMetadata(boost::filesystem::path metadata_fn) {
       // ignore header lines
       continue;
     }
+    if ( csvline == "" ) {
+      continue;
+    }
 
     //std::cout << "\n*** CSVLINE : \n" << csvline << std::flush;
     std::vector<std::string> tokens;
@@ -83,6 +86,7 @@ void ImageMetadata::LoadPreprocessData( boost::filesystem::path preprocess_log_f
     //#image_fn,original_size,original_width,original_height,tx_size,tx_width,tx_height
     std::string csvline;
     std::getline( f, csvline);
+
     if ( csvline[0] != '#' ) {
       // ignore header lines
       std::vector<std::string> tokens;
@@ -112,7 +116,7 @@ void ImageMetadata::GetImageMetadata(std::string image_fn,
                                      double overlap_threshold,
                                      std::string &metadata_str,
                                      std::string &metadata_region_str) {
-  std::cout << "\nFilename = " << image_fn << std::flush;
+  //std::cout << "\nFilename = " << image_fn << std::flush;
   std::map< std::string, std::vector<ImageRegionMetadata> >::iterator it;
   it = metadata_.find( image_fn );
   if ( it != metadata_.end() ) {
@@ -144,8 +148,6 @@ void ImageMetadata::GetImageMetadata(std::string image_fn,
         //std::cout << "(** Matched thresdhold = " << overlap_threshold << ")";
         break;
       }
-      std::cout << std::endl;
-
     }
   } else {
     std::cerr << "\nMetadata not found: " << image_fn << std::flush;
