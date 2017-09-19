@@ -64,6 +64,7 @@ void ImageMetadata::LoadMetadata(boost::filesystem::path metadata_fn) {
         s >> h;
         metadata_i.region_[3] = metadata_i.region_[1] + h; s.clear();
 
+        //std::cout << "\nfilename=" << filename << " : " << metadata_i.region_[0] << "," << metadata_i.region_[1] << "," << metadata_i.region_[2] << "," << metadata_i.region_[3] << std::flush;
         if ( metadata_.find(filename) == metadata_.end() ) {
           metadata_.insert( std::make_pair<std::string, std::vector<ImageRegionMetadata> >(filename, std::vector<ImageRegionMetadata>()) );
         }
@@ -120,34 +121,45 @@ void ImageMetadata::GetImageMetadata(std::string image_fn,
   std::map< std::string, std::vector<ImageRegionMetadata> >::iterator it;
   it = metadata_.find( image_fn );
   if ( it != metadata_.end() ) {
-    double sx = img_scale_.find(image_fn)->second.at(0);
-    double sy = img_scale_.find(image_fn)->second.at(1);
+    std::map< std::string, std::vector<double> >::iterator scale_it = img_scale_.find(image_fn);
+    double sx = scale_it->second.at(0);
+    double sy = scale_it->second.at(1);
     rx0 = rx0 * sx;
     ry0 = ry0 * sy;
     rx1 = rx1 * sx;
     ry1 = ry1 * sy;
 
+    double max_iou = -1.0;
+    int max_iou_index = -1;
+
     for ( unsigned int i=0; i < it->second.size(); i++ ) {
       //std::cout << "\n  Region " << (i+1) << std::flush;
+      //double* d = it->second.at(i).region_;
+      //std::cout << "\n  region_ = " << d[0] << "," << d[1] << "," << d[2] << "," << d[3] << std::flush;
       //it->second.at(i).PrintRegionMetadata();
       double iou = it->second.at(i).IOU( rx0, ry0, rx1, ry1 );
       //std::cout << "\n  IOU = " << iou << std::flush;
 
       if ( iou >= overlap_threshold ) {
-        it->second.at(i).GetMetadataString( metadata_str );
-
-        // get region coordinates in tx image space
-        double mx0 = it->second.at(i).region_[0] / sx;
-        double my0 = it->second.at(i).region_[1] / sy;
-        double mx1 = it->second.at(i).region_[2] / sx;
-        double my1 = it->second.at(i).region_[3] / sy;
-        std::stringstream s;
-        s << (int) mx0 << "," << (int) my0 << "," << (int) mx1 << "," << (int) my1;
-        metadata_region_str = s.str();
-
+        if ( iou > max_iou ) {
+          max_iou = iou;
+          max_iou_index = i;
+        }
         //std::cout << "(** Matched thresdhold = " << overlap_threshold << ")";
-        break;
+        //break;
       }
+    }
+    if ( max_iou_index != -1 ) {
+      it->second.at(max_iou_index).GetMetadataString( metadata_str );
+
+      // get region coordinates in tx image space
+      double mx0 = it->second.at(max_iou_index).region_[0] / sx;
+      double my0 = it->second.at(max_iou_index).region_[1] / sy;
+      double mx1 = it->second.at(max_iou_index).region_[2] / sx;
+      double my1 = it->second.at(max_iou_index).region_[3] / sy;
+      std::stringstream s;
+      s << (int) mx0 << "," << (int) my0 << "," << (int) mx1 << "," << (int) my1;
+      metadata_region_str = s.str();
     }
   } else {
     std::cerr << "\nMetadata not found: " << image_fn << std::flush;
@@ -309,7 +321,9 @@ double ImageRegionMetadata::IOU(double rx0, double ry0, double rx1, double ry1) 
   double iy0 = fmax( region_[1], ry0 );
   double ix1 = fmin( region_[2], rx1 );
   double iy1 = fmin( region_[3], ry1 );
-  double intersection_area = fabs( (iy1 - iy0) * (ix1 - ix0) );
+  double x_intersect_area = fmax(0, ix1 - ix0);
+  double y_intersect_area = fmax(0, iy1 - iy0);
+  double intersection_area = fabs( x_intersect_area * y_intersect_area );
 
   // union
   double union_area1 = fabs( (region_[2] - region_[0]) * (region_[3] - region_[1]) );

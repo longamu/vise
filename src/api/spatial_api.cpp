@@ -151,7 +151,8 @@ API::ReturnAnnotatedResults( std::vector<indScorePair> const &queryRes, std::map
       //std::cout << "\n\t(tx0,ty0) = (" << tx0 << "," << ty0 << ") (tx1,ty1) = (" << tx1 << "," << ty1 << ")" << std::flush;
 
       ImageMetadata::Instance()->GetImageMetadata( res_fn, tx0, ty0, tx1, ty1, 0.5, metadata_str, metadata_region_str);
-      //std::cout << "\n\n\tmetadata = " << metadata << std::flush;
+      //std::cout << "\n\n\tmetadata = " << metadata_str << std::flush;
+      //std::cout << "\n\n\tmetadata_region = " << metadata_region_str << std::flush;
       // read annotation.csv, locate record for document_fn
       // check if any region in annotations overlap with result_region,
       // if yes, store the region attribute in metadata
