@@ -221,7 +221,7 @@ class doSearch:
                 if emailFeedback: js_imageNames.append( hiddenPath );
                 
                 ## convert metadata to HTML
-                metadata_html = "<table style=\"width:100%\; font-size:small; border-collapse:collapse; border: 1px solid #ccc;\">";
+                metadata_html = "<table>";
                 if metadata != None:
                   if metadata_region != "":
                     boxArg+= "&metadata_region=" + metadata_region;
