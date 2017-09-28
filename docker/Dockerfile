@@ -15,7 +15,7 @@ FROM debian:jessie
 #
 # Define image labels
 #
-LABEL name="VGG Image Search Engine" codename="VISE" version="1.0.2" maintainer="Abhishek Dutta <adutta@robots.ox.ac.uk>" description="VGG Image Search Engine (VISE) enables image instance based search of a large collection of images."
+LABEL name="VGG Image Search Engine" codename="VISE" version="1.0.3" maintainer="Abhishek Dutta <adutta@robots.ox.ac.uk>" description="VGG Image Search Engine (VISE) enables image instance based search of a large collection of images."
 
 #
 # Define ports used by VISE
@@ -63,7 +63,7 @@ RUN /bin/bash -c 'export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/" ; \
 #
 # uncomment the lines below if you wish to try out the latest master branch (may not be stable)
 git clone -b master --single-branch https://gitlab.com/vgg/vise.git ; \
-mv vise/ vise-1.0.2 ; cd vise-1.0.2 ; mkdir build ; \
+mv vise/ vise-1.0.3 ; cd vise-1.0.3 ; mkdir build ; \
 #
 #
 # Compile pypar and dkmeans (needed for clustering)
