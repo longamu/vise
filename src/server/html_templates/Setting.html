@@ -32,7 +32,7 @@
     </td>
   </tr>
 </div>
-
+-->
 
 <table class="vise_setting">
   <tr>
@@ -40,8 +40,8 @@
     <td><p class="action_button" style="font-size: x-small;" onclick="_vise_toggle_advanced_settings()">Show/hide advanced settings</p></td>
   </tr>
 </table>
--->
-<table class="vise_setting" style="display: none;" id="vise_advanced_settings">
+
+<table class="vise_setting display-none" id="vise_advanced_settings">
   <tr>
     <td><h3>Advanced Setting</h3></td>
     <td>&nbsp;</td>
@@ -64,7 +64,7 @@ If these input values are not supplied, trainNumDescs and vocSize are automatica
 	double VOCABULARY_SIZE_FACTOR = 10; // voc. size = no. of descriptors / 10
 	trainNumDescs = imglist_.size() * DESCRIPTORS_PER_IMAGE; // we use all the images
 	vocSize = ((double)trainNumDescs) / VOCABULARY_SIZE_FACTOR;
-
+-->
   <tr>
     <td>trainNumDescs</td>
     <td><input class="vise_setting_param" type="text" name="trainNumDescs" value="18000000"></td>
@@ -73,7 +73,7 @@ If these input values are not supplied, trainNumDescs and vocSize are automatica
     <td>vocSize</td>
     <td><input class="vise_setting_param" type="text" name="vocSize" value="100000"></td>
   </tr>
--->
+
 
   <tr>
     <td>clusterNumIteration</td>

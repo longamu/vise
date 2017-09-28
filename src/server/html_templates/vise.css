@@ -251,3 +251,6 @@ ul.img_list.columns-4 li {
 ul.img_list li canvas {
 }
 
+.display-none {
+	display: none;
+}
