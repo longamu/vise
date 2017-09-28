@@ -29,7 +29,7 @@ VOLUME /opt/ox/vgg/vise/application_data/ /opt/ox/vgg/mydata/images/
 #
 # Define environment variables
 #
-ENV VGG_ROOT_DIR="/opt/ox/vgg/" VISE_ROOT_DIR="/opt/ox/vgg/vise/" VISE_CODE_DIR="/opt/ox/vgg/vise/vise-1.0.2/" VISE_DEP_DIR="/opt/ox/vgg/vise/build_deps/" VISE_DEP_LIBDIR="/opt/ox/vgg/vise/build_deps/lib/" VISE_DEP_SRCDIR="/opt/ox/vgg/vise/build_deps/tmp_libsrc/"
+ENV VGG_ROOT_DIR="/opt/ox/vgg/" VISE_ROOT_DIR="/opt/ox/vgg/vise/" VISE_CODE_DIR="/opt/ox/vgg/vise/vise-1.0.x/" VISE_DEP_DIR="/opt/ox/vgg/vise/build_deps/" VISE_DEP_LIBDIR="/opt/ox/vgg/vise/build_deps/lib/" VISE_DEP_SRCDIR="/opt/ox/vgg/vise/build_deps/tmp_libsrc/"
 
 #
 # Prepare environment variables
@@ -59,11 +59,11 @@ RUN /bin/bash -c 'export FASTANN_LIBDIR=$VISE_DEP_LIBDIR"fastann/" ; \
 #
  cd $VISE_ROOT_DIR ; \
 # curl -o vise-1.0.1.tar.gz https://gitlab.com/vgg/vise/raw/release/vise-1.0.1.tar.gz ; \
-# tar -zxf vise-1.0.1.tar.gz ; cd vise-1.0.1 ; mkdir build ; \
+# tar -zxf vise-1.0.1.tar.gz ; cd vise-1.0.x ; mkdir build ; \
 #
 # uncomment the lines below if you wish to try out the latest master branch (may not be stable)
 git clone -b master --single-branch https://gitlab.com/vgg/vise.git ; \
-mv vise/ vise-1.0.3 ; cd vise-1.0.3 ; mkdir build ; \
+mv vise/ vise-1.0.x ; cd vise-1.0.x ; mkdir build ; \
 #
 #
 # Compile pypar and dkmeans (needed for clustering)
