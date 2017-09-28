@@ -130,7 +130,7 @@ void SearchEngine::Preprocess() {
             SendLog("Preprocess", ".");
           }
         } catch (std::exception &error) {
-          SendLog("Preprocess", "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
+          SendLog("Preprocess", "\nCannot load file " + src_fn.string() + " : Error [" + error.what() + "]" );
         }
       }
     }
@@ -161,18 +161,36 @@ void SearchEngine::Descriptor() {
     std::string const trainDatabasePath = GetEngineConfigParam("trainDatabasePath");
 
     int32_t trainNumDescs;
+		unsigned int vocSize;
+		std::string trainNumDescs_str = GetEngineConfigParam("trainNumDescs");
+		std::string vocSize_str = GetEngineConfigParam("vocSize");
+		if ( trainNumDescs_str == "" && vocSize_str == "") {
+		  // @todo : find a better place to define these constants
+		  unsigned int DESCRIPTORS_PER_IMAGE = 1000;
+		  double VOCABULARY_SIZE_FACTOR = 10; // voc. size = no. of descriptors / 10
 
-    // @todo : find a better place to define these constants
-    unsigned int DESCRIPTORS_PER_IMAGE = 1000;
-    double VOCABULARY_SIZE_FACTOR = 10; // voc. size = no. of descriptors / 10
+		  trainNumDescs = imglist_.size() * DESCRIPTORS_PER_IMAGE; // we use all the images
 
-    trainNumDescs = imglist_.size() * DESCRIPTORS_PER_IMAGE; // we use all the images
+		  std::stringstream s1;
+		  vocSize = ((double)trainNumDescs) / VOCABULARY_SIZE_FACTOR;
+		  s1 << vocSize;
+			vocSize_str = s1.str();
+		  SetEngineConfigParam( "vocSize", vocSize_str);
 
-    std::ostringstream s;
-    unsigned int vocSize = ((double)trainNumDescs) / VOCABULARY_SIZE_FACTOR;
-    s << vocSize;
-    SetEngineConfigParam( "vocSize", s.str());
-    WriteConfigToFile();
+			std::stringstream s2;
+			s2 << trainNumDescs;
+			trainNumDescs_str = s2.str();
+		  SetEngineConfigParam( "trainNumDescs", trainNumDescs_str);
+
+		  WriteConfigToFile();
+		} else {
+			std::stringstream s1(trainNumDescs_str);
+			s1 >> trainNumDescs;
+
+			std::stringstream s2(vocSize_str);
+			s2 >> vocSize;
+		}
+
     std::cout << "\nSearchEngine::Descriptor() : trainNumDescs = " << trainNumDescs << std::flush;
     std::cout << "\nSearchEngine::Descriptor() : vocSize = " << vocSize << std::flush;
 
@@ -389,7 +407,7 @@ void SearchEngine::CreateFileList() {
 
       // convert fn_ext to lower case
       for ( unsigned int i=0; i<fn_ext.length(); i++) {
-        std::tolower( fn_ext.at(i), locale );
+        fn_ext[i] = std::tolower( fn_ext.at(i), locale );
       }
 
       // avoid hidden filenames

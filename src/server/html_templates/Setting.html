@@ -59,15 +59,21 @@
     <td><input class="vise_setting_param" type="text" name="hammEmbBits" value="64"></td>
   </tr>
 <!--
+If these input values are not supplied, trainNumDescs and vocSize are automatically calculated as follows:
+	unsigned int DESCRIPTORS_PER_IMAGE = 1000;
+	double VOCABULARY_SIZE_FACTOR = 10; // voc. size = no. of descriptors / 10
+	trainNumDescs = imglist_.size() * DESCRIPTORS_PER_IMAGE; // we use all the images
+	vocSize = ((double)trainNumDescs) / VOCABULARY_SIZE_FACTOR;
+-->
   <tr>
     <td>trainNumDescs</td>
-    <td><input class="vise_setting_param" type="text" name="trainNumDescs" value="18000"></td>
+    <td><input class="vise_setting_param" type="text" name="trainNumDescs" value="18000000"></td>
   </tr>
   <tr>
     <td>vocSize</td>
-    <td><input class="vise_setting_param" type="text" name="vocSize" value="1000"></td>
+    <td><input class="vise_setting_param" type="text" name="vocSize" value="100000"></td>
   </tr>
--->
+
 
   <tr>
     <td>clusterNumIteration</td>
@@ -93,4 +99,5 @@
     <td>&nbsp;</td>
   </tr>
 </table>
+
 

@@ -1,3 +1,6 @@
+## [1.0.3] - NOT RELEASED YET
+ * minor bug fixes (international chars in filename, allow JPG and jpeg extensions)
+
 ## [1.0.2] - September 07, 2017
  * docker container for Linux, MacOS and Windows
 
