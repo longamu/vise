@@ -217,7 +217,7 @@ class doSearch:
                 else:
                     tickBox= '';
                 
-                hiddenPath= self.pathManager_obj[dsetname].hidePath(docIDres);
+                hiddenPath= self.pathManager_obj[dsetname].hidePath(docIDres).decode('utf-8');
                 if emailFeedback: js_imageNames.append( hiddenPath );
                 
                 body+= """
