@@ -894,6 +894,14 @@ function img_comp_canvas_mouseup_listener(e) {
   imcomp_ctx.drawImage(imcomp_im1, 0, 0);
 }
 
+///
+/// misc
+///
+function _vise_toggle_advanced_settings() {
+	var p = document.getElementById('vise_advanced_settings');
+	p.classList.toggle('display-none');
+}
+
 //
 // infinite scroll pane for image list
 //
