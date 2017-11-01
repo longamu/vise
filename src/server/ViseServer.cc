@@ -242,7 +242,8 @@ void ViseServer::LoadStateComplexityModel() {
 }
 
 void ViseServer::Start(unsigned int port) {
-  hostname_ = "localhost";
+  //hostname_ = "localhost";
+  hostname_ = "0.0.0.0";
   port_ = port;
 
   std::ostringstream url_builder;
