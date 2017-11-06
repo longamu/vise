@@ -2,7 +2,9 @@ if (cREGISTER)
     set(REGISTER_LIB "register_images")
 endif (cREGISTER)
 
-#add_executable( api_v2 api_v2.cpp )
+add_executable( rr_backend rr_backend.cpp )
+target_link_libraries( rr_backend api_v2 )
+
 add_library( api_v2 api_v2.cpp )
 target_link_libraries( api_v2
     ViseMessageQueue

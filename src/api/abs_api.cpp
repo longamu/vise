@@ -148,7 +148,7 @@ try_again:
         a.set_option(tcp::acceptor::reuse_address(true));
 
 
-        boost::thread t( boost::bind( &InitReljaRetrivalFrontend, dsetname, configFn, vise_src_code_dir ) );
+        //boost::thread t( boost::bind( &InitReljaRetrivalFrontend, dsetname, configFn, vise_src_code_dir ) );
 
         while (1) {
             socket_ptr sock(new tcp::socket(io_service));
