@@ -7,15 +7,12 @@ target_link_libraries( abs_api ViseMessageQueue ${Boost_LIBRARIES} ${MPI_LIBRARI
 
 add_library( spatial_api spatial_api.cpp )
 target_link_libraries( spatial_api
-    ImageMetadata
     abs_api
     multi_query
     spatial_retriever
     ${Boost_LIBRARIES}
     ${MPI_LIBRARIES}
     ${REGISTER_LIB} )
-
-add_library( ImageMetadata ImageMetadata.cc )
 
 # TODO: can be trivially ported to v2
 # add_executable( single_api single_api.cpp )

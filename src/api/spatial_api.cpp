@@ -27,40 +27,12 @@
 #include "homography.h"
 #include "ellipse.h"
 
-#include "ImageMetadata.h"
-
 #ifdef RR_REGISTER
 #include "register_images.h"
 #endif
 
 
-void HomographyPointTransform( double H[], const double x, const double y, double &xt, double &yt ) {
-  xt = H[0]*x + H[1]*y + H[2];
-  yt = H[3]*x + H[4]*y + H[5];
-  double h = H[6]*x + H[7]*y + H[8];
-  xt = xt / h;
-  yt = yt / h;
-  //std::cout << "\n\tx=" << x << ", y=" << y << " : xt=" << xt << ", yt=" << yt << std::flush;
-}
 
-void HomographyTransform( double H[],
-                          double   x0, double   y0, double   x1, double   y1,
-                          double &tx0, double &ty0, double &tx1, double &ty1) {
-
-  double x_H_tx[4] = {0.0, 0.0, 0.0, 0.0};
-  double y_H_tx[4] = {0.0, 0.0, 0.0, 0.0};
-
-  HomographyPointTransform( H, x0   , y0   , x_H_tx[0], y_H_tx[0] );
-  HomographyPointTransform( H, x1   , y0   , x_H_tx[1], y_H_tx[1] );
-  HomographyPointTransform( H, x1   , y1   , x_H_tx[2], y_H_tx[2] );
-  HomographyPointTransform( H, x0   , y1   , x_H_tx[3], y_H_tx[3] );
-
-  tx0 = (double) *std::min_element( x_H_tx, x_H_tx+3 );
-  ty0 = (double) *std::min_element( y_H_tx, y_H_tx+3 );
-  tx1 = (double) *std::max_element( x_H_tx, x_H_tx+3 );
-  ty1 = (double) *std::max_element( y_H_tx, y_H_tx+3 );
-  //std::cout << "\nViseServer::HomographyTransform() : tx0=" << tx0 << ", ty0=" << ty0 << ", tx1=" << tx1 << ", ty1=" << ty1 << std::flush;
-}
 
 void
 API::returnResults( std::vector<indScorePair> const &queryRes, std::map<uint32_t,homography> const *Hs, uint32_t startFrom, uint32_t numberToReturn, std::string &output ){
@@ -73,118 +45,31 @@ API::returnResults( std::vector<indScorePair> const &queryRes, std::map<uint32_t
   double siftScore;
   std::string Hstr;
 
-  // for recording results
-  //std::ofstream f;
-  //f.open("/mnt/data2/Yujie/data/BBC/results.txt",std::ios::app);
-
   for (uint32_t iRes= startFrom; (iRes < queryRes.size()) && (iRes < startFrom+numberToReturn); ++iRes){
     docID= queryRes[iRes].first;
     siftScore= queryRes[iRes].second;
+
     if ( Hs!=NULL && Hs->count( docID ) ){
       Hs->find( docID )->second.exportToDoubleArray( h );
       Hstr= (boost::format( "H=\"%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\"" )
              % h[0]%h[1]%h[2]%h[3]%h[4]%h[5]%h[6]%h[7]%h[8] ).str();
     }
-    else
+    else {
       Hstr= "";
+    }
+
     output+= (boost::format( "<result rank=\"%d\" docID=\"%d\" score=\"%.4f\" %s/>" )
               % iRes
               % docID
               % siftScore
               % Hstr
               ).str();
-
-    //f<<docID<<'\n';
   }
 
   output+= "</results>";
-
-
-  //std::ofstream fscore;
-  //fscore.open("/mnt/data2/Yujie/data/BBC/results_score.txt",std::ios::app);
-
-
-  //fscore<<siftScore<<'\n';
-  //f.close();
-  //fscore.close();
 }
 
 
-void
-API::ReturnAnnotatedResults( std::vector<indScorePair> const &queryRes, std::map<uint32_t,homography> const *Hs, uint32_t startFrom, uint32_t numberToReturn, std::string &output, query &query) {
-
-  output+= ( boost::format("<results size=\"%d\">") % queryRes.size() ).str();
-
-  double h[9];
-  uint32_t docID;
-  // for recording score
-  double siftScore;
-  std::string Hstr;
-
-  for (uint32_t iRes= startFrom; (iRes < queryRes.size()) && (iRes < startFrom+numberToReturn); ++iRes){
-    docID= queryRes[iRes].first;
-    siftScore = queryRes[iRes].second;
-
-    std::string metadata_str = "";
-    std::string metadata_region_str = "";
-    if ( Hs!=NULL && Hs->count( docID ) ){
-      Hs->find( docID )->second.exportToDoubleArray( h );
-      Hstr= (boost::format( "H=\"%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\"" )
-             % h[0]%h[1]%h[2]%h[3]%h[4]%h[5]%h[6]%h[7]%h[8] ).str();
-
-      // document_id = queryRes[iRes].first
-      // document_fn = ? (find document filename)
-      boost::filesystem::path res_full_fn( dataset_->getFn( docID ) );
-      std::string res_fn = dataset_->getInternalFn( docID );
-      //std::cout << "\n\n\tdocid = " << docID << " : " << res_fn << std::flush;
-
-      // determine the region corresponding to H : result_region
-      //get (x0,y0) and (x1,y1) for original query image
-      double x0 = query.xl; double y0 = query.yl;
-      double x1 = query.xu; double y1 = query.yu;
-
-      double tx0, ty0, tx1, ty1; // contains the match region transformed to result image space
-      HomographyTransform( h, x0,  y0,  x1,  y1, tx0, ty0, tx1, ty1);
-
-      //std::cout << "\n\tHstr = " << Hstr << std::flush;
-      //std::cout << "\n\t(x0,y0) = (" << x0 << "," << y0 << ") (x1,y1) = (" << x1 << "," << y1 << ")" << std::flush;
-      //std::cout << "\n\t(tx0,ty0) = (" << tx0 << "," << ty0 << ") (tx1,ty1) = (" << tx1 << "," << ty1 << ")" << std::flush;
-
-      ImageMetadata::Instance()->GetImageMetadata( res_fn, tx0, ty0, tx1, ty1, 0.5, metadata_str, metadata_region_str);
-      //std::cout << "\n\n\tmetadata = " << metadata_str << std::flush;
-      //std::cout << "\n\n\tmetadata_region = " << metadata_region_str << std::flush;
-      // read annotation.csv, locate record for document_fn
-      // check if any region in annotations overlap with result_region,
-      // if yes, store the region attribute in metadata
-    }
-    else {
-      Hstr= "";
-    }
-
-    output+= (boost::format( "<result rank=\"%d\" docID=\"%d\" score=\"%.4f\" metadata=\"%s\" metadata_region=\"%s\" %s />" )
-              % iRes
-              % docID
-              % siftScore
-              % metadata_str
-              % metadata_region_str
-              % Hstr
-              ).str();
-  }
-
-  output+= "</results>";
-  //std::cout << "\n\nResponse = \n" << output << std::flush;
-}
-
-
-void
-API::ExecuteQueryForAnnotatedResults( query &query_obj, uint32_t startFrom, uint32_t numberToReturn, std::string &output ) {
-
-  std::vector<indScorePair> queryRes;
-  std::map<uint32_t,homography> Hs;
-  spatialRetriever_obj->spatialQuery( query_obj, queryRes, Hs, startFrom+numberToReturn );
-  ReturnAnnotatedResults(queryRes, &Hs, startFrom, numberToReturn, output, query_obj);
-
-}
 
 void
 API::queryExecute( query &query_obj, uint32_t startFrom, uint32_t numberToReturn, std::string &output ) const {
@@ -287,7 +172,7 @@ API::returnMatches( std::vector< std::pair<ellipse,ellipse> > &matches, std::str
 
 
 std::string
-API::getReply( boost::property_tree::ptree &pt, std::string const &request ) {
+API::getReply( boost::property_tree::ptree &pt, std::string const &request ) const {
 
   std::string reply;
 
@@ -306,16 +191,11 @@ API::getReply( boost::property_tree::ptree &pt, std::string const &request ) {
                     );
 
     std::cout<< pt.get<uint>("internalQuery.numberToReturn") <<"\n";
-    /*
     queryExecute( query_obj,
                   pt.get("internalQuery.startFrom",0),
                   pt.get("internalQuery.numberToReturn",20),
                   reply );
-    */
-    ExecuteQueryForAnnotatedResults( query_obj,
-                                     pt.get("internalQuery.startFrom",0),
-                                     pt.get("internalQuery.numberToReturn",20),
-                                     reply );
+
   } else if ( pt.count("externalQuery") ) {
 
     // precomputed features

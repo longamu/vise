@@ -18,6 +18,7 @@ No usage or redistribution is allowed without explicit permission.
 #include <stdint.h>
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 #include "macros.h"
 #include "query.h"

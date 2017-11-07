@@ -100,12 +100,12 @@ absAPI::session( socket_ptr sock ){
 
     } else {
 
-      //std::cout<< timing::getTimeString() <<" Request= "<<request<<"\n";
+//         std::cout<< timing::getTimeString() <<" Request= "<<request<<"\n";
 //        std::cout<< timing::getTimeString() <<" Request= "<< request.substr(0,300) << ( request.length()>300 ? " (...) \n" : "\n" ) ;
 
         reply= getReply(pt, request);
 
-        //         std::cout<<"Response= "<<reply<<"\n";
+//         std::cout<<"Response= "<<reply<<"\n";
 //        std::cout<<"Response= "<< reply.substr(0,300) << ( reply.length()>300 ? " (...) \n" : "\n" ) ;
         std::cout<<timing::getTimeString()<<" Request - DONE ("<< timing::toc(t0) <<" ms)\n";
     }
@@ -148,7 +148,7 @@ try_again:
         a.set_option(tcp::acceptor::reuse_address(true));
 
 
-        boost::thread t( boost::bind( &InitReljaRetrivalFrontend, dsetname, configFn, vise_src_code_dir ) );
+        //boost::thread t( boost::bind( &InitReljaRetrivalFrontend, dsetname, configFn, vise_src_code_dir ) );
 
         while (1) {
             socket_ptr sock(new tcp::socket(io_service));
