@@ -238,7 +238,7 @@ endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-add_executable( vise vise.cc )
+add_executable( vise vise.cc)
 target_link_libraries( vise ViseServer ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES})
 
 include_directories( api )

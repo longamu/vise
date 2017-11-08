@@ -193,8 +193,6 @@ class webserver:
         self.api_engine_reachable= self.webAPI_obj.api_engine_reachable;
         self.api_exec_query= self.webAPI_obj.api_exec_query;
 
-
-
 def getOptional( f, defaultValue ):
     
     try:
@@ -256,7 +254,6 @@ def get(
         print '\tdsetname=', datasetOpt['dsetname'];
         print '\tAPIport=', datasetOpt['APIport'];
         print '\tenableUpload=', datasetOpt['enableUpload'];
-        print '';
     
     #DEBUG_upload= True;
     DEBUG_upload= False;
@@ -368,7 +365,7 @@ def get(
     
     if onlyAPI:
         return API_obj;
-    
+
     webserver_obj= webserver( API_obj, serveraddress, serverroot, docMap_obj, enableUpload, guiOpts, pathManager= pathManager_obj, examples= examples, externalExamples= externalExamples );
     
     return webserver_obj, conf;
@@ -381,7 +378,8 @@ def start(
     serverroot= None,
     webserverPort= 8083,
     webserverHost= "0.0.0.0",
-    keepalive= False
+    keepalive= False,
+    app_namespace= '/'
     ):
     
     
@@ -392,11 +390,11 @@ def start(
             serverroot+= '/';
     
     webserver_obj, conf= get( datasetOpts, serverroot= serverroot, webserverPort= webserverPort, webserverHost= webserverHost );
-    
+
     cherrypy.config.update({
       'server.socket_port' : webserverPort,\
       'server.socket_host' : webserverHost,\
-      'server.keepalive' : keepalive
+      'server.keepalive' : keepalive,\
       });
     
     cherrypy.config.update({'tools.encode.on': True, 'tools.encode.encoding': 'utf-8', 'tools.decode.on': True});
@@ -407,13 +405,17 @@ def start(
     error_log = cherrypy.log.error_log
     for handler in tuple(error_log.handlers):
         error_log.removeHandler(handler)
+
+    print 'cherrypy options:';
+    print '\twebserverHost=', webserverHost;
+    print '\twebserverPort=', webserverPort;
+    print '\tserverroot=', serverroot;
+    print '\tapp_namespace=', app_namespace;
     
     if serverroot=='/':
-        cherrypy.quickstart( webserver_obj, serverroot, config= conf );
+        cherrypy.quickstart( webserver_obj, app_namespace, config= conf );
     else:
         cherrypy.tree.mount( webserver_obj, serverroot, conf);
-
-
 
 if __name__=='__main__':
     
@@ -421,7 +423,7 @@ if __name__=='__main__':
 
     datasetOpts= [];
     datasetOpts.append( {'dsetname': sys.argv[2],'APIport': int(sys.argv[3]), 'config_filename': sys.argv[4], 'enableUpload': sys.argv[5]} );
-    start( datasetOpts, webserverPort= webserverPort );
+    start( datasetOpts, webserverPort= webserverPort, app_namespace=sys.argv[6] );
 
 '''
     if len(sys.argv)>5:

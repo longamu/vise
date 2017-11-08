@@ -23,13 +23,18 @@ mkdir $BUILDDIR
   python setup.py install ;
 )
 
+( cd $SRCDIR"external/jp_draw/" ;
+  python setup.py build ;
+  python setup.py install ;
+)
 
 CMAKE_BIN_DIR="${DEP_BASEDIR}lib/cmake/bin"
 IMAGEMAGICK_LIBDIR="${DEP_BASEDIR}lib/imagemagick/"
 BOOST_LIBDIR="${DEP_BASEDIR}lib/boost/"
 FASTANN_LIBDIR="${DEP_BASEDIR}lib/fastann/"
+PROTOBUF_LIBDIR="${DEP_BASEDIR}lib/protobuf/"
 
-(export CMAKE_PREFIX_PATH=$IMAGEMAGICK_LIBDIR:$BOOST_LIBDIR:$FASTANN_LIBDIR; 
+(export CMAKE_PREFIX_PATH=$IMAGEMAGICK_LIBDIR:$BOOST_LIBDIR:$FASTANN_LIBDIR:$PROTOBUF_LIBDIR; 
  cd $BUILDDIR; 
  "${CMAKE_BIN_DIR}/cmake" -DCMAKE_BUILD_TYPE=Release $SRCDIR;
  make -j8)

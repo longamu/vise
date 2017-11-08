@@ -42,16 +42,16 @@ class dynamicImage:
         
         
     @cherrypy.expose
-    def index(self, fn= None, docID= None, uploadID= None, H=None, xl=None, xu=None, yl=None, yu=None, width= None, height=None, drawBox="true", crop=None, dsetname= None):
+    def index(self, fn= None, docID= None, uploadID= None, H=None, xl=None, xu=None, yl=None, yu=None, width= None, height=None, drawBox="true", crop=None, dsetname= None, metadata_region=None):
         
         if dsetname==None: dsetname= self.def_dsetname;
         
         cherrypy.response.headers['Content-Type'] = 'image/jpeg';
-        return self.getImage( docID= docID, uploadID= uploadID, H= H, xl= xl, xu= xu, yl= yl, yu= yu, width= width, height= height, drawBox= drawBox, crop= crop, dsetname= dsetname );
+        return self.getImage( docID= docID, uploadID= uploadID, H= H, xl= xl, xu= xu, yl= yl, yu= yu, width= width, height= height, drawBox= drawBox, crop= crop, dsetname= dsetname, metadata_region=metadata_region );
     
     
     
-    def getImage( self, docID= None, uploadID= None, H=None, xl=None, xu=None, yl=None, yu=None, width= None, height=None, drawBox="true", crop=None, dsetname= None):
+    def getImage( self, docID= None, uploadID= None, H=None, xl=None, xu=None, yl=None, yu=None, width= None, height=None, drawBox="true", crop=None, dsetname= None, metadata_region=None):
         
         if dsetname==None: dsetname= self.def_dsetname;
         
@@ -69,12 +69,12 @@ class dynamicImage:
             st= savedTemp.load(uploadID);
             fn= st['localFilename_jpg'];
         
-        return dynamicImage.getImageFromFile( fn, H= H, xl= xl, xu= xu, yl= yl, yu= yu, width= width, height= height, drawBox= drawBox, crop= crop );
+        return dynamicImage.getImageFromFile( fn, H= H, xl= xl, xu= xu, yl= yl, yu= yu, width= width, height= height, drawBox= drawBox, crop= crop, metadata_region=metadata_region );
     
     
     
     @staticmethod
-    def getImageFromFile( fn, H=None, xl=None, xu=None, yl=None, yu=None, width= None, height=None, drawBox="true", crop= None):
+    def getImageFromFile( fn, H=None, xl=None, xu=None, yl=None, yu=None, width= None, height=None, drawBox="true", crop= None, metadata_region=None):
         
         im= Image.open(fn);
         imw, imh= im.size;
@@ -144,6 +144,17 @@ class dynamicImage:
                 imd.line( (XP[0,2], XP[1,2], XP[0,3], XP[1,3]), linecol );
                 imd.line( (XP[0,3], XP[1,3], XP[0,0], XP[1,0]), linecol );
         
+                if metadata_region is not None:
+                  mr = metadata_region.split(","); # x0, y0, x1, y1
+                  mx0 = int(mr[0]) * scale;
+                  my0 = int(mr[1]) * scale;
+                  mx1 = int(mr[2]) * scale;
+                  my1 = int(mr[3]) * scale;
+                  linecol = (0,0,255);
+                  imd.line( (mx0, my0, mx1, my0), width=2, fill=linecol );
+                  imd.line( (mx0, my1, mx1, my1), width=2, fill=linecol );
+                  imd.line( (mx0, my0, mx0, my1), width=2, fill=linecol );
+                  imd.line( (mx1, my0, mx1, my1), width=2, fill=linecol );
         if crop:
             im= im.crop( cropBox );
         imStr = StringIO.StringIO();

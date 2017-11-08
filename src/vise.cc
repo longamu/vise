@@ -7,12 +7,24 @@
 
 #include <iostream>
 #include <string>
+#include <algorithm>
 
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <boost/filesystem.hpp>
 
 #include <Magick++.h>            // to transform images
 
 #include "ViseServer.h"
+#include "ImageMetadata.h"
+
+void StringReplace(std::string& str, const std::string& old_str, const std::string& new_str) {
+  std::size_t start = 0;
+  while ( (start = str.find(old_str, start)) != std::string::npos ) {
+    str.replace(start, old_str.length(), new_str);
+    start += new_str.length();
+  }
+}
 
 int main(int argc, char** argv) {
 
@@ -36,6 +48,7 @@ int main(int argc, char** argv) {
   std::string data_home = getenv("VISE_DATA_DIR");
 */
 
+  boost::filesystem::path data_home( argv[2] );
   boost::filesystem::path vise_src_code_dir( argv[1] );
   boost::filesystem::path vise_application_data_dir( argv[2] );
   boost::filesystem::path vise_training_images_dir( argv[3] );
@@ -55,6 +68,21 @@ int main(int argc, char** argv) {
   //std::cout << "\nVISE_APPLICATION_DATA_DIR = " << vise_application_data_dir.string() << std::flush;
   //std::cout << "\nVISE_TRAINING_IMAGES_DIR = " << vise_training_images_dir.string() << std::flush;
 
+  /*
+  // debug : ImageMetadata
+  boost::filesystem::path metadata_fn("/home/tlm/vgg/vise/search_engines/15c_bt/training_data/image_annotations.csv");
+  boost::filesystem::path preprocess_fn("/home/tlm/vgg/vise/search_engines/15c_bt/training_data/preprocess_log.csv");
+  ImageMetadata::Instance()->LoadMetadata( metadata_fn );
+  ImageMetadata::Instance()->LoadPreprocessData( preprocess_fn );
+
+  std::string metadata;
+  ImageMetadata::Instance()->GetImageMetadata( "ia00150400_02012307_h8v.jpg",
+                                               828, 570, 1989, 1074,
+                                               0.6, metadata);
+  std::cout << "\nmetadata = " << metadata << std::flush;
+  */
+
+  /*  */
   ViseServer vise_server( vise_application_data_dir, vise_training_images_dir, vise_src_code_dir );
   //vise_server.InitResources( visedata_dir, template_dir );
 

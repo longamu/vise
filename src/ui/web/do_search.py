@@ -200,8 +200,8 @@ class doSearch:
             # results
             
             if emailFeedback: js_imageNames= [];
-            
-            for (rank, docIDres, score, H) in results:
+
+            for (rank, docIDres, score, metadata, metadata_region, H) in results:
                 
                 boxArg="xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f" % (xl,xu,yl,yu);
                 if H!=None:
@@ -209,7 +209,7 @@ class doSearch:
                     detailedMatches= "<br><a href=\"details?%s&docID2=%d&%s\">Detailed matches</a><br>" % (querySpec1, docIDres, boxArg);
                 else:
                     detailedMatches= "<br><a href=\"details?%s&docID2=%d&%s&drawPutative=true\">Detailed matches</a><br>" % (querySpec1, docIDres, boxArg);
-                
+
                 if emailFeedback:
                     tickChecked= "checked";
                     if uploadID==None and rank==0: tickChecked= "";
@@ -220,15 +220,31 @@ class doSearch:
                 hiddenPath= self.pathManager_obj[dsetname].hidePath(docIDres).decode('utf-8');
                 if emailFeedback: js_imageNames.append( hiddenPath );
                 
+                ## convert metadata to HTML
+                metadata_html = "<table>";
+                if metadata != None:
+                  if metadata_region != "":
+                    boxArg+= "&metadata_region=" + metadata_region;
+                  metadata_tokens = metadata.split("__SEP__");
+                  if len(metadata_tokens) != 1:
+                    for metadata_i in metadata_tokens :
+                      keyval = metadata_i.split("__KEYVAL_SEP__");
+                      if len(keyval) == 2:
+                        metadata_html += "<tr><td style=\"border: 1px solid #ccc; padding: 4px;\">" + keyval[0] + "</td><td style=\"border: 1px solid #ccc;padding: 4px;\">" + keyval[1] + "</td></tr>";
+                  else:
+                    metadata_html += "<tr><td colspan=\"2\">Not available!</td></tr>";
+
+                metadata_html += "</table>";
                 body+= """
                 <tr>
-                    <td>%d</td>
+                    <td valign=\"top\">%d</td>
                     <td>
                         name: %s<br>
                         score: %.6f<br>
-                        %s
+                        %s<br>
+                        <span style=\"color:blue;\">Manually annotated metadata</span>: <br>%s
                     </td>
-                    <td width="210" align="center">
+                    <td valign=\"top\" width="210" align="center">
                         <a href="search?docID=%d">
                             <img src="getImage?docID=%s&width=200&%s">
                         </a>
@@ -238,8 +254,7 @@ class doSearch:
                     </td>
                 </tr>
                 <tr><td colspan="4"><hr style="border:dashed; border-width:1px 0 0 0;"></td></tr>
-                """ % (rank+1, hiddenPath, score, \
-                       detailedMatches, \
+                """ % (rank+1, hiddenPath, score, detailedMatches, metadata_html, \
                        docIDres, docIDres, boxArg , \
                        tickBox );
             
@@ -248,7 +263,7 @@ class doSearch:
             infos= [];
             numPerRow= 4;
             
-            for (rank, docIDres, score, H) in results:
+            for (rank, docIDres, score, metadata, metadata_region, H) in results:
                 
                 boxArg="xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f" % (xl,xu,yl,yu);
                 if H!=None:

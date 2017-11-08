@@ -27,6 +27,7 @@ void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
 
   imglist_fn_ = training_datadir_ / "imlist.txt";
   engine_config_fn_ = training_datadir_ / "vise_config.cfg";
+  preprocess_log_fn_ = training_datadir_ / "preprocess_log.csv";
 
   transformed_imgdir_ += boost::filesystem::path::preferred_separator;
   training_datadir_ += boost::filesystem::path::preferred_separator;
@@ -63,6 +64,10 @@ void SearchEngine::Preprocess() {
     SendLog("Preprocess", "\nPreprocessing started ...");
     SendCommand("Preprocess", "_progress reset show");
 
+    // preprocess log
+    std::ofstream preprocess_log_f( preprocess_log_fn_.string().c_str(), std::fstream::out);
+    preprocess_log_f << "#image_fn,original_size,original_width,original_height,tx_size,tx_width,tx_height";
+
     std::string transformed_img_width = GetEngineConfigParam("transformed_img_width");
     if (transformed_img_width != "original") {
       // scale and copy image to transformed_imgdir_
@@ -93,6 +98,7 @@ void SearchEngine::Preprocess() {
             s << transformed_img_width;
             unsigned int new_width;
             s >> new_width;
+            unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
 
             if ( new_width < size.width() ) {
               unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
@@ -102,6 +108,12 @@ void SearchEngine::Preprocess() {
 
               im.write( dest_fn.string() );
               imglist_fn_transformed_size_.at(i) = boost::filesystem::file_size(dest_fn.string().c_str());
+
+	      // save to preprocess_log_fn
+              preprocess_log_f << std::endl << img_rel_path.string() << ","
+                             << boost::filesystem::file_size(src_fn) << "," << size.width() << "," << size.height() << ","
+                             << boost::filesystem::file_size(dest_fn) << "," << resize.width() << "," << resize.height();
+
               // to avoid overflow of the message queue
               if ( (i % 5) == 0 ) {
                 SendProgress( "Preprocess", i+1, imglist_.size() );
@@ -130,10 +142,12 @@ void SearchEngine::Preprocess() {
             SendLog("Preprocess", ".");
           }
         } catch (std::exception &error) {
-          SendLog("Preprocess", "\nCannot load file " + src_fn.string() + " : Error [" + error.what() + "]" );
+          SendLog("Preprocess", "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
         }
       }
     }
+    preprocess_log_f.close();
+
     if (transformed_img_width != "original") {
       SendProgress( "Preprocess", imglist_.size(), imglist_.size() );
     }
