@@ -31,7 +31,9 @@ class template:
         self.ballads= ballads;
     
     
-    
+    def __str__(self):
+        return self.get();
+
     def get( self, title= "", headExtra= "", body= "", outOfContainer= False ):
         
         res= """

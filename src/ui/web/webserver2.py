@@ -23,6 +23,10 @@ from auth import Authenticator;
 import api;
 
 import template, page0, dynamic_image, search_page, do_search, details;
+import file_index;
+import file_attributes;
+import csv;
+
 if True:
     import register_images;
 
@@ -193,6 +197,19 @@ class webserver:
         self.api_engine_reachable= self.webAPI_obj.api_engine_reachable;
         self.api_exec_query= self.webAPI_obj.api_exec_query;
 
+        # file attributes page
+        self.file_index = file_index.file_index( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
+        self.file_attributes_obj = file_attributes.file_attributes( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
+        self.file_attributes= self.file_attributes_obj.index;
+
+
+    def load_file_attributes( self, file_attributes_fn ):
+      # load the file attributes from csv
+      with open(file_attributes_fn, 'rb') as csvfile:
+        self.file_attributes = csv.reader(csvfile, delimiter=',', quotechar='"');
+
+      #### @todo: build index with correspondence between docID and csv row-id
+
 def getOptional( f, defaultValue ):
     
     try:
@@ -200,7 +217,6 @@ def getOptional( f, defaultValue ):
     except ConfigParser.NoOptionError:
         value= defaultValue;
     return value;
-
 
 
 def get(
@@ -311,7 +327,12 @@ def get(
                 featureWrapper[dsetname]= None;
                 SIFTscale3= True;
         
-        
+
+        # Load all dataset files metadata        
+        file_attributes_fn = getOptional( lambda: config.get(dsetname, 'file_attributes'), None );
+        if ( file_attributes_fn != None ):
+          print "file_attributes_fn=%s" %(file_attributes_fn);
+
         # API construction
         
         apiScoreThr= getOptional( lambda: config.getfloat(dsetname, 'apiScoreThr'), None );

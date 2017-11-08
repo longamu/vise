@@ -196,19 +196,14 @@ class doSearch:
         body+= '<table width="80%" border="0">';
         
         if not(tile):
-            
             # results
-            
-            if emailFeedback: js_imageNames= [];
-
             for (rank, docIDres, score, metadata, metadata_region, H) in results:
-                
                 boxArg="xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f" % (xl,xu,yl,yu);
                 if H!=None:
                     boxArg+= "&H=%s" % H;
-                    detailedMatches= "<br><a href=\"details?%s&docID2=%d&%s\">Detailed matches</a><br>" % (querySpec1, docIDres, boxArg);
+                    match_details_url = "details?%s&docID2=%d&%s" % (querySpec1, docIDres, boxArg);
                 else:
-                    detailedMatches= "<br><a href=\"details?%s&docID2=%d&%s&drawPutative=true\">Detailed matches</a><br>" % (querySpec1, docIDres, boxArg);
+                    match_details_url = "details?%s&docID2=%d&%s&drawPutative=true" % (querySpec1, docIDres, boxArg);
 
                 if emailFeedback:
                     tickChecked= "checked";
@@ -221,8 +216,9 @@ class doSearch:
                 if emailFeedback: js_imageNames.append( hiddenPath );
                 
                 ## convert metadata to HTML
-                metadata_html = "<table>";
+                metadata_html = '';
                 if metadata != None:
+                  metadata_html = "<span style=\"color:blue;\">Match region overlaps with the following manually annotated region</span>: <br><table>";
                   if metadata_region != "":
                     boxArg+= "&metadata_region=" + metadata_region;
                   metadata_tokens = metadata.split("__SEP__");
@@ -234,30 +230,28 @@ class doSearch:
                   else:
                     metadata_html += "<tr><td colspan=\"2\">Not available!</td></tr>";
 
-                metadata_html += "</table>";
+                  metadata_html += "</table>";
+
+
                 body+= """
                 <tr>
                     <td valign=\"top\">%d</td>
                     <td>
-                        name: %s<br>
-                        score: %.6f<br>
+                        Filename: <a href="search?docID=%d">%s</a><br>
+                        Match score: %.6f<br>
+                        <p><a href="%s">Show details of match</a><br>
+                        <a target="_blank" href="file_attributes?docID=%d">Show file metadata</a><br>
+                        <a href="search?docID=%d">Search using this image</a><br>
+                        </p>
                         %s<br>
-                        <span style=\"color:blue;\">Manually annotated metadata</span>: <br>%s
                     </td>
                     <td valign=\"top\" width="210" align="center">
-                        <a href="search?docID=%d">
-                            <img src="getImage?docID=%s&width=200&%s">
-                        </a>
-                    </td>
-                    <td width="20" align="center">
-                        %s
+                        <a href="%s"><img src="getImage?docID=%s&width=200&%s"></a>
                     </td>
                 </tr>
-                <tr><td colspan="4"><hr style="border:dashed; border-width:1px 0 0 0;"></td></tr>
-                """ % (rank+1, hiddenPath, score, detailedMatches, metadata_html, \
-                       docIDres, docIDres, boxArg , \
-                       tickBox );
-            
+                <tr><td colspan="4"><hr style="border:solid; border-width:1px 0 0 0;"></td></tr>
+                """ % (rank+1, docIDres, hiddenPath, score, match_details_url, docIDres, docIDres, metadata_html, \
+                       match_details_url, docIDres, boxArg );
         else:
             
             infos= [];

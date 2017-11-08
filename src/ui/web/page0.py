@@ -46,7 +46,6 @@ class page0:
         total_num = len(self.docMap[dsetname]);
         
         if browse:
-            
             if page<0:
                 page= 0;
             startFrom= min(page*numPerPage,total_num-1);
@@ -54,19 +53,19 @@ class page0:
             sampleImages= range(startFrom,endBefore);
             lastPage= (total_num+numPerPage-1)/numPerPage-1;
             
-            navigation= "<br>Images %d to %d of %d. " % (startFrom+1, endBefore, total_num);
-            
+            navigation= '<div style="border: 1px solid #ccc; padding: 1rem;height: 1rem;"><span style="float: left;">Showing %d to %d of total %d files</span>' % (startFrom+1, endBefore, total_num);
+            navigation+='<span style="float:right">';
             if page>0:
                 if page>1:
                     navigation+= '<a href="page0?&numPerPage=%d&browse=true&page=%d">First</a>' % ( numPerPage, 0 );
-                    navigation+= "&nbsp;&nbsp;";
+                    navigation+= "&nbsp;&nbsp;|&nbsp;&nbsp;";
                 navigation+= '<a href="page0?&numPerPage=%d&browse=true&page=%d">Prev</a>' % ( numPerPage, page-1 );
             if page>0 and page<lastPage:
-                navigation+= "&nbsp;&nbsp;";
+                navigation+= "&nbsp;&nbsp;|&nbsp;&nbsp;";
             if page<lastPage:
                 navigation+= '<a href="page0?numPerPage=%d&browse=true&page=%d">Next</a>' % ( numPerPage, page+1 );
-            navigation+= "<br><br>\n";
-            
+
+            navigation+= '&nbsp;&nbsp;|&nbsp;&nbsp;<a target="_blank" href="file_index" title="Browse index of files in this dataset">Index</a></span></div>';            
         else:
             
             if seed==-1:
@@ -108,18 +107,18 @@ class page0:
             body+="<br><br>\n";
             body+= "</center>";
             
-        
+        '''
         if browse:
             body+= """<h3>List of images in the database</h3>""";
         else:
             #body+= """<h3>Random samples of images in the database (click <a href="javascript:location.reload(true)">here</a> for another one)</h3>""";
             body+= '<a name="samples"></a>';
             body+= """<h3>Random samples of images in the database (click <a href="page0?page=%d&browse=false#samples">here</a> for another one)</h3>""" % nextSeed;
-        
+        '''
         if browse:
             body+= navigation;
         
-        body+= "<center>"
+        body+= '<center style="margin: 1rem 0;">'
         body+='<table width="100%">\n';
         iRowImage= 0; iImage= 0;
                 
@@ -130,7 +129,7 @@ class page0:
                     if iImage+jImage >= len(sampleImages):
                         body+= '<td colspan="%d"></td>' % (numPerRow-jImage);
                         break;
-                    body+= '<td align="center">%s</td>' % ( self.pathManager_obj[dsetname].displayPath(sampleImages[iImage+jImage]) if self.doShowPath else "");
+                    body+= '<td align="center"><a href="file_attributes?docID=%d">%s</a></td>' % ( iImage+jImage, self.pathManager_obj[dsetname].displayPath(sampleImages[iImage+jImage]) if self.doShowPath else "");
                 body+='</tr>\n';
                 body+="<tr>\n";
             
@@ -145,7 +144,7 @@ class page0:
             if (iRowImage%numPerRow==0):
                 iRowImage= 0;
                 body+="</tr>\n";
-                body+='<tr><td colspan="%d"><hr style="border:dashed; border-width:1px 0 0 0;"></td></tr>\n' % numPerRow;
+                body+='<tr><td colspan="%d"><hr style="border:solid; border-width:1px 0 0 0;"></td></tr>\n' % numPerRow;
             
         if iRowImage!=0:
             body+='<td colspan="%d"></td></tr>\n' % (numPerRow-iRowImage);

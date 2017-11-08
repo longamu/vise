@@ -84,10 +84,12 @@ class API:
         if self.scoreThr!=None:
             resultsAll= results;
             results= [];
-            for (rank, docID, score, H) in resultsAll:
+            #for (rank, docID, score, H) in resultsAll:
+            for (rank, docIDres, score, metadata, metadata_region, H) in resultsAll:
                 if score<self.scoreThr:
                     break;
-                results.append( (rank, docID, score, H) );
+                #results.append( (rank, docID, score, H) );
+                results.append( (rank, docIDres, score, metadata, metadata_region, H) );
         
         if self.verbose:
             for (rank, docID, score, H) in results:
