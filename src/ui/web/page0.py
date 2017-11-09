@@ -53,19 +53,23 @@ class page0:
             sampleImages= range(startFrom,endBefore);
             lastPage= (total_num+numPerPage-1)/numPerPage-1;
             
-            navigation= '<div style="border: 1px solid #ccc; padding: 1rem;height: 1rem;"><span style="float: left;">Showing %d to %d of total %d files</span>' % (startFrom+1, endBefore, total_num);
-            navigation+='<span style="float:right">';
+            navigation  = '<div id="navbar" style="display: block;overflow:hidden;background-color:#d7f4f6;border: 1px solid #ccc;padding: 1rem;line-height: 2rem">'
+            navigation += 'Showing %d to %d of total %d files&nbsp;&nbsp;|&nbsp;&nbsp;' % (startFrom+1, endBefore, total_num);
+            navigation += '<span style="line-height: 2rem; float:right;">'
+            navigation += '<form action="file_attributes" method="POST" id="filename_search">'
+            navigation += '<input type="text" name="filename" value="enter partial filename" title="search filenames using keyword or regular expression" size="12" onclick="this.value=\'\';">'
+            navigation += '&nbsp;&nbsp;<button type="submit" form="filename_search" value="Submit">Search</button>'
+            navigation += '</form>&nbsp;&nbsp;|&nbsp;&nbsp;'
+
             if page>0:
                 if page>1:
-                    navigation+= '<a href="page0?&numPerPage=%d&browse=true&page=%d">First</a>' % ( numPerPage, 0 );
-                    navigation+= "&nbsp;&nbsp;|&nbsp;&nbsp;";
-                navigation+= '<a href="page0?&numPerPage=%d&browse=true&page=%d">Prev</a>' % ( numPerPage, page-1 );
-            if page>0 and page<lastPage:
-                navigation+= "&nbsp;&nbsp;|&nbsp;&nbsp;";
-            if page<lastPage:
-                navigation+= '<a href="page0?numPerPage=%d&browse=true&page=%d">Next</a>' % ( numPerPage, page+1 );
+                    navigation+= '<a href="page0?&numPerPage=%d&browse=true&page=%d">First</a>&nbsp;&nbsp;|&nbsp;&nbsp;' % ( numPerPage, 0 );
+                navigation+= '<a href="page0?&numPerPage=%d&browse=true&page=%d">Prev</a>&nbsp;&nbsp;|&nbsp;&nbsp;' % ( numPerPage, page-1 );
+            if page < lastPage:
+                navigation+= '<a href="page0?numPerPage=%d&browse=true&page=%d">Next</a>&nbsp;&nbsp;|&nbsp;&nbsp;' % ( numPerPage, page+1 );
 
-            navigation+= '&nbsp;&nbsp;|&nbsp;&nbsp;<a target="_blank" href="file_index" title="Browse index of files in this dataset">Index</a></span></div>';            
+            navigation += '<a target="_blank" href="file_index" title="Browse index of files in this dataset">Index</a></span>';
+            navigation += '</div>';
         else:
             
             if seed==-1:
