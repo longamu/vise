@@ -128,7 +128,7 @@ class pathManager_open:
 
 class webserver:
     
-    def __init__(self, API_obj, serveraddress, serverroot, docMap, enableUpload, guiOpts, pathManager= None, examples= None, externalExamples= None):
+    def __init__(self, API_obj, serveraddress, serverroot, docMap, enableUpload, guiOpts, pathManager= None, examples= None, externalExamples= None, file_attributes_fn= None, file_attributes_filename_colname= None):
         
         def_dsetname= docMap.keys()[0];
         
@@ -199,16 +199,8 @@ class webserver:
 
         # file attributes page
         self.file_index = file_index.file_index( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
-        self.file_attributes_obj = file_attributes.file_attributes( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
+        self.file_attributes_obj = file_attributes.file_attributes( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True, file_attributes_fn=file_attributes_fn, file_attributes_filename_colname=file_attributes_filename_colname );
         self.file_attributes= self.file_attributes_obj.index;
-
-
-    def load_file_attributes( self, file_attributes_fn ):
-      # load the file attributes from csv
-      with open(file_attributes_fn, 'rb') as csvfile:
-        self.file_attributes = csv.reader(csvfile, delimiter=',', quotechar='"');
-
-      #### @todo: build index with correspondence between docID and csv row-id
 
 def getOptional( f, defaultValue ):
     
@@ -252,7 +244,7 @@ def get(
             };
     
     hostname= socket.gethostname();
-    print 'Hostname: ', hostname;
+    #print 'Hostname: ', hostname;
     if hostname=='claros3':
         hostname= 'http://claros3.oerc.ox.ac.uk';
     elif hostname in ['arthur','arthurlegacy']:
@@ -260,16 +252,13 @@ def get(
     elif hostname in ['thaisa','sands','zeus']:
         hostname= 'http://%s.robots.ox.ac.uk' % hostname;
     else:
-        if hostname!='Relja-laptop':
-            print '\n\n\tUnknown hostname\n\n';
         hostname= 'http://localhost';
     serveraddress= '%s:%d' % (hostname, webserverPort);
     
-    print '\nConfiguration:\n';
     for datasetOpt in datasetOpts:
-        print '\tdsetname=', datasetOpt['dsetname'];
-        print '\tAPIport=', datasetOpt['APIport'];
-        print '\tenableUpload=', datasetOpt['enableUpload'];
+        print 'Dataset: ', datasetOpt['dsetname'];
+        print 'APIport: ', datasetOpt['APIport'];
+        print 'enableUpload: ', datasetOpt['enableUpload'];
     
     #DEBUG_upload= True;
     DEBUG_upload= False;
@@ -329,9 +318,11 @@ def get(
         
 
         # Load all dataset files metadata        
-        file_attributes_fn = getOptional( lambda: config.get(dsetname, 'file_attributes'), None );
+        file_attributes_fn = getOptional( lambda: config.get(dsetname, 'file_attributes_fn'), None );
+        file_attributes_filename_colname = getOptional( lambda: config.get(dsetname, 'file_attributes_filename_colname'), 'filename' );
+
         if ( file_attributes_fn != None ):
-          print "file_attributes_fn=%s" %(file_attributes_fn);
+          print "Loading file attributes from: %s ..." %(file_attributes_fn);
 
         # API construction
         
@@ -387,7 +378,7 @@ def get(
     if onlyAPI:
         return API_obj;
 
-    webserver_obj= webserver( API_obj, serveraddress, serverroot, docMap_obj, enableUpload, guiOpts, pathManager= pathManager_obj, examples= examples, externalExamples= externalExamples );
+    webserver_obj= webserver( API_obj, serveraddress, serverroot, docMap_obj, enableUpload, guiOpts, pathManager= pathManager_obj, examples= examples, externalExamples= externalExamples, file_attributes_fn=file_attributes_fn, file_attributes_filename_colname=file_attributes_filename_colname );
     
     return webserver_obj, conf;
     
@@ -427,11 +418,8 @@ def start(
     for handler in tuple(error_log.handlers):
         error_log.removeHandler(handler)
 
-    print 'cherrypy options:';
-    print '\twebserverHost=', webserverHost;
-    print '\twebserverPort=', webserverPort;
-    print '\tserverroot=', serverroot;
-    print '\tapp_namespace=', app_namespace;
+    print 'Application namespace: ', app_namespace;
+    print '\nServer listening for requests at %s:%d ...' % (webserverHost, webserverPort);
     
     if serverroot=='/':
         cherrypy.quickstart( webserver_obj, app_namespace, config= conf );

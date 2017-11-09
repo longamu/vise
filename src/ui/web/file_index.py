@@ -19,6 +19,7 @@ class file_index:
     self.docMap = docMap;
     self.pathManager_obj= pathManager_obj;
     self.dsetname = self.docMap.keys()[0];
+    self.file_index_html = '';
 
   def get(self, title= "", headExtra= "", body= "", outOfContainer= False ):
     html = """
@@ -49,21 +50,24 @@ li:nth-child(odd) { background-color: #f2f2f2;}
 
   @cherrypy.expose
   def index(self ):
-    file_count = len(self.docMap[self.dsetname]);
     body  = "<h1>Index of files in %s</h1>" % (self.dsetname)
     body += '<cite><ul style="list-style-type: disc; padding-left: 2rem;">'
-    body += "<li>It is very expensive (computationally) to generate this page. Do not close this browser tab if you want to use this page again.</li>";
     body += "<li>Use the web browser search functionality to search for keywords (press Ctrl + F)</li>";
     body += '<li>Click on the image-id (for example: [<a target="_blank" href="../search?docID=1">00001</a>]) to perform instance search using this image. </li>';
     body += "</ul></cite>";
-    body += '<ul style="margin-top: 2rem;">'
 
-    for doc_id in range(0,file_count):
-    #for doc_id in range(0,100):
-        #body+= '<li>%s,</li>' % ( self.pathManager_obj[dsetname].displayPath(sampleImages[iImage+jImage]) if self.doShowPath else "");
-        body += '<li>[<a target="_blank" href="../search?docID=%d">%.5d</a>] <a target="_blank" href="../getImage?docID=%d">%s</a></li>' % (doc_id, doc_id, doc_id, self.pathManager_obj[self.dsetname].displayPath(doc_id));
+    # cache the index for subsequent requests
+    if self.file_index_html == '':
+      self.file_index_html = '<ul style="margin-top: 2rem;">'
+  
+      file_count = len(self.docMap[self.dsetname]);
+      for doc_id in range(0,file_count):
+      #for doc_id in range(0,100):
+          self.file_index_html += '<li>[<a target="_blank" href="../search?docID=%d">%.5d</a>] <a target="_blank" href="../getImage?docID=%d">%s</a></li>' % (doc_id, doc_id, doc_id, self.pathManager_obj[self.dsetname].displayPath(doc_id));
 
-    body += '</ul>'
+      self.file_index_html += '</ul>';
+
+    body += self.file_index_html;
     headExtra = '';
 
 
