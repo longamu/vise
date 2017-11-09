@@ -30,7 +30,7 @@ class file_attributes:
   def load_file_attributes(self, file_attributes_fn, file_attributes_filename_colname):
     csv_metadata = pd.read_csv(file_attributes_fn);
     csv_metadata.rename( columns={file_attributes_filename_colname: 'filename'}, inplace=True );
-    csv_metadata.loc[:, ~csv_metadata.columns.str.contains('^Unnamed')]; # remove unnamed columns
+    csv_metadata.drop([col for col in csv_metadata.columns if "Unnamed" in col], axis=1, inplace=True) # remove unnamed columns
 
     file_count = len(self.docMap[self.dsetname]);
     dataset_index = {};
@@ -44,25 +44,80 @@ class file_attributes:
     self.file_attributes_index = pd.merge(dataset_index_df, csv_metadata, on='filename')
     print 'Finished loading attributes for %d files' % (len(self.file_attributes_index.index))
 
+  def filename_to_docid(self, filename_pattern):
+    match = self.file_attributes_index[ self.file_attributes_index['filename'].str.contains(filename_pattern) ]
+    return match.iloc[:]['doc_id']
+
   @cherrypy.expose
-  def index(self, docID= None):
+  def index(self, docID= None, filename=None):
+    doc_id_list = pd.Series( data=[], dtype=int );
+
     if docID == None:
-      doc_id = 0;
+      if filename == None:
+        doc_id_list = pd.Series( data=[0], dtype=int ); # show first image if no argument is provided
+      else:
+        doc_id_list = self.filename_to_docid(filename);
     else:
-      doc_id = int(docID);
+      doc_id_list = pd.Series( data=[docID], dtype=int );
 
-    filename = self.pathManager_obj[self.dsetname].displayPath(doc_id)
+    file_count = len(self.docMap[self.dsetname]);
+    navigation = '<div id="navbar" style="border: 1px solid #ccc; padding: 1rem;height: 1rem;">';
 
-    body  = "<h1>File: %s</h1>" % (filename)
-    body += '<p><a href="search?docID=%d"><img src="getImage?docID=%d&width=400"></a><br><cite>Click on the image to use it for searching.</cite></p>' %(doc_id, doc_id);
-    body += '<p>Metadata</p><ul>';
+    if doc_id_list.size == 1:
+      doc_id = doc_id_list.iloc[0]
+      navigation += '<span style="float: left;">Showing file %d of total %d files</span>' % (doc_id, file_count);
 
-    metadata = self.file_attributes_index[ self.file_attributes_index['doc_id'] == doc_id ];
-    for column in metadata:
-      body += '<li>%s: %s</li>' %(column, metadata[column]);
-    body += '</ul>';
+    navigation+= '<span style="float:right">';
+    navigation+= '<form action="file_attributes" method="POST" id="filename_search">'
+    navigation+= '<input style="font-size: 1rem; border:0;" type="text" name="filename" size="10">'
+    navigation+= '&nbsp;&nbsp;<button style="font-size: 1rem; border:0;" type="submit" form="filename_search" value="Submit">Search File</button> '
+    navigation+= '</form>'
+    navigation+= '&nbsp;&nbsp;|&nbsp;&nbsp;'
+    if doc_id_list.size == 1:
+      doc_id = doc_id_list.iloc[0]
+      if doc_id > 0:
+          navigation+= '<a href="./file_attributes?docID=%d">Prev</a>&nbsp;&nbsp;|&nbsp;&nbsp;' % ( doc_id - 1 );
+      if doc_id < file_count:
+          navigation+= '<a href="./file_attributes?docID=%d">Next</a>&nbsp;&nbsp;|&nbsp;&nbsp;' % ( doc_id + 1 );
+
+    navigation+= '<a target="_blank" href="file_index" title="Browse index of files in this dataset">Index</a></span></div>';  
+
+    body  = navigation
+
+    if doc_id_list.size == 0:
+      body += "<h1>File not found</h1>"
+      title = ""
+    elif doc_id_list.size == 1:
+      doc_id = doc_id_list.iloc[0]
+      filename = self.pathManager_obj[self.dsetname].displayPath(doc_id)
+      body += "<h1>File: %s</h1>" % (filename)
+      body += '<table style="width:100%;">'
+      body += '<tr><td valign="top">'
+      body += '<p><a title="Search using this image" href="search?docID=%d"><img src="getImage?docID=%d&width=400"></a></p><p><i>Click on the image to use it for searching.</i></p></td>' %(doc_id, doc_id);
+
+      metadata = self.file_attributes_index[ self.file_attributes_index['doc_id'] == doc_id ];
+      if metadata.shape[0] == 1:
+        body += '<td valign="top"><ul>';
+        for key in metadata:
+          value = metadata.iloc[0][key]
+          if type(value) == str and value.startswith('http://'):
+            value = '<a target="_blank" href="%s">%s</a>' % (value, value)
+
+          body += '<li>%s: %s</li>' %(key, value);
+        body += '</ul></td></tr></table>';
+      else:
+        body += '<td><p>File attributes not found</p></td>';
+      title = "File: %s" % (filename)
+    else:
+      # show a list of files
+      body += "<h1>Search result</h1>"
+      body += "<ul>"
+      for doc_id in doc_id_list:
+        match = self.file_attributes_index[ self.file_attributes_index['doc_id'] == doc_id ]
+        body += '<li>[<a title="Search using this image" href="../search?docID=%d">%.5d</a>] <a title="View image attributes" href="file_attributes?docID=%d">%s</a></li>' % (doc_id, doc_id, doc_id, match.iloc[0]['filename']);
+      body += "</ul>"
+
+      title = "Search result"
 
     headExtra = '';
-
-    title = "File: %s" % (filename)
     return self.pT.get( title=title, body=body, headExtra=headExtra );
