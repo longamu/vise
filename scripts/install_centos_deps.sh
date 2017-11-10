@@ -108,3 +108,6 @@ else
   make install
 fi
 
+## Run as root
+# yum install cairo-devel.x86_64 cairo.x86_64
+#
