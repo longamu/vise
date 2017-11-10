@@ -53,14 +53,15 @@ class page0:
             sampleImages= range(startFrom,endBefore);
             lastPage= (total_num+numPerPage-1)/numPerPage-1;
             
-            navigation  = '<div id="navbar" style="display: block;overflow:hidden;background-color:#d7f4f6;border: 1px solid #ccc;padding: 1rem;line-height: 2rem">'
-            navigation += 'Showing %d to %d of total %d files&nbsp;&nbsp;|&nbsp;&nbsp;' % (startFrom+1, endBefore, total_num);
-            navigation += '<span style="line-height: 2rem; float:right;">'
+            navigation  = '<div id="navbar" style="display:table; width:96%; background-color:#d7f4f6; border:1px solid #ccc; padding:1rem; line-height:2rem">'
+            navigation += '<div style="display: table-cell;text-align: left;">Showing %d to %d of total %d files</div>' % (startFrom+1, endBefore, total_num);
+            navigation += '<div style="display: table-cell;">'
             navigation += '<form action="file_attributes" method="POST" id="filename_search">'
             navigation += '<input type="text" name="filename" value="enter partial filename" title="search filenames using keyword or regular expression" size="12" onclick="this.value=\'\';">'
-            navigation += '&nbsp;&nbsp;<button type="submit" form="filename_search" value="Submit">Search</button>'
-            navigation += '</form>&nbsp;&nbsp;|&nbsp;&nbsp;'
+            navigation += '&nbsp;<button type="submit" form="filename_search" value="Submit">Search</button>'
+            navigation += '</form></div>'
 
+            navigation += '<div style="display: table-cell; text-align: right;">'
             if page>0:
                 if page>1:
                     navigation+= '<a href="page0?&numPerPage=%d&browse=true&page=%d">First</a>&nbsp;&nbsp;|&nbsp;&nbsp;' % ( numPerPage, 0 );
@@ -68,7 +69,7 @@ class page0:
             if page < lastPage:
                 navigation+= '<a href="page0?numPerPage=%d&browse=true&page=%d">Next</a>&nbsp;&nbsp;|&nbsp;&nbsp;' % ( numPerPage, page+1 );
 
-            navigation += '<a target="_blank" href="file_index" title="Browse index of files in this dataset">Index</a></span>';
+            navigation += '<a target="_blank" href="file_index" title="Browse index of files in this dataset">Index</a></div>';
             navigation += '</div>';
         else:
             

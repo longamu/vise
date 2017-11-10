@@ -61,22 +61,23 @@ class file_attributes:
       doc_id_list = pd.Series( data=[docID], dtype=int );
 
     file_count = len(self.docMap[self.dsetname]);
-    navigation  = '<div id="navbar" style="display: block;background-color:#d7f4f6;border: 1px solid #ccc;padding: 1rem;line-height: 2rem">'
+    navigation  = '<div id="navbar" style="display: table; width:96%;background-color:#d7f4f6;border: 1px solid #ccc;padding: 1rem;line-height: 2rem">'
 
     if doc_id_list.size == 1:
       doc_id = doc_id_list.iloc[0]
-      navigation += 'Showing file %d of total %d files' % (doc_id, file_count);
+      navigation += '<div style="display: table-cell;text-align: left;">Showing file %d of total %d files</div>' % (doc_id, file_count);
     else:
       if filename != None:
-        navigation += 'Search keyword: %s' % (filename)
+        navigation += '<div style="display: table-cell;text-align: left;">Search keyword: %s</div>' % (filename)
       else:
-        navigation += '&nbsp;'
+        navigation += '<div style="display: table-cell;text-align: left;">&nbsp;</div>'
 
-    navigation += '<span style="line-height: 2rem; float:right;">'
+    navigation += '<div style="display: table-cell;">'
     navigation += '<form action="file_attributes" method="POST" id="filename_search">'
     navigation += '<input type="text" name="filename" value="enter partial filename" title="search filenames using keyword or regular expression" size="12" onclick="this.value=\'\';">'
-    navigation += '&nbsp;&nbsp;<button type="submit" form="filename_search" value="Submit">Search</button>'
-    navigation += '</form>&nbsp;&nbsp;|&nbsp;&nbsp;'
+    navigation += '&nbsp;<button type="submit" form="filename_search" value="Submit">Search</button>'
+    navigation += '</form></div>'
+    navigation += '<div style="display: table-cell; text-align: right;">'
 
     if doc_id_list.size == 1:
       doc_id = doc_id_list.iloc[0]
@@ -85,8 +86,8 @@ class file_attributes:
       if doc_id < file_count:
           navigation+= '<a href="./file_attributes?docID=%d">Next</a>&nbsp;&nbsp;|&nbsp;&nbsp;' % ( doc_id + 1 );
 
-    navigation += '<a target="_blank" href="file_index" title="Browse index of files in this dataset">Index</a></span>';
-    navigation += '</div>';  
+    navigation += '<a target="_blank" href="file_index" title="Browse index of files in this dataset">Index</a></div>';
+    navigation += '</div>'; 
 
     body  = navigation
 

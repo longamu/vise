@@ -141,11 +141,11 @@ class doSearch:
         body+= """
             <tr>
                 <td>&nbsp;</td>
-                <td>name: %s</td>
+                <td>Filename: <a href="file_attributes?docID=%d">%s</a></td>
                 <td width="210" align="center">%s</td>
                 <td width="20" align="center">&nbsp;</td>
             </tr></table></center><br>
-            """  % (queryFn, queryImage);
+            """  % (docID, queryFn, queryImage);
         
         
         # navigation
@@ -199,6 +199,7 @@ class doSearch:
             # results
             for (rank, docIDres, score, metadata, metadata_region, H) in results:
                 boxArg="xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f" % (xl,xu,yl,yu);
+                match_compare_url = '<a href="register?%s&docID2=%d&%s">Compare matching regions</a><br>' % (querySpec1, docIDres, boxArg);
                 if H!=None:
                     boxArg+= "&H=%s" % H;
                     match_details_url = "details?%s&docID2=%d&%s" % (querySpec1, docIDres, boxArg);
@@ -237,11 +238,13 @@ class doSearch:
                 <tr>
                     <td valign=\"top\">%d</td>
                     <td>
-                        Filename: <a href="search?docID=%d">%s</a><br>
-                        Match score: %.6f<br>
-                        <p><a href="%s">Show details of match</a><br>
-                        <a target="_blank" href="file_attributes?docID=%d">Show file metadata</a><br>
+                        Filename: <a href="file_attributes?docID=%d">%s</a><br>
+                        Match score: <a href="%s">%.6f</a><br>
+                        <p>
+                        <a href="%s">More details of this match</a><br>
+                        <a href="file_attributes?docID=%d">Show file metadata</a><br>
                         <a href="search?docID=%d">Search using this image</a><br>
+                        %s
                         </p>
                         %s<br>
                     </td>
@@ -250,7 +253,7 @@ class doSearch:
                     </td>
                 </tr>
                 <tr><td colspan="4"><hr style="border:solid; border-width:1px 0 0 0;"></td></tr>
-                """ % (rank+1, docIDres, hiddenPath, score, match_details_url, docIDres, docIDres, metadata_html, \
+                """ % (rank+1, docIDres, hiddenPath, match_details_url, score, match_details_url, docIDres, docIDres, match_compare_url, metadata_html, \
                        match_details_url, docIDres, boxArg );
         else:
             

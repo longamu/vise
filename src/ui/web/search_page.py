@@ -36,6 +36,7 @@ from upload import savedTemp;
 import get_scriptroot;
 scriptroot= get_scriptroot.getScriptroot();
 
+import copy;
 
 class searchPage:
     
@@ -44,8 +45,8 @@ class searchPage:
         self.docMap= docMap;
         self.pathManager_obj= pathManager_obj;
         self.def_dsetname= self.docMap.keys()[0];
-        
-        
+
+
     @cherrypy.expose
     def index(self, docID= None, fn= None, uploadID= None, startFrom= "0", numberToReturn= "20", dsetname= None):
         
@@ -97,22 +98,19 @@ class searchPage:
         scale= min( float(imw_limit)/imh, float(imh_limit)/imw );
                
 
-        body+='name: %s<br><br>\n' % filename;
-        body+='<a href="getImageFull?%s&dsetname=%s">Full size image</a><br><br>' % (querySpec, dsetname);
-
-        body+= '<center><img id="cropbox" src="getImage?%s&dsetname=%s&width=%d&height=%d"></center><br>\n' % (querySpec, dsetname, imw_limit, imh_limit);
-
         body+= '''
         <center>
-        <input type="button" value="Search" onclick="javascript:selSearch(event, %.4f)" style="width: 400px; height:100px; font-size:30">
-        <br><br>
-        Note: Click on the image and drag to select a query region.
+        <p><input name="search1" type="button" value="Search" onclick="javascript:selSearch(event, %.4f)" style="width: 12rem; height:4rem; font-size:2rem"></p>
+        <p>To select a region, click and drag on the image below</p>
         </center>
         ''' % scale;
-        
+
+        body+= '<center><img id="cropbox" src="getImage?%s&dsetname=%s&width=%d&height=%d"></center><br>\n' % (querySpec, dsetname, imw_limit, imh_limit);
+        body+= '<center><p>Filename: <a href="file_attributes?docID=%d">%s</a> (view original <a href="getImageFull?%s&dsetname=%s">full resolution</a> image)</p></center>' % (docID, filename, querySpec, dsetname);
+        body+= '<center><p><input name="search2" type="button" value="Search" onclick="javascript:selSearch(event, %.4f)" style="width: 12rem; height:4rem; font-size:2rem"></p></center>' % scale
+
+       
         return self.pT.get(title= "Search", headExtra= headExtra, body= body);
-    
-    
     
     @cherrypy.expose
     def getImageFull(self, docID= None, uploadID= None, dsetname= None):
