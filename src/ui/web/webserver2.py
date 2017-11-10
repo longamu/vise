@@ -198,7 +198,9 @@ class webserver:
         self.api_exec_query= self.webAPI_obj.api_exec_query;
 
         # file attributes page
-        self.file_index = file_index.file_index( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
+        self.file_index_obj = file_index.file_index( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
+        self.file_index = self.file_index_obj.index;
+
         self.file_attributes_obj = file_attributes.file_attributes( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True, file_attributes_fn=file_attributes_fn, file_attributes_filename_colname=file_attributes_filename_colname );
         self.file_attributes= self.file_attributes_obj.index;
 

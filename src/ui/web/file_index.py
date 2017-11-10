@@ -63,7 +63,7 @@ li:nth-child(odd) { background-color: #f2f2f2;}
       file_count = len(self.docMap[self.dsetname]);
       for doc_id in range(0,file_count):
       #for doc_id in range(0,100):
-          self.file_index_html += '<li>[<a target="_blank" href="../search?docID=%d">%.5d</a>] <a target="_blank" href="../getImage?docID=%d">%s</a></li>' % (doc_id, doc_id, doc_id, self.pathManager_obj[self.dsetname].displayPath(doc_id));
+          self.file_index_html += '<li>[<a target="_blank" href="search?docID=%d">%.5d</a>] <a target="_blank" href="file_attributes?docID=%d">%s</a></li>' % (doc_id, doc_id, doc_id, self.pathManager_obj[self.dsetname].displayPath(doc_id));
 
       self.file_index_html += '</ul>';
 
