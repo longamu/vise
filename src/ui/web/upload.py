@@ -39,6 +39,10 @@ scriptroot= get_scriptroot.getScriptroot();
 tmpDir=    os.path.join( scriptroot, 'tmp/' );
 uploadDir= os.path.join( scriptroot, 'tmp/uploaded/' );
 
+print 'scriptroot = %s' %(scriptroot);
+print 'uploadDir = %s' %(uploadDir);
+print 'tmpDir = %s' %(tmpDir);
+
 maxSizeDefault= 600;
 
 
@@ -134,7 +138,7 @@ class upload:
         
         st['size']= 0;
         st['allData']= '';
-        
+
         os.popen('mkdir -p "%s%s"' % (uploadDir,upID) );
         st.store( upID );
         
@@ -144,7 +148,14 @@ class upload:
     
     @cherrypy.expose
     def upload(self, uploadFile= None, uploadURL= None, **kwargs):
-        
+        print 'cherrypy.request.headers.get("Content-Length")=%s' %(cherrypy.request.headers.get("Content-Length"));
+        print 'uploadFile = %s' %(uploadFile.filename);
+        print 'uploadFile type = %s' %( type(uploadFile.filename) );
+        print 'uploadURL = %s' %(uploadURL);
+        if ( not uploadFile.filename and not uploadURL ):
+          body = "<h2>Error: image not selected</h2><p>Select a local image file or a URL to an image and press <i>Upload and Search</i> button.</p>"
+          return self.pT.get( title= "File upload error", headExtra= '', body= body );
+
         st, upID= self.initUpload( uploadFile, uploadURL, **kwargs );
         returnURL= "dosearch?uploadID=%s" % upID;
         

@@ -120,7 +120,7 @@ class file_attributes:
       title = "File: %s" % (filename)
     else:
       # show a list of files
-      body += "<h1>Search result</h1>"
+      body += "<h1>Search result : found %d files</h1>" %(doc_id_list.size)
       body += "<ul>"
       for doc_id in doc_id_list:
         match = self.file_attributes_index[ self.file_attributes_index['doc_id'] == doc_id ]

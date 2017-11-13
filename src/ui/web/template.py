@@ -21,10 +21,10 @@ class template:
         
         self.titlePrefix= titlePrefix if not(titlePrefix==None) else "Image Search:";
         self.titlePrefix+= ' ';
-        self.homeText= homeText if not(homeText==None) else "VGG Image Search Engine";
+        self.homeText= homeText if not(homeText==None) else "VGG Image <br>Search Engine";
         self.headerImage= ("style=\"background: url('%s') no-repeat;\"" % headerImage) if not(headerImage==None or len(headerImage)<3) else "";
         self.topLink= topLink if not(topLink==None) else "page0";
-        self.bottomText= bottomText if not(bottomText==None) else '<div><p style="text-align: center; font-size:small;"><a href="http://www.robots.ox.ac.uk/~vgg/software/vise/">VGG Image Search Engine</a> is an open source project developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group (VGG)</a>.</div>';
+        self.bottomText= bottomText if not(bottomText==None) else '<div style="text-align: center;font-size:small;"><a href="http://www.robots.ox.ac.uk/~vgg/software/vise/">VGG Image Search Engine (VISE)</a> is an open source project developed by the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group (VGG)</a>.</div>';
         self.haveLogout= haveLogout;
         self.enableUpload= enableUpload;
         
@@ -41,7 +41,7 @@ class template:
 <html><head>
     <title>%s%s</title>
     
-    <link rel="stylesheet" type="text/css" href="static/style.130705.css">
+    <link rel="stylesheet" type="text/css" href="static/vise.css">
     
     <script language="javascript">
         
@@ -65,15 +65,7 @@ class template:
 <body>
     """ % ( self.titlePrefix, title, headExtra );
         
-        
-        if not(outOfContainer):
-            
-            res+= """
-<div id="page">
-
-
-    <div id="header">
-            """;
+        res+= '<div id="page"><div id="header">';
     
         res+= """
         <table width="100%%" cellpadding="0" cellspacing="10" border="0">
@@ -117,13 +109,15 @@ class template:
             res+= """
         <tr>
             <td colspan="%d" align="center">
-                <form action="upload?" method="post" name="upload" id="upload" enctype="multipart/form-data">
-                    File: <input name="uploadFile" type="file" size="5">
-                    or URL: <input name="uploadURL" id="uploadURL" type="text" size="10">
-                    &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;
-                    <input value="Upload and Search" type="submit">
-                    &nbsp;&nbsp;%s
-                </form>
+              <div id="file_upload_bar" style="display:table; width:96%%; padding:0rem; line-height:2rem">
+              <div style="display: table-cell;text-align:left;">Upload and Search</div>
+              <div style="display: table-cell;text-align:left;">
+              <form action="upload" method="POST" name="upload" id="upload" enctype="multipart/form-data">
+              <input name="uploadFile" type="file" size="5">
+              <input name="uploadURL" id="uploadURL" type="text" size="10" value="or, enter url" onclick="this.value=\'\';">
+              <input value="Upload and Search" type="submit">&nbsp;&nbsp;%s
+              </form></div>
+              </div>
             </td>
         </tr>
             """ % ( 2 if not(self.haveLogout) else 3, \
@@ -135,25 +129,16 @@ class template:
         
         
         res+= "</table>";
-        
-        if not(outOfContainer):
-            
-            res+= """
-    
-    </div>
-    
-    <div id="content">
-            """;
-        
-        res+= "%s<br>" % body;
-        
-        if not(outOfContainer):
-            res+= "</div>";
-        
-        res+= "%s<br><br>" % self.bottomText;
-        
-        if not(outOfContainer):
-            res+= "</div>";
+        res+= "</div> <!-- end of header -->"
+
+        if outOfContainer:
+          res+= '</div> <!-- end of page -->';
+          res+= '<div id="wide_content" style="width: 100%%;">%s</div>' % (body);
+          res+= '<div style="text-align:center; display: block; padding:3rem 0;">%s</div>' %(self.bottomText);
+        else:
+          res+= '<div id="content">%s</div>' % (body);
+          res+= '<div style="text-align:center; display: block; padding:3rem 0;">%s</div>' %(self.bottomText);
+          res+= '</div> <!-- end of page -->';
 
         res+= "</body></html>";
         

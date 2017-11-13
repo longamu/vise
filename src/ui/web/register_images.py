@@ -66,142 +66,62 @@ class registerImages:
         outFnPrefix= os.path.join( scriptroot, 'tmp' );
         width1= Image.open( os.path.join( outFnPrefix, '%s_%s.jpg' % (registerID,"im1") ) ).size[0];
         
-        title= "Image comparison";
-        
-        headExtra= """
+        title= "Image Comparator";
+
+        im1_id = ("docID=%s" % docID1) if uploadID1==None else ("uploadID=%s" % uploadID1);
+        im2_id = ("docID=%s" % docID2);
+        body = """
+<div style="display: table; padding: 1rem; margin: auto; text-align: center;">
+  <div style="display: table-row;">
+    <div style="display: table-cell;">&nbsp;</div>
+    <div style="display: table-cell;text-align: center">Click on the image to <a onclick="change_compare_img();">switch</a> between regions being compared.</div>
+    <div style="display: table-cell;">&nbsp;</div>
+  </div>
+  <div style="display: table-row;">
+    <div style="display: table-cell; padding: 1rem;"><img name="im1" src="tmpImage?registerID=%s&imName=im1"></div>
+    <div style="display: table-cell; padding: 1rem;"><img name="compare_img" onmousedown="change_to_im2t();" onmouseup="change_to_im1();"></div>
+    <div style="display: table-cell; padding: 1rem;"><img name="im2t" src="tmpImage?registerID=%s&imName=im2t"></div>
+  </div>
+  <div style="display: table-row;">
+    <div style="display: table-cell;text-align: center"><a href="search?%s">Search on full image</a> (or, view <a href="getImageFull?%s">full image</a>)</div>
+    <div style="display: table-cell;text-align: center">&nbsp;</div>
+    <div style="display: table-cell;text-align: center"><a href="search?docID=%s">Search on full image</a> (or, view <a href="getImageFull?docID=%s">full image</a>)</div>
+  </div>
+</div>
+
 <script language="javascript">
-    
-    var isIE = document.all ? true : false;
-    document.onmousemove = getMousePosition;
-    
     jsIm1 = new Image();
     jsIm2t= new Image();
     jsIm1.src ="tmpImage?registerID=%s&imName=im1";
     jsIm2t.src="tmpImage?registerID=%s&imName=im2t";
     
     var currentImage= 1;
-    
-    function getMousePosition(e){
-        if (!isIE) {
-            posX= e.pageX; posY= e.pageY;
-        }
-        if (isIE) {
-            posX= event.clientX + document.body.scrollLeft;
-            posY= event.clientY + document.body.scrollTop;
-        }
-    }
-    
-    function changeTo1(){
-        document['image'].src= jsIm1.src;
+
+    function change_to_im1(){
+        document['compare_img'].src= jsIm1.src;
         currentImage= 1;
     }
 
-    function changeTo2(){
-        document['image'].src= jsIm2t.src;
+    function change_to_im2t(){
+        document['compare_img'].src= jsIm2t.src;
         currentImage= 2;
     }
-    
-    function swapImage(){
-        if (currentImage==1){
-            changeTo2();
-        } else {
-            changeTo1();
-        }
-    }
-    
-    function findPosX( obj ){
-        x= 0;
-        if (obj.offsetParent){
-            while (1) {
-                x+= obj.offsetLeft;
-                if (!obj.offsetParent) break;
-                obj= obj.offsetParent;
-            }
-        }
-        return x;
+    function change_compare_img() {
+      switch(currentImage) {
+      case 1:
+        change_to_im2t();
+        break;
+      case 2:
+        change_to_im1();
+        break;
+      }
     }
 
-    function mouseMove( obj, e ){
-        clickX= posX - findPosX(obj);
-        if (clickX > (obj.width)/2){
-            changeTo2();
-        } else {
-            changeTo1();
-        }
-    }
-
+    change_to_im1();
 </script>
-    """ % (registerID, registerID);
-        
-        body= """
-<center>
-<table>
-
-<tr>
-    
-    <td align="center">
-        <center>Image 1</center>
-    </td>
-    
-    <td align="center">
-        Flip between images by moving the mouse to the left (image 1) or right (image 2) part of the image.
-    </td>
-    
-    <td align="center">
-        <center>Image 2</center>
-    </td>
-    
-</tr>
-
-<tr>
-    <td align="center">
-        <img name="im1" onmouseover="javascript:changeTo1();" onmouseclick="javascript:changeTo1();">
-        <script language="javascript">
-            document['im1'].src= jsIm1.src
-        </script>
-    </td>
-    
-    <td align="center">
-        <img name="image" onmousemove="javascript:mouseMove(this);" onmouseclick="javascript:swapImage();">
-        <script language="javascript">
-            changeTo1();
-        </script>
-    </td>
-    
-    
-    <td align="center">
-        <img name="im2" src="tmpImage?registerID=%s&imName=im2&width=%d" onmouseover="javascript:changeTo2();" onmouseclick="javascript:changeTo2();">
-    </td>
-</tr>
-
-<tr>
-    <td align="center">
-    <a href="getImageFull?%s">High resolution full image</a><br>
-    </td>
-    <td></td>
-    <td align="center">
-    <a href="getImageFull?docID=%s">High resolution full image</a><br>
-    </td>
-</tr>
-
-<tr>
-    <td align="center">
-    <a href="search?%s">Search on full image</a><br>
-    </td>
-    <td></td>
-    <td align="center">
-    <a href="search?docID=%s">Search on full image</a><br>
-    </td>
-</tr>
-
-</table>
-</center>
-
-""" % ( registerID, width1, \
-        ("docID=%s" % docID1) if uploadID1==None else ("uploadID=%s" % uploadID1), docID2, \
-        ("docID=%s" % docID1) if uploadID1==None else ("uploadID=%s" % uploadID1), docID2 );
-        
-        return self.pT.get(title= title, headExtra= headExtra, body= body, outOfContainer= True);
+""" % (registerID, registerID, \
+      im1_id, im1_id, docID2, docID2, registerID, registerID);
+        return self.pT.get(title= title, headExtra= "", body= body, outOfContainer= True);
         
     
     

@@ -106,7 +106,11 @@ class searchPage:
         ''' % scale;
 
         body+= '<center><img id="cropbox" src="getImage?%s&dsetname=%s&width=%d&height=%d"></center><br>\n' % (querySpec, dsetname, imw_limit, imh_limit);
-        body+= '<center><p>Filename: <a href="file_attributes?docID=%d">%s</a> (view original <a href="getImageFull?%s&dsetname=%s">full resolution</a> image)</p></center>' % (docID, filename, querySpec, dsetname);
+        if docID!=None:
+          body+= '<center><p>Filename: <a href="file_attributes?docID=%d">%s</a> (view original <a href="getImageFull?%s&dsetname=%s">full resolution</a> image)</p></center>' % (docID, filename, querySpec, dsetname);
+        else:
+          body+= '<center><p>Filename: %s</p></center>' % (filename);
+
         body+= '<center><p><input name="search2" type="button" value="Search" onclick="javascript:selSearch(event, %.4f)" style="width: 12rem; height:4rem; font-size:2rem"></p></center>' % scale
 
        

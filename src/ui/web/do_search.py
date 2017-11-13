@@ -138,15 +138,25 @@ class doSearch:
         
         body+= "<h3>Query Image</h3>";
         body+= '<center><table width="80%" border="0">';
-        body+= """
-            <tr>
-                <td>&nbsp;</td>
-                <td>Filename: <a href="file_attributes?docID=%d">%s</a></td>
-                <td width="210" align="center">%s</td>
-                <td width="20" align="center">&nbsp;</td>
-            </tr></table></center><br>
-            """  % (docID, queryFn, queryImage);
-        
+
+        if uploadID==None:
+          body+= """
+              <tr>
+                  <td>&nbsp;</td>
+                  <td>Filename: <a href="file_attributes?docID=%d">%s</a></td>
+                  <td width="210" align="center">%s</td>
+                  <td width="20" align="center">&nbsp;</td>
+              </tr></table></center><br>
+              """  % (docID, queryFn, queryImage);
+        else:
+          body+= """ 
+              <tr>
+                  <td>&nbsp;</td>
+                  <td>Filename: %s</td>
+                  <td width="210" align="center">%s</td>
+                  <td width="20" align="center">&nbsp;</td>
+              </tr></table></center><br>
+              """  % (queryFn, queryImage);
         
         # navigation
         

@@ -421,6 +421,7 @@ def start(
     for handler in tuple(error_log.handlers):
         error_log.removeHandler(handler)
 
+
     print 'Application namespace: ', app_namespace;
     print '\nServer listening for requests at %s:%d ...' % (webserverHost, webserverPort);
     
