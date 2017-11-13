@@ -223,7 +223,7 @@ class details:
         drawLines= (drawLines=="true");
         drawRegions= (drawRegions=="true");
         
-        reljaDraw= False; # if this changes remove jp_draw !
+        reljaDraw= True; # if this changes remove jp_draw !
         
         cherrypy.response.headers['Content-Type'] = 'image/jpeg';
         
@@ -439,7 +439,7 @@ class details:
         #circleR= 20;
         circleR= np.ceil(max(elW,elH));
         extraSpace= 5;
-        imDim= (circleR+extraSpace)*2;
+        imDim= int((circleR+extraSpace)*2);
         mask= Image.new( "L", (imDim, imDim), 0 );
         maskd= ImageDraw.Draw(mask);
         maskd.ellipse( (extraSpace,extraSpace,extraSpace+2*circleR,extraSpace+2*circleR), outline= 255 );
@@ -447,11 +447,15 @@ class details:
         Haffinv[3]*= circleR; Haffinv[4]*= circleR;
         elImW+= np.ceil(2*extraSpace/(at*float(circleR)));
         elImH+= np.ceil(2*extraSpace/(ct*float(circleR)));
+
+        elImW = int(elImW);
+        elImH = int(elImH);
+
         mask= mask.transform( (elImW,elImH), Image.AFFINE, tuple(Haffinv), Image.NEAREST );
         #mask.show()
         
         #imd.bitmap( (x-float(mask.size[0])/2, y-float(mask.size[1])/2), mask );
-        xlu= x-float(mask.size[0])/2;
-        ylu= y-float(mask.size[1])/2;
+        xlu= int( x-float(mask.size[0])/2 );
+        ylu= int( y-float(mask.size[1])/2 );
         im.paste( ELLIPSE_COL, (xlu,ylu,xlu+mask.size[0],ylu+mask.size[1]), mask );
     
