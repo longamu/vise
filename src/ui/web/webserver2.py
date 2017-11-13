@@ -413,6 +413,14 @@ def start(
     
     cherrypy.config.update({'tools.encode.on': True, 'tools.encode.encoding': 'utf-8', 'tools.decode.on': True});
 
+    access_log = cherrypy.log.access_log
+    for handler in tuple(access_log.handlers):
+        access_log.removeHandler(handler)
+
+    error_log = cherrypy.log.error_log
+    for handler in tuple(error_log.handlers):
+        error_log.removeHandler(handler)
+
     print 'Application namespace: ', app_namespace;
     print '\nServer listening for requests at %s:%d ...' % (webserverHost, webserverPort);
     
