@@ -23,15 +23,11 @@ class file_attributes:
 
     self.attributes_available = False;
     self.file_attributes_index = None;
-    if file_attributes_fn != None:
-      self.attributes_available = True;
-      self.load_file_attributes(file_attributes_fn, file_attributes_filename_colname);
 
-  def load_file_attributes(self, file_attributes_fn, file_attributes_filename_colname):
-    csv_metadata = pd.read_csv(file_attributes_fn);
-    csv_metadata.rename( columns={file_attributes_filename_colname: 'filename'}, inplace=True );
-    csv_metadata.drop([col for col in csv_metadata.columns if "Unnamed" in col], axis=1, inplace=True) # remove unnamed columns
+    self.attributes_available = True;
+    self.load_file_attributes(file_attributes_fn, file_attributes_filename_colname);
 
+  def load_file_attributes(self, file_attributes_fn=None, file_attributes_filename_colname=None):
     file_count = len(self.docMap[self.dsetname]);
     dataset_index = {};
     dataset_index['doc_id'] = range(0, file_count);
@@ -39,9 +35,16 @@ class file_attributes:
     for doc_id in range(0,file_count):
       dataset_index['filename'].append(self.pathManager_obj[self.dsetname].displayPath(doc_id));
 
-    dataset_index_df = pd.DataFrame(dataset_index);
+    if file_attributes_fn != None:
+      csv_metadata = pd.read_csv(file_attributes_fn);
+      csv_metadata.rename( columns={file_attributes_filename_colname: 'filename'}, inplace=True );
+      csv_metadata.drop([col for col in csv_metadata.columns if "Unnamed" in col], axis=1, inplace=True) # remove unnamed columns
+      dataset_index_df = pd.DataFrame(dataset_index);
 
-    self.file_attributes_index = pd.merge(dataset_index_df, csv_metadata, on='filename')
+      self.file_attributes_index = pd.merge(dataset_index_df, csv_metadata, on='filename')
+    else:
+      self.file_attributes_index = pd.DataFrame(dataset_index);
+
     print 'Finished loading attributes for %d files' % (len(self.file_attributes_index.index))
 
   def filename_to_docid(self, filename_pattern):

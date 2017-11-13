@@ -21,10 +21,10 @@ class template:
         
         self.titlePrefix= titlePrefix if not(titlePrefix==None) else "Image Search:";
         self.titlePrefix+= ' ';
-        self.homeText= homeText if not(homeText==None) else "Oxford Image<br> Search";
+        self.homeText= homeText if not(homeText==None) else "VGG Image Search Engine";
         self.headerImage= ("style=\"background: url('%s') no-repeat;\"" % headerImage) if not(headerImage==None or len(headerImage)<3) else "";
         self.topLink= topLink if not(topLink==None) else "page0";
-        self.bottomText= bottomText if not(bottomText==None) else "";
+        self.bottomText= bottomText if not(bottomText==None) else '<div><p style="text-align: center; font-size:small;"><a href="http://www.robots.ox.ac.uk/~vgg/software/vise/">VGG Image Search Engine</a> is an open source project developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group (VGG)</a>.</div>';
         self.haveLogout= haveLogout;
         self.enableUpload= enableUpload;
         
@@ -79,16 +79,6 @@ class template:
         <table width="100%%" cellpadding="0" cellspacing="10" border="0">
         
         <tr>
-            <td colspan="%d" align="center">
-            <a href="http://www.robots.ox.ac.uk/~vgg">
-            <div id="VGG">
-            Visual Geometry Group, University of Oxford
-            </div>
-            </a>
-            </td>
-        </tr>
-        
-        <tr>
         
             <td width="200" align="center">
                 <a href="page0">
@@ -105,7 +95,7 @@ class template:
                 </div>
                 </a>
             </td>
-        """ % ( 2 if not(self.haveLogout) else 3, self.homeText, self.topLink, self.headerImage );
+        """ % (self.homeText, self.topLink, self.headerImage );
         
         if self.haveLogout:
             
