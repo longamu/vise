@@ -1,7 +1,6 @@
 #ifndef _API_V2_H_
 #define _API_V2_H_
 
-
 #include "spatial_api.h"
 
 #include <iostream>
@@ -45,6 +44,8 @@
 #include "tfidf_data.pb.h"
 #include "tfidf_v2.h"
 #include "util.h"
+
+#include "ImageMetadata.h"
 
 void api_v2(std::vector< std::string > argv);
 
