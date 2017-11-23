@@ -98,7 +98,6 @@ void SearchEngine::Preprocess() {
             s << transformed_img_width;
             unsigned int new_width;
             s >> new_width;
-            unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
 
             if ( new_width < size.width() ) {
               unsigned int new_height = (unsigned int) (new_width * aspect_ratio);
@@ -109,7 +108,7 @@ void SearchEngine::Preprocess() {
               im.write( dest_fn.string() );
               imglist_fn_transformed_size_.at(i) = boost::filesystem::file_size(dest_fn.string().c_str());
 
-	      // save to preprocess_log_fn
+      	      // save to preprocess_log_fn
               preprocess_log_f << std::endl << img_rel_path.string() << ","
                              << boost::filesystem::file_size(src_fn) << "," << size.width() << "," << size.height() << ","
                              << boost::filesystem::file_size(dest_fn) << "," << resize.width() << "," << resize.height();
