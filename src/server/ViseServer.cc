@@ -841,7 +841,7 @@ void ViseServer::InitiateSearchEngineTraining() {
     AddTrainingStat(search_engine_.GetName(),
                     GetCurrentStateName(),
                     elapsed.wall / 1e9,
-                    search_engine_.GetImglistTransformedSize());
+                    search_engine_.GetImglistSize());
 
     if ( UpdateState() ) {
       // send control message : state updated

@@ -66,7 +66,7 @@ void SearchEngine::Preprocess() {
 
     // preprocess log
     std::ofstream preprocess_log_f( preprocess_log_fn_.string().c_str(), std::fstream::out);
-    preprocess_log_f << "#image_fn,original_size,original_width,original_height,tx_size,tx_width,tx_height";
+    preprocess_log_f << "#image_fn,original_size,original_width,original_height,tx_width,tx_height\n";
 
     std::string transformed_img_width = GetEngineConfigParam("transformed_img_width");
     if (transformed_img_width != "original") {
@@ -75,6 +75,8 @@ void SearchEngine::Preprocess() {
     } else {
       SendLog("Preprocess", "\nCopying original images to [" + transformed_imgdir_.string() + "] ");
     }
+
+    std::vector<std::string> preprocess_imglist;
     for ( unsigned int i=0; i<imglist_.size(); i++ ) {
       boost::filesystem::path img_rel_path = imglist_.at(i);
       boost::filesystem::path src_fn  = original_imgdir_ / img_rel_path;
@@ -104,14 +106,12 @@ void SearchEngine::Preprocess() {
 
               Magick::Geometry resize = Magick::Geometry(new_width, new_height);
               im.zoom( resize );
-
               im.write( dest_fn.string() );
-              imglist_fn_transformed_size_.at(i) = boost::filesystem::file_size(dest_fn.string().c_str());
 
       	      // save to preprocess_log_fn
-              preprocess_log_f << std::endl << img_rel_path.string() << ","
+              preprocess_log_f << img_rel_path.string() << ","
                              << boost::filesystem::file_size(src_fn) << "," << size.width() << "," << size.height() << ","
-                             << boost::filesystem::file_size(dest_fn) << "," << resize.width() << "," << resize.height();
+                             << boost::filesystem::file_size(dest_fn) << "," << resize.width() << "," << resize.height() << "\n";
 
               // to avoid overflow of the message queue
               if ( (i % 5) == 0 ) {
@@ -120,7 +120,6 @@ void SearchEngine::Preprocess() {
             } else {
               // copy the original image since original image is already smaller than requested size
               boost::filesystem::copy_file( src_fn, dest_fn );
-              imglist_fn_transformed_size_.at(i) = imglist_fn_original_size_.at(i);
 
               // to avoid overflow of the message queue
               if ( (i % 50) == 0 ) {
@@ -130,7 +129,6 @@ void SearchEngine::Preprocess() {
           } else {
             // just copy the files
             boost::filesystem::copy_file( src_fn, dest_fn );
-            imglist_fn_transformed_size_.at(i) = imglist_fn_original_size_.at(i);
 
             // to avoid overflow of the message queue
             if ( (i % 50) == 0 ) {
@@ -140,6 +138,8 @@ void SearchEngine::Preprocess() {
           if ( (i % 50) == 0 ) {
             SendLog("Preprocess", ".");
           }
+
+          preprocess_imglist.push_back(img_rel_path.string());
         } catch (std::exception &error) {
           SendLog("Preprocess", "\n" + src_fn.string() + " : Error [" + error.what() + "]" );
         }
@@ -156,6 +156,8 @@ void SearchEngine::Preprocess() {
     // @todo improve the design of ViseMessageQueue to avoid such blocked state
     std::cout << "\n@todo: Message queue size = " << ViseMessageQueue::Instance()->GetSize() << std::flush;
 
+    imglist_.clear();
+    imglist_.assign( preprocess_imglist.begin(), preprocess_imglist.end() );
     WriteImageListToFile( imglist_fn_.string(), imglist_ );
     SendLog("Preprocess", "\nWritten image list to : [" + imglist_fn_.string() + "]" );
   }
@@ -703,20 +705,6 @@ unsigned long SearchEngine::IndexFnSize() {
   unsigned long fidx_size = boost::filesystem::file_size( fidx_fn.string() );
   unsigned long iidx_size = boost::filesystem::file_size( iidx_fn.string() );
   return (dset_size + fidx_size + iidx_size);
-}
-unsigned long SearchEngine::GetImglistOriginalSize() {
-  unsigned long total_size = 0;
-  for ( unsigned int i=0; i<imglist_fn_original_size_.size(); i++) {
-    total_size += imglist_fn_original_size_.at(i);
-  }
-  return total_size;
-}
-unsigned long SearchEngine::GetImglistTransformedSize() {
-  unsigned long total_size = 0;
-  for ( unsigned int i=0; i<imglist_fn_transformed_size_.size(); i++) {
-    total_size += imglist_fn_transformed_size_.at(i);
-  }
-  return total_size;
 }
 
 boost::filesystem::path SearchEngine::GetOriginalImageDir() {

@@ -64,8 +64,6 @@ public:
   bool HammFnExists();
   bool IndexFnExists();
   std::string GetEngineOverview();
-  unsigned long GetImglistOriginalSize();
-  unsigned long GetImglistTransformedSize();
   unsigned long DescFnSize();
   unsigned long ClstFnSize();
   unsigned long AssignFnSize();

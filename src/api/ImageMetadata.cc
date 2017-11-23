@@ -11,11 +11,13 @@ ImageMetadata* ImageMetadata::Instance() {
 
 void ImageMetadata::LoadMetadata(boost::filesystem::path metadata_fn) {
   metadata_fn_ = metadata_fn;
+  std::cout << "\nOpening file " << metadata_fn_ << std::flush;
   std::ifstream f(metadata_fn_.string().c_str(), std::ifstream::in);
 
   while( !f.eof() ) {
     std::string csvline;
-    std::getline( f, csvline);
+    std::getline( f, csvline, '\r');
+    //std::cout << "\n*** CSVLINE : \n" << csvline << std::flush;
     if ( csvline[0] == '#' ) {
       // ignore header lines
       continue;
@@ -24,7 +26,6 @@ void ImageMetadata::LoadMetadata(boost::filesystem::path metadata_fn) {
       continue;
     }
 
-    //std::cout << "\n*** CSVLINE : \n" << csvline << std::flush;
     std::vector<std::string> tokens;
     ParseCsvLine(csvline, tokens);
 
@@ -64,14 +65,14 @@ void ImageMetadata::LoadMetadata(boost::filesystem::path metadata_fn) {
         s >> h;
         metadata_i.region_[3] = metadata_i.region_[1] + h; s.clear();
 
-        //std::cout << "\nfilename=" << filename << " : " << metadata_i.region_[0] << "," << metadata_i.region_[1] << "," << metadata_i.region_[2] << "," << metadata_i.region_[3] << std::flush;
+        std::cout << "\nfilename=" << filename << " : " << metadata_i.region_[0] << "," << metadata_i.region_[1] << "," << metadata_i.region_[2] << "," << metadata_i.region_[3] << std::flush;
         if ( metadata_.find(filename) == metadata_.end() ) {
           metadata_.insert( std::make_pair<std::string, std::vector<ImageRegionMetadata> >(filename, std::vector<ImageRegionMetadata>()) );
         }
         metadata_.find(filename)->second.push_back(metadata_i);
-      } else {
+      }/* else {
         std::cerr << "\nDiscarding non-rectangular region in metadata : " << tokens.at(5) << std::flush;
-      }
+      }*/
     } else {
       std::cerr << "\nrect region not found : " << tokens.at(5) << std::flush;
     }
@@ -117,10 +118,12 @@ void ImageMetadata::GetImageMetadata(std::string image_fn,
                                      double overlap_threshold,
                                      std::string &metadata_str,
                                      std::string &metadata_region_str) {
-  //std::cout << "\nFilename = " << image_fn << std::flush;
+  std::cout << "\nImageMetadata::GetImageMetadata() filename = " << image_fn << std::flush;
+
   std::map< std::string, std::vector<ImageRegionMetadata> >::iterator it;
   it = metadata_.find( image_fn );
   if ( it != metadata_.end() ) {
+    std::cout << "\nFound entry in metadata list" << std::flush;
     std::map< std::string, std::vector<double> >::iterator scale_it = img_scale_.find(image_fn);
     double sx = scale_it->second.at(0);
     double sy = scale_it->second.at(1);
@@ -133,10 +136,10 @@ void ImageMetadata::GetImageMetadata(std::string image_fn,
     int max_iou_index = -1;
 
     for ( unsigned int i=0; i < it->second.size(); i++ ) {
-      //std::cout << "\n  Region " << (i+1) << std::flush;
-      //double* d = it->second.at(i).region_;
-      //std::cout << "\n  region_ = " << d[0] << "," << d[1] << "," << d[2] << "," << d[3] << std::flush;
-      //it->second.at(i).PrintRegionMetadata();
+      std::cout << "\n  Region " << (i+1) << std::flush;
+      double* d = it->second.at(i).region_;
+      std::cout << "\n  region_ = " << d[0] << "," << d[1] << "," << d[2] << "," << d[3] << std::flush;
+      it->second.at(i).PrintRegionMetadata();
       double iou = it->second.at(i).IOU( rx0, ry0, rx1, ry1 );
       //std::cout << "\n  IOU = " << iou << std::flush;
 
@@ -180,19 +183,23 @@ void ImageMetadata::PrintMetadata() {
 
 // "{""name"":""rect"",""x"":203,""y"":169,""width"":236,""height"":732}"
 void ImageMetadata::JsonParse(std::string& json, std::map<std::string, std::string>& data) {
-  json = json.substr(1, json.length() - 2);  // remove json string quotes
-  ReplaceAll(json, "\"\"", "\"");          // remove all escaped double quotes
+  try {
+    json = json.substr(1, json.length() - 2);  // remove json string quotes
+    ReplaceAll(json, "\"\"", "\"");          // remove all escaped double quotes
 
-  std::stringstream json_stream(json);
-  boost::property_tree::ptree pt;
-  boost::property_tree::read_json( json_stream, pt );
+    std::stringstream json_stream(json);
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_json( json_stream, pt );
 
-  data.clear();
-  boost::property_tree::ptree::iterator it;
-  for ( it = pt.begin(); it != pt.end(); it++ ) {
-    std::string key = it->first;
-    std::string val = pt.get<std::string>(key);
-    data.insert( std::make_pair<std::string, std::string>(key, val) );
+    data.clear();
+    boost::property_tree::ptree::iterator it;
+    for ( it = pt.begin(); it != pt.end(); it++ ) {
+      std::string key = it->first;
+      std::string val = pt.get<std::string>(key);
+      data.insert( std::make_pair<std::string, std::string>(key, val) );
+    }
+  } catch( std::exception& e ) {
+    std::cerr << "\nImageMetadata::JsonParse() : error parsing json : " << json << " : " << e.what() << std::flush;
   }
 }
 
@@ -313,8 +320,8 @@ void ImageRegionMetadata::GetMetadataString(std::string& metadata_string) {
 
 // compute intersection over union
 double ImageRegionMetadata::IOU(double rx0, double ry0, double rx1, double ry1) {
-  //printf("\n  region = %f,%f,%f,%f", region_[0], region_[1], region_[2], region_[3]);
-  //printf("\n  query  = %f,%f,%f,%f", rx0, ry0, rx1, ry1);
+  printf("\n  region = %f,%f,%f,%f", region_[0], region_[1], region_[2], region_[3]);
+  printf("\n  query  = %f,%f,%f,%f", rx0, ry0, rx1, ry1);
 
   // intersection
   double ix0 = fmax( region_[0], rx0 );
@@ -329,6 +336,6 @@ double ImageRegionMetadata::IOU(double rx0, double ry0, double rx1, double ry1) 
   double union_area1 = fabs( (region_[2] - region_[0]) * (region_[3] - region_[1]) );
   double union_area2 = fabs( (rx1 - rx0) * (ry1 - ry0) );
   double union_area = union_area1 + union_area2 - intersection_area;
-  //std::cout << "\n  intersection = " << intersection_area << ", union = " << union_area << std::flush;
+  std::cout << "\n  intersection = " << intersection_area << ", union = " << union_area << ", IOU=" << (intersection_area / union_area) << std::flush;
   return intersection_area / union_area;
 }
