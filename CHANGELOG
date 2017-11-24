@@ -1,3 +1,7 @@
+## [1.0.4] - Not Released
+ * updated image folder instructions in settings page
+ * frontend javascript xhr requests posted to "/" instead of "localhost:9971" to accommodate VISE server running in other network environments
+
 ## [1.0.3] - September 28, 2017
  * international characters (utf-8) are now allowed in image filenames (issue 15)
  * uppercase image filename extensions (PNG, JPG) are now allowed (issue 17)
