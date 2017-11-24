@@ -83,7 +83,7 @@ docker pull registry.gitlab.com/vgg/vise:1.0.0
 
 ## Publishing image to dockerhub
 ```
-sudo docker build --no-cache=true -t oxvgg/vise .
+sudo docker build --no-cache=true -t oxvgg/vise:1.0.4 .
 sudo docker login
 sudo docker push oxvgg/vise
 ```

@@ -15,7 +15,7 @@ FROM debian:jessie
 #
 # Define image labels
 #
-LABEL name="VGG Image Search Engine" codename="VISE" version="1.0.3" maintainer="Abhishek Dutta <adutta@robots.ox.ac.uk>" description="VGG Image Search Engine (VISE) enables image instance based search of a large collection of images."
+LABEL name="VGG Image Search Engine" codename="VISE" version="1.0.4" maintainer="Abhishek Dutta <adutta@robots.ox.ac.uk>" description="VGG Image Search Engine (VISE) enables image instance based search of a large collection of images."
 
 #
 # Define ports used by VISE
