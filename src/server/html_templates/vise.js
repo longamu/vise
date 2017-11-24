@@ -7,7 +7,8 @@ var _vise_server = new XMLHttpRequest();
 var _vise_messenger = new XMLHttpRequest();
 var _vise_query = new XMLHttpRequest();
 
-var VISE_SERVER_ADDRESS    = "http://localhost:9971/";
+//var VISE_SERVER_ADDRESS    = "http://localhost:9971/";
+var VISE_SERVER_ADDRESS    = "/";
 var VISE_MESSENGER_ADDRESS = VISE_SERVER_ADDRESS + "_message";
 var VISE_QUERY_ADDRESS     = VISE_SERVER_ADDRESS + "_query";
 

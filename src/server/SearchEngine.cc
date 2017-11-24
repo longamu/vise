@@ -6,10 +6,6 @@ SearchEngine::SearchEngine() {
 
   acceptable_img_ext_.insert( ".jpg" );
   acceptable_img_ext_.insert( ".jpeg" );
-  acceptable_img_ext_.insert( ".png" );
-  acceptable_img_ext_.insert( ".pgm" );
-  acceptable_img_ext_.insert( ".pnm" );
-  acceptable_img_ext_.insert( ".ppm" );
 }
 
 void SearchEngine::Init(std::string name, boost::filesystem::path basedir) {
