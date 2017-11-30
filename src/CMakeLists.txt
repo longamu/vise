@@ -191,7 +191,7 @@ CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/ui/web/send_comments.cmake.py ${CMAKE_SOURCE
 ############################## Boost
 
 
-find_package(Boost 1.44.0 COMPONENTS ${REQURE_BOOST_MPI} filesystem system thread date_time atomic timer REQUIRED)
+find_package(Boost 1.58.0 COMPONENTS ${REQURE_BOOST_MPI} filesystem system thread date_time atomic timer REQUIRED)
 
 link_directories( ${Boost_LIBRARY_DIRS} )
 include_directories( ${Boost_INCLUDE_DIRS} )
@@ -221,7 +221,7 @@ set( BUILD_SHARED_LIBS "ON" )
 # set( BUILD_SHARED_LIBS "OFF" )
 
 ## Flags for building VISE release
-set( CMAKE_CXX_FLAGS "--std=c++11 -Wall -DEIGEN_NO_DEBUG -O3 -msse2 -mpopcnt -DMAGICKCORE_QUANTUM_DEPTH=16 -DMAGICKCORE_HDRI_ENABLE=1")
+set( CMAKE_CXX_FLAGS "-Wall -DEIGEN_NO_DEBUG -O3 -msse2 -mpopcnt -DMAGICKCORE_QUANTUM_DEPTH=16 -DMAGICKCORE_HDRI_ENABLE=1")
 
 ## Flags for debugging VISE codebase
 #set( CMAKE_CXX_FLAGS "-Wall -DEIGEN_NO_DEBUG -g3 -msse2 -mpopcnt -DMAGICKCORE_QUANTUM_DEPTH=16 -DMAGICKCORE_HDRI_ENABLE=1")
