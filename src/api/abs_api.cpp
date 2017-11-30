@@ -113,6 +113,20 @@ absAPI::session( socket_ptr sock ){
     boost::asio::write(*sock, boost::asio::buffer(reply));
 }
 
+void exec_cmd(const std::string cmd, std::string& output) {
+  std::array<char, 128> buffer;
+  std::ostringstream cmd_output;
+
+  std::shared_ptr<FILE> pipe(popen(cmd.c_str(), "r"), pclose);
+  if (!pipe) throw std::runtime_error("popen() failed!");
+
+  while (!feof(pipe.get())) {
+    if (fgets(buffer.data(), 80, pipe.get()) != nullptr) {
+      cmd_output << buffer.data();
+    }
+  }
+  output = cmd_output.str();
+}
 
 void InitReljaRetrivalFrontend(std::string dsetname, std::string configFn, std::string vise_src_code_dir) {
   // @todo: avoid relative path and discover the file "compute_clusters.py" automatically
@@ -126,15 +140,45 @@ void InitReljaRetrivalFrontend(std::string dsetname, std::string configFn, std::
   s << " " << configFn;
   s << " true";
 
-  FILE *pipe = popen( s.str().c_str(), "r");
-  ViseMessageQueue::Instance()->Push("Query command _redirect http://localhost:9973 1000");
+  std::array<char, 128> buffer;
+  std::ostringstream cmd_output;
 
-  if ( pipe == NULL ) {
-    std::cerr << " [failed]" << std::flush;
+  std::cout << "\nexecuting command: " << s.str() << std::endl << std::flush;
+  std::shared_ptr<FILE> pipe(popen(s.str().c_str(), "r"), pclose);
+  if (!pipe) throw std::runtime_error("popen() failed!");
+
+/*
+  // @todo: simplify this in future with a better designed code
+  // check where the frontend is running
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(1500)); // wait until frontend starts
+  std::string cmd1 = "curl -I -X GET http://localhost:9973";
+  std::string cmd2 = "curl -I -X GET http://0.0.0.0:9973";
+  std::string cmd1_output, cmd2_output;
+  exec_cmd(cmd1, cmd1_output);
+  exec_cmd(cmd2, cmd2_output);
+  std::cout << "\ncmd1_output = " << cmd1_output << std::flush;
+  std::cout << "\ncmd2_output = " << cmd2_output << std::flush;
+  std::string success_str("HTTP/1.1 200 OK");
+  std::size_t found1 = cmd1_output.find(success_str);
+  std::size_t found2 = cmd2_output.find(success_str);
+
+  if(found1 != std::string::npos) {
+    ViseMessageQueue::Instance()->Push("Query command _redirect http://localhost:9973 500");
   } else {
-
+    if(found2 != std::string::npos) {
+      ViseMessageQueue::Instance()->Push("Query command _redirect http://0.0.0.0:9973 500");
+    } else {
+      ViseMessageQueue::Instance()->Push("Query command _redirect http://INSERT_YOUR_IP_HERE:9973 500");
+    }
   }
-  pclose( pipe );
+*/
+  ViseMessageQueue::Instance()->Push("Query command _redirect http://0.0.0.0:9973 1000");
+  while (!feof(pipe.get())) {
+    if (fgets(buffer.data(), 80, pipe.get()) != nullptr) {
+      cmd_output << buffer.data();
+      std::cout << buffer.data() << std::flush;
+    }
+  }
   std::cout << " [done]" << std::flush;
 }
 

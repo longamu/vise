@@ -62,7 +62,8 @@ class webAPI:
             
             filename= self.pathManager_obj.hide(self.docMap.getFn(docIDres));
             
-            imageUrl= "%s%sgetImageFull?docID=%d" % (self.serveraddress, self.serverroot, docIDres);
+            #imageUrl= "%s%sgetImageFull?docID=%d" % (self.serveraddress, self.serverroot, docIDres);
+            imageUrl= "%sgetImageFull?docID=%d" % (self.serverroot, docIDres);
             
             if decideMatch: confidence= 'High';
             else: confidence= 'Low';

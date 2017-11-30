@@ -18,6 +18,15 @@ No usage or redistribution is allowed without explicit permission.
 #include <string>
 #include <stdint.h>
 
+// for pipe
+#include <cstdio>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <array>
+#include <sstream>
+
 /*
 If these 2 are not included here, before boost/asio.hpp: Arthur has some problems:
 /usr/local/include/boost/interprocess/detail/os_file_functions.hpp:363:33: error: ‘SEEK_SET’ cannot appear in a constant-expression
@@ -32,6 +41,9 @@ If these 2 are not included here, before boost/asio.hpp: Arthur has some problem
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/property_tree/ptree.hpp>
+// for sleep
+#include <boost/chrono.hpp>
+#include <boost/thread/thread.hpp> 
 
 #include "dataset_abs.h"
 

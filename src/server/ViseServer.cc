@@ -151,6 +151,7 @@ ViseServer::ViseServer( boost::filesystem::path vise_application_data_dir,
   std::strftime(date_str, sizeof(date_str), "%a, %d %b %Y %H:%M:%S %Z", std::gmtime(&t));
   training_log_f << "Log date : " << date_str << std::endl;
   std::cout.rdbuf( training_log_f.rdbuf());
+  std::clog.rdbuf( training_log_f.rdbuf());
   std::cerr.rdbuf( training_log_f.rdbuf());
 
   LoadStateComplexityModel();
