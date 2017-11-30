@@ -191,7 +191,7 @@ CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/ui/web/send_comments.cmake.py ${CMAKE_SOURCE
 ############################## Boost
 
 
-find_package(Boost 1.58.0 COMPONENTS ${REQURE_BOOST_MPI} filesystem system thread date_time atomic timer REQUIRED)
+find_package(Boost 1.55.0 COMPONENTS ${REQURE_BOOST_MPI} filesystem system thread date_time atomic timer REQUIRED)
 
 link_directories( ${Boost_LIBRARY_DIRS} )
 include_directories( ${Boost_INCLUDE_DIRS} )
