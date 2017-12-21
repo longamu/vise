@@ -143,11 +143,11 @@ class doSearch:
           body+= """
               <tr>
                   <td>&nbsp;</td>
-                  <td>Filename: <a href="file_attributes?docID=%d">%s</a></td>
+                  <td>Filename: <a href="file_attributes?%s">%s</a></td>
                   <td width="210" align="center">%s</td>
                   <td width="20" align="center">&nbsp;</td>
               </tr></table></center><br>
-              """  % (docID, queryFn, queryImage);
+              """  % (querySpec0, queryFn, queryImage);
         else:
           body+= """ 
               <tr>

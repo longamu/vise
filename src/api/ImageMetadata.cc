@@ -125,8 +125,15 @@ void ImageMetadata::GetImageMetadata(std::string image_fn,
   if ( it != metadata_.end() ) {
     std::cout << "\nFound entry in metadata list" << std::flush;
     std::map< std::string, std::vector<double> >::iterator scale_it = img_scale_.find(image_fn);
-    double sx = scale_it->second.at(0);
-    double sy = scale_it->second.at(1);
+
+    double sx = 1.0;
+    double sy = 1.0;
+    if( scale_it != img_scale_.end() ) {
+      // absence of an entry in preprocess shows that the file has not been modified
+      sx = scale_it->second.at(0);
+      sy = scale_it->second.at(1);
+    }
+
     rx0 = rx0 * sx;
     ry0 = ry0 * sy;
     rx1 = rx1 * sx;
