@@ -1,0 +1,145 @@
+body {
+  font-family: Arial, Helvetica, sans-serif; 
+  font-size: 0.9rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background-color: #ffffff;
+  color: #000000;
+  opacity: 1.0;
+  /*  min-width: 1280px; min-height: 720px; /* laptop screen */
+  min-width: 900px; min-height: 600px; /* small screen */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+li {
+  margin: 0.5rem 0;
+}
+
+.page {
+  display: block;
+  margin: auto;
+  padding: 1rem;
+  display: block;
+  width: 1000px;
+}
+.pagerow {
+  display: block;
+}
+
+.pagerow p {
+  display: block;
+  text-align: center;
+}
+
+.metadata_table {
+  display: table;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+.metadata_table tr {
+  display: table-row;
+}
+.metadata_table td {
+  display: table-cell;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #e6e6e6;
+}
+
+/* The panel showing query image and its metadata */
+.query_image_panel {
+  border: 1px solid #e6e6e6;
+  border-radius: 0.5rem;
+  box-shadow: 10px 10px 16px -4px #e6e6e6;
+  margin: 2rem 0;
+  padding: 0 0 1rem 0;
+  overflow:auto;
+}
+.query_image_panel div {
+  display: inline-block;
+}
+.query_image_panel img {
+  float: right;
+  margin: 1rem 1rem;
+}
+
+/* The panel showing search result count and search result page navigation */
+.search_result_panel {
+  border: none;
+  overflow:auto;
+}
+.search_result_panel div {
+  display: inline-block;
+}
+.search_result_panel div:last-child {
+  float: right;
+}
+.search_result_panel div:last-child ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.search_result_panel div:last-child li {
+  display: inline;
+  padding-left: 1rem;
+}
+
+/* The panels showing each search result */
+.search_result_i {
+  border: 1px solid #e6e6e6;
+  border-radius: 0.5rem;
+  box-shadow: 10px 10px 16px -4px #e6e6e6;
+  margin: 2rem 0;
+  padding: 0 0 1rem 0;
+  overflow:auto;
+}
+
+.search_result_i .header {
+  display: block;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e6e6e6;
+  overflow: auto;
+}
+
+.search_result_i .header span {
+  padding: 0 1rem;
+}
+
+.search_result_i .header span:last-child {
+  float: right;
+}
+
+.search_result_i img {
+  float: right;
+  margin: 1rem 1rem;
+}
+
+.search_result_i .istc_metadata {
+  margin-left: 1rem;
+  margin-top: 1rem;
+  display: inline-block;
+}
+
+.search_result_i .region_metadata {
+  float: clear;
+  margin-left: 1rem;
+  margin-top: 1rem;
+  display: inline-block;
+  width: 97%;
+}
+.search_result_i .footer {
+  margin-top: 1rem;
+  display: block;
+  padding: 1rem 0 0 0;
+  border-top: 1px solid #e6e6e6;
+  overflow: auto;
+  text-align: center;
+}
+
+.search_result_i .footer span {
+  padding: 0 1rem;
+}
+
