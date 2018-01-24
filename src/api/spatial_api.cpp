@@ -114,7 +114,6 @@ void
 API::ReturnAnnotatedResults( std::vector<indScorePair> const &queryRes, std::map<uint32_t,homography> const *Hs, uint32_t startFrom, uint32_t numberToReturn, std::string &output, query &query) {
 
   output+= ( boost::format("<results size=\"%d\">") % queryRes.size() ).str();
-
   double h[9];
   uint32_t docID;
   // for recording score
@@ -305,7 +304,7 @@ API::getReply( boost::property_tree::ptree &pt, std::string const &request ) {
                     pt.get("internalQuery.yu",  inf)
                     );
 
-    std::cout<< pt.get<uint>("internalQuery.numberToReturn") <<"\n";
+    //std::cout<< pt.get<uint>("internalQuery.numberToReturn") <<"\n";
     /*
     queryExecute( query_obj,
                   pt.get("internalQuery.startFrom",0),

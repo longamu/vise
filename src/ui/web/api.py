@@ -90,7 +90,6 @@ class API:
                     break;
                 #results.append( (rank, docID, score, H) );
                 results.append( (rank, docIDres, score, metadata, metadata_region, H) );
-        
         if self.verbose:
             for (rank, docID, score, H) in results:
                 print rank, docID, score, H;

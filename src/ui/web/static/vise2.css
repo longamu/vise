@@ -132,7 +132,7 @@ li {
   display: inline-block;
   width: 97%;
 }
-.search_result_i .footer {
+.search_result_i .search_result_tools {
   margin-top: 1rem;
   display: block;
   padding: 1rem 0 0 0;
@@ -141,7 +141,7 @@ li {
   text-align: center;
 }
 
-.search_result_i .footer span {
+.search_result_i .search_result_tools span {
   padding: 0 1rem;
 }
 
@@ -155,6 +155,7 @@ li {
   background: #ffaaaa;
   padding: 2rem;
   border-radius: 0.5rem;
+  text-align: center;
 }
 
 /* 
@@ -187,4 +188,11 @@ li {
   padding: 0 .5em;
   color: #666;
   font-size: .9em;
+}
+
+.page_footer {
+  display: block;
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 6rem 0 0 0;
 }

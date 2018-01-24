@@ -65,7 +65,7 @@ void ImageMetadata::LoadMetadata(boost::filesystem::path metadata_fn) {
         s >> h;
         metadata_i.region_[3] = metadata_i.region_[1] + h; s.clear();
 
-        std::cout << "\nfilename=" << filename << " : " << metadata_i.region_[0] << "," << metadata_i.region_[1] << "," << metadata_i.region_[2] << "," << metadata_i.region_[3] << std::flush;
+        //std::cout << "\nfilename=" << filename << " : " << metadata_i.region_[0] << "," << metadata_i.region_[1] << "," << metadata_i.region_[2] << "," << metadata_i.region_[3] << std::flush;
         if ( metadata_.find(filename) == metadata_.end() ) {
           metadata_.insert( std::make_pair<std::string, std::vector<ImageRegionMetadata> >(filename, std::vector<ImageRegionMetadata>()) );
         }
@@ -118,12 +118,12 @@ void ImageMetadata::GetImageMetadata(std::string image_fn,
                                      double overlap_threshold,
                                      std::string &metadata_str,
                                      std::string &metadata_region_str) {
-  std::cout << "\nImageMetadata::GetImageMetadata() filename = " << image_fn << std::flush;
+  //std::cout << "\nImageMetadata::GetImageMetadata() filename = " << image_fn << std::flush;
 
   std::map< std::string, std::vector<ImageRegionMetadata> >::iterator it;
   it = metadata_.find( image_fn );
   if ( it != metadata_.end() ) {
-    std::cout << "\nFound entry in metadata list" << std::flush;
+    //std::cout << "\nFound entry in metadata list" << std::flush;
     std::map< std::string, std::vector<double> >::iterator scale_it = img_scale_.find(image_fn);
 
     double sx = 1.0;
@@ -143,10 +143,10 @@ void ImageMetadata::GetImageMetadata(std::string image_fn,
     int max_iou_index = -1;
 
     for ( unsigned int i=0; i < it->second.size(); i++ ) {
-      std::cout << "\n  Region " << (i+1) << std::flush;
-      double* d = it->second.at(i).region_;
-      std::cout << "\n  region_ = " << d[0] << "," << d[1] << "," << d[2] << "," << d[3] << std::flush;
-      it->second.at(i).PrintRegionMetadata();
+      //std::cout << "\n  Region " << (i+1) << std::flush;
+      //double* d = it->second.at(i).region_;
+      //std::cout << "\n  region_ = " << d[0] << "," << d[1] << "," << d[2] << "," << d[3] << std::flush;
+      //it->second.at(i).PrintRegionMetadata();
       double iou = it->second.at(i).IOU( rx0, ry0, rx1, ry1 );
       //std::cout << "\n  IOU = " << iou << std::flush;
 
@@ -192,6 +192,9 @@ void ImageMetadata::PrintMetadata() {
 void ImageMetadata::JsonParse(std::string& json, std::map<std::string, std::string>& data) {
   try {
     json = json.substr(1, json.length() - 2);  // remove json string quotes
+    if( json == "" ) {
+      return;
+    }
     ReplaceAll(json, "\"\"", "\"");          // remove all escaped double quotes
 
     std::stringstream json_stream(json);
@@ -327,8 +330,8 @@ void ImageRegionMetadata::GetMetadataString(std::string& metadata_string) {
 
 // compute intersection over union
 double ImageRegionMetadata::IOU(double rx0, double ry0, double rx1, double ry1) {
-  printf("\n  region = %f,%f,%f,%f", region_[0], region_[1], region_[2], region_[3]);
-  printf("\n  query  = %f,%f,%f,%f", rx0, ry0, rx1, ry1);
+  //printf("\n  region = %f,%f,%f,%f", region_[0], region_[1], region_[2], region_[3]);
+  //printf("\n  query  = %f,%f,%f,%f", rx0, ry0, rx1, ry1);
 
   // intersection
   double ix0 = fmax( region_[0], rx0 );
@@ -343,6 +346,6 @@ double ImageRegionMetadata::IOU(double rx0, double ry0, double rx1, double ry1) 
   double union_area1 = fabs( (region_[2] - region_[0]) * (region_[3] - region_[1]) );
   double union_area2 = fabs( (rx1 - rx0) * (ry1 - ry0) );
   double union_area = union_area1 + union_area2 - intersection_area;
-  std::cout << "\n  intersection = " << intersection_area << ", union = " << union_area << ", IOU=" << (intersection_area / union_area) << std::flush;
+  //std::cout << "\n  intersection = " << intersection_area << ", union = " << union_area << ", IOU=" << (intersection_area / union_area) << std::flush;
   return intersection_area / union_area;
 }
