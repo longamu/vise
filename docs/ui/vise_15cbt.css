@@ -7,7 +7,7 @@ body {
   background-color: #ffffff;
   color: #000000;
   opacity: 1.0;
-  /*  min-width: 1280px; min-height: 720px; /* laptop screen */
+  /*  min-width: 1280px; min-height: 720px; */
   min-width: 900px; min-height: 600px; /* small screen */
 }
 
@@ -51,12 +51,14 @@ li {
 
 /* The panel showing query image and its metadata */
 .query_image_panel {
-  border: 1px solid #e6e6e6;
-  border-radius: 0.5rem;
   box-shadow: 10px 10px 16px -4px #e6e6e6;
   margin: 2rem 0;
   padding: 0 0 1rem 0;
-  overflow:auto;
+  overflow: auto;
+  background: #fff6d5;
+}
+.query_image_panel .metadata_table td {
+  border: 1px solid #cccccc;
 }
 .query_image_panel div {
   display: inline-block;
@@ -77,12 +79,12 @@ li {
 .search_result_panel div:last-child {
   float: right;
 }
-.search_result_panel div:last-child ul {
+.search_result_panel divul {
   list-style-type: none;
   margin: 0;
   padding: 0;
 }
-.search_result_panel div:last-child li {
+.search_result_panel div li {
   display: inline;
   padding-left: 1rem;
 }
@@ -92,9 +94,9 @@ li {
   border: 1px solid #e6e6e6;
   border-radius: 0.5rem;
   box-shadow: 10px 10px 16px -4px #e6e6e6;
-  margin: 2rem 0;
+  margin: 3rem 0;
   padding: 0 0 1rem 0;
-  overflow:auto;
+  background: #f9f9f9;
 }
 
 .search_result_i .header {
@@ -124,7 +126,7 @@ li {
 }
 
 .search_result_i .region_metadata {
-  float: clear;
+  clear: both;
   margin-left: 1rem;
   margin-top: 1rem;
   display: inline-block;
@@ -143,3 +145,46 @@ li {
   padding: 0 1rem;
 }
 
+.display-none {
+  display: none;
+}
+
+/* The panel showing message about hidden search results (i.e. search results with low score) */
+.hidden_search_result_msg_panel {
+  border: none;
+  background: #ffaaaa;
+  padding: 2rem;
+  border-radius: 0.5rem;
+}
+
+/* 
+  css based "show more" or "show less" feature for large content 
+  source: https://codepen.io/Idered/pen/AeBgF
+*/
+.show_more_state {
+  display: none;
+}
+
+.show_more_target {
+  visibility: collapse;
+}
+
+.show_more_state:checked ~ .show_more_wrap .show_more_target {
+  visibility: visible;
+}
+
+.show_more_state ~ .show_more_trigger:before {
+  content: 'Show more metadata';
+}
+
+.show_more_state:checked ~ .show_more_trigger:before {
+  content: 'Show less metadata';
+}
+
+.show_more_trigger {
+  cursor: pointer;
+  display: block;
+  padding: 0 .5em;
+  color: #666;
+  font-size: .9em;
+}

@@ -8,6 +8,26 @@
 
   <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico"/>
   <link rel="stylesheet" type="text/css" href="vise_15cbt.css" />
+
+  <script>
+function toggle_hidden_search_result() {
+  var sr = document.getElementsByClassName('search_result_i');
+  var n = sr.length;
+  var seen_first_hidden_block = false;
+  for( var i=0; i < n; i++ ) {
+    if( sr[i].classList.contains('hidden_by_default') ) {
+      sr[i].classList.toggle('display-none');
+
+      if( !seen_first_hidden_block ) {
+        seen_first_hidden_block = true;
+        console.log(sr[i].scrollTop);
+        console.log(sr[i].scrollHeight);
+        sr[i].scrollIntoView();
+      }
+    }
+  }
+}
+  </script>
 </head>
 
 <body>
@@ -54,6 +74,13 @@
 
   <div id="search_result_panel" class="search_result_panel pagerow">
     <div id="search_result_count">Search Result: 1 to 20</div>
+
+    <div id="search_result_page_tools">
+      <ul>
+        <li><a href="#">See Results in Tiled View</a></li>
+      </ul>
+    </div>
+
     <div id="search_result_page_nav">
       <ul>
         <li><a href="#">Prev</a></li>
@@ -99,7 +126,101 @@
 
 
     <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_1" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>folio</td>
+          <td>i1v</td>
+        </tr>
+        <tr>
+          <td>iconclass</td>
+          <td>85A(DE CAPONE ET ACCIPITRE) FABLESOFAESOP(WITH TITLE); 25F33(HAWK) predatory birds: hawk; 34B232 fowl (cock, hen, chicken, etc.); 44B1523 page ~ court; 31D14(+1) adult man (+ front view); 25G3 trees; 47G532 tiles, bricks ~ building material; 41A54 fence, wall, paling; 41D221(HAT) head-gear: hat; 25II5 landscape with tower or castle - II - ideal landscapes; 31A25513 hand made into a fist</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c63</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Hawk; Page; Wall; Bricks; Man; Hat; Tree; Castle; Fist</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i1v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_1" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+  <div class="search_result_i pagerow">
+    <div class="header">
+      <span class="search_result_id">2</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 347.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
       <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result2.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_2" />
+      <table class="metadata_table show_more_wrap">
         <tr>
           <td>artistic_style</td>
           <td>Italian/Venetian</td>
@@ -118,33 +239,1260 @@
         </tr>
         <tr>
           <td>folio</td>
-          <td>i1v</td>
+          <td>i3v</td>
         </tr>
-        <tr>
+        <tr class="show_more_target">
           <td>iconclass</td>
-          <td>85A(DE CAPONE ET ACCIPITRE) FABLESOFAESOP(WITH TITLE); 25F33(HAWK) predatory birds: hawk; 34B232 fowl (cock, hen, chicken, etc.); 44B1523 page ~ court; 31D14(+1) adult man (+ front view); 25G3 trees; 47G532 tiles, bricks ~ building material; 41A54 fence, wall, paling; 41D221(HAT) head-gear: hat; 25II5 landscape with tower or castle - II - ideal landscapes; 31A25513 hand made into a fist</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
         </tr>
-        <tr>
+        <tr class="show_more_target">
           <td>internal_number_of_object</td>
-          <td>c63</td>
+          <td>c65</td>
         </tr>
-        <tr>
+        <tr class="show_more_target">
           <td>keywords</td>
-          <td>Hawk; Page; Wall; Bricks; Man; Hat; Tree; Castle; Fist</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
         </tr>
-        <tr>
+        <tr class="show_more_target">
           <td>name</td>
-          <td>a00152000_00202205 i1v center</td>
+          <td>a00152000_00202205 i3v center</td>
         </tr>
-        <tr>
+        <tr class="show_more_target">
           <td>state_of_conservation</td>
           <td>Good</td>
         </tr>
-        <tr>
+        <tr class="show_more_target">
           <td>type_of_cut</td>
           <td>Center</td>
         </tr>
       </table>
+      <label for="region_metadata_2" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+
+  <div class="search_result_i pagerow">
+    <div class="header">
+      <span class="search_result_id">3</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 90.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result3.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_3" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_3" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+  <div class="hidden_search_result_msg_panel">
+    We have removed 12 search results with low matching scores because these matches may be incorrect.
+    <button id="toggle_hidden_search_result_button" type="button" onclick="toggle_hidden_search_result()">Toggle hidden search results</button>
+  </div>
+
+  <div class="search_result_i pagerow hidden_by_default display-none">
+    <div class="header">
+      <span class="search_result_id">4</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 13.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result4.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_4" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_4" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+
+  <div class="search_result_i pagerow hidden_by_default display-none">
+    <div class="header">
+      <span class="search_result_id">5</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 13.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result5.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_5" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_5" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+
+  <div class="search_result_i pagerow hidden_by_default display-none">
+    <div class="header">
+      <span class="search_result_id">6</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 12.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result6.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_6" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_6" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+
+  <div class="search_result_i pagerow hidden_by_default display-none">
+    <div class="header">
+      <span class="search_result_id">7</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 11.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result2.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_7" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_7" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+
+  <div class="search_result_i pagerow hidden_by_default display-none">
+    <div class="header">
+      <span class="search_result_id">8</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 9.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result2.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_8" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_8" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+
+  <div class="search_result_i pagerow hidden_by_default display-none">
+    <div class="header">
+      <span class="search_result_id">9</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 9.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result2.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_9" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_9" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+
+  <div class="search_result_i pagerow hidden_by_default display-none">
+    <div class="header">
+      <span class="search_result_id">10</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 9.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result2.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_10" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_10" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+
+  <div class="search_result_i pagerow hidden_by_default display-none">
+    <div class="header">
+      <span class="search_result_id">11</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 9.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result2.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_11" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_11" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+
+  <div class="search_result_i pagerow hidden_by_default display-none">
+    <div class="header">
+      <span class="search_result_id">12</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 9.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result2.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_12" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_12" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+
+  <div class="search_result_i pagerow hidden_by_default display-none">
+    <div class="header">
+      <span class="search_result_id">13</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 9.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result2.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_13" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_13" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+
+  <div class="search_result_i pagerow hidden_by_default display-none">
+    <div class="header">
+      <span class="search_result_id">14</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 9.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result2.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_14" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_14" class="show_more_trigger"></label>
+    </div>
+
+    <div class="footer">
+      <span><a href="#">Details of Match</a></span>
+      <span><a href="#">Compare Matching Regions</a></span>
+      <span><a href="#">Use this image for further search</a></span>
+    </div>
+  </div>
+
+
+  <div class="search_result_i pagerow hidden_by_default display-none">
+    <div class="header">
+      <span class="search_result_id">15</span>
+      <span class="search_result_filename">Filename: ia00152000_00202205_i3v.jpg</span>
+      <span class="search_result_score">Score: 9.0</span>
+    </div>
+
+    <div class="istc_metadata"><strong>ISTC Metadata</strong>
+      <table class="metadata_table">
+        <tr>
+          <td>id</td>
+          <td>ia00152000</td>
+        </tr>
+        <tr>
+          <td>Author</td>
+          <td>Aesopus</td>
+        </tr>
+        <tr>
+          <td>Title</td>
+          <td>Aesopus moralisatus [Latin and Italian] (Adapted, with additions, by Accio Zucco, tr)</td>
+        </tr>
+        <tr>
+          <td>Imprint</td>
+          <td>Venice : Manfredus de Bonellis, de Monteferrato, 15 Feb. 1491</td>
+        </tr>
+        <tr>
+          <td>Format</td>
+          <td>4&deg;</td>
+        </tr>
+      </table>
+    </div>
+
+    <img src="./img/result2.jpg">
+
+
+    <div class="region_metadata"><strong>Metadata of overlapping region (manually annotated region shown in <span style="color:blue">blue</span>)</strong>
+      <input type="checkbox" class="show_more_state" id="region_metadata_15" />
+      <table class="metadata_table show_more_wrap">
+        <tr>
+          <td>artistic_style</td>
+          <td>Italian/Venetian</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(owners_institution</td>
+          <td>Venezia Fondazione Giorgio Cini</td>
+        </tr>
+        <tr>
+          <td>creator_of_the_image_and_description_(scholar)</td>
+          <td>Matilde Malaspina</td>
+        </tr>
+        <tr>
+          <td>date_that_the_image_was_made</td>
+          <td>14/05/2015</td>
+        </tr>
+        <tr>
+          <td>folio</td>
+          <td>i3v</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>iconclass</td>
+          <td>85A(DE MERCATORE ET EIUS UXORE) FABLESOFAESOP(WITH TITLE); 41D224 sleeves; 31D14(+1) adult man (+ front view); 31D15(+1) adult woman (+ front view); 31D15(+1) adult woman (+ front view); 42A4 infant, baby; 41D263 walking-stick, staff, cane; 41D221(HAT) head-gear: hat; 25G3 trees;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>internal_number_of_object</td>
+          <td>c65</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>keywords</td>
+          <td>Sleeves; Man; Woman; Child; Whip; Strap; Infant; Baby; Stick; Hat; Tree;</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>name</td>
+          <td>a00152000_00202205 i3v center</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>state_of_conservation</td>
+          <td>Good</td>
+        </tr>
+        <tr class="show_more_target">
+          <td>type_of_cut</td>
+          <td>Center</td>
+        </tr>
+      </table>
+      <label for="region_metadata_15" class="show_more_trigger"></label>
     </div>
 
     <div class="footer">
