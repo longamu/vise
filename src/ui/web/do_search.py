@@ -31,21 +31,37 @@ _username_key_= 'username';
 
 
 class doSearch:
-    def __init__(self, page_template, API_obj, docMap, pathManager_obj, upload_obj= None, examples= None, guiOpts= None ):
+    def __init__(self, page_template, API_obj, docMap, pathManager_obj, upload_obj=None, examples=None, guiOpts=None, file_attributes=None ):
 
         self.pt = page_template;
-        self.API_obj= API_obj;
-        self.docMap= docMap;
-        self.pathManager_obj= pathManager_obj;
-        self.upload_obj= upload_obj;
-        self.datasets= self.API_obj.keys();
-        self.examples= examples;
-        self.guiOpts= guiOpts;
+        self.API_obj = API_obj;
+        self.docMap = docMap;
+        self.pathManager_obj = pathManager_obj;
+        self.upload_obj = upload_obj;
+        self.datasets = self.API_obj.keys();
+        self.examples = examples;
+        self.guiOpts = guiOpts;
 
-        self.def_dsetname= self.docMap.keys()[0];
+        self.def_dsetname = self.docMap.keys()[0];
+        self.file_attributes = file_attributes;
 
-
-
+    def get_istc_metadata_html_table(self, filename):
+        istc_metadata = self.file_attributes.get_file_metadata(filename=filename);
+        html = 'ISTC metadata for ' + filename + ' not found!';
+        if istc_metadata.shape[0] == 1:
+            html = '<table class="metadata_table">'
+            for key in istc_metadata:
+                value = istc_metadata.iloc[0][key]
+                if key == 'id':
+                    istc_url = '<a target="_blank" href="http://data.cerl.org/istc/%s">%s</a>' % (value, value);
+                    html += '<tr><td>%s</td><td>%s</td></tr>' % (key, istc_url);
+                    continue;
+                if value != '':
+                    html += '<tr><td>%s</td><td>%s</td></tr>' % (key, value);
+                else:
+                    html += '<tr><td>%s</td><td></td></tr>' % (key);
+            html += '</table>';
+        return html;
 
     @cherrypy.expose
     def index(self, docID= None, uploadID= None, xl= None, xu= None, yl= None, yu= None, startFrom= "1", numberToReturn= "20", tile= None, noText= None, dsetname= None):
@@ -57,7 +73,11 @@ class doSearch:
             tile= 'tile' in self.guiOpts['defaultView'][dsetname];
         else:
             tile= (tile!='false');
-        showText= tile and noText==None;
+        if noText == None:
+            showText = True;
+        else:
+            showText = False;
+        print(showText);
 
         if xl!=None: xl= float(xl);
         if xu!=None: xu= float(xu);
@@ -81,11 +101,11 @@ class doSearch:
             if xu==None: xu= imw;
             if yu==None: yu= imh;
             queryFn= self.pathManager_obj[dsetname].hidePath(docID);
-            query_filename = self.pathManager_obj[dsetname].hidePath(docID);
+            query_filename = self.pathManager_obj[dsetname].hidePath(docID).decode('utf-8');
             results= self.API_obj[dsetname].internalQuery( docID= docID, xl= xl, xu= xu, yl= yl, yu= yu, startFrom= startFrom, numberToReturn= numberToReturn+1 );
         else:
             st= savedTemp.load(uploadID);
-            query_filename = st['originalFullFilename'];
+            query_filename = st['originalFullFilename'].decode('utf-8');
             if xu==None or yu==None:
                 if xu==None: xu= st['w'];
                 if yu==None: yu= st['h'];
@@ -107,33 +127,24 @@ class doSearch:
 
         body= "";
 
-        # switch between tiled and list views
-
-        if tile:
-            # show text option
-            switchText= ''' |
-                <a href="dosearch?%s&xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f&numberToReturn=%d&startFrom=%d&tile=%s&%s">
-                %s text
-                </a>''' % ( query_spec0, xl, xu, yl, yu, numberToReturn, startFrom+1, "true" if tile else "false", "noText" if showText else "", "No" if showText else "Show" );
-        else:
-            switchText= '';
-
         # query image
         queryImage= '<a href="search?%s"><img width="200" src="getImage?%s&width=200&xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f&H=1,0,0,0,1,0,0,0,1&%s">' % (query_spec0, query_spec0, xl,xu,yl,yu, "crop" if tile else "");
 
         query_img_url = 'search?%s' % (query_spec0);
-        query_img_src = 'getImage?%s&width=200&xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f&H=1,0,0,0,1,0,0,0,1&%s">' % (query_spec0, xl, xu, yl, yu, "crop" if tile else "");
+        query_img_src = 'getImage?%s&width=200&xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f&H=1,0,0,0,1,0,0,0,1%s' % (query_spec0, xl, xu, yl, yu, "&crop" if tile else "");
+        query_istc_metadata = self.get_istc_metadata_html_table(query_filename);
 
-        body += '''
+        body +='''
 <div id="query_image_panel" class="query_image_panel pagerow">
   <p>Query Image Region</p>
   <div id="query_image_metadata">
     <ul>
       <li>Filename: <a href="file_attributes?%s">%s</a></li>
+      <li>ISTC Metadata: %s</li>
     </ul>
   </div>
   <a href="file_attributes?%s"><img src="%s"></a>
-</div>''' % (query_spec0, query_filename, query_spec0, query_img_src)
+</div>''' % (query_spec0, query_filename, query_istc_metadata, query_spec0, query_img_src);
 
         # navigation
 
@@ -161,15 +172,26 @@ class doSearch:
         if noNavigation:
             navigation= "";
 
-        if not(tile):
-            body += '''
+        # switch between tiled and list views
+        search_result_page_tools = '';
+        listview_url = 'dosearch?%s&xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f&numberToReturn=%d&startFrom=%d' % (query_spec0, xl, xu, yl, yu, numberToReturn, startFrom+1);
+        tileview_url = listview_url + '&tile=true';
+        tileview_notext_url = tileview_url + '&noText';
+
+        if tile :
+            if showText:
+                search_result_page_tools = '<li><a href="%s">List View</a></li><li>Tile View</li><li><a href="%s">Tile View (images only)</a></li>' % (listview_url, tileview_notext_url);
+            else:
+                search_result_page_tools = '<li><a href="%s">List View</a></li><li><a href="%s">Tile View</a></li><li>Tile View (images only)</li>' % (listview_url, tileview_url);
+        else:
+            search_result_page_tools = '<li>List View</li><li><a href="%s">Tile View</a></li><li><a href="%s">Tile View (images only)</a></li>' % (tileview_url, tileview_notext_url);
+
+        body += '''
 <div id="search_result_panel" class="search_result_panel pagerow">
   <div id="search_result_count">Search Result: %d to %d</div>
 
   <div id="search_result_page_tools">
-    <ul>
-      <li>%s</li>
-    </ul>
+    <ul>%s</ul>
   </div>
 
   <div id="search_result_page_nav">
@@ -177,69 +199,94 @@ class doSearch:
   </div>
 </div>''' % (startFrom + 1,
              startFrom + min(numberToReturn, len(results)),
-             switchText,
+             search_result_page_tools,
              navigation)
-        else:
-            body+= '<table width="100%" border="0"><tr><td align="left">';
-            body+= "<h3>Search Results %d to %d</h3>" % (startFrom+1, startFrom+min(numberToReturn, len(results)) );
-            body+= '</td><td align="right">'+navigation+"</td></tr></table><br>\n";
 
-        if not(tile):
-            # results
-            hidden_results_msg_shown = False;
-            print "Search query returned %d results" % (len(results));
-            for (rank, docIDres, score, metadata, metadata_region, H) in results:
-                boxArg="xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f" % (xl,xu,yl,yu);
-                match_compare_url = 'register?%s&docID2=%d&%s' % (query_spec1, docIDres, boxArg);
-                if H!=None:
-                    boxArg+= "&H=%s" % H;
-                    match_details_url = "details?%s&docID2=%d&%s" % (query_spec1, docIDres, boxArg);
-                else:
-                    match_details_url = "details?%s&docID2=%d&%s&drawPutative=true" % (query_spec1, docIDres, boxArg);
+        ## show list view (one result per row)
+        hidden_results_msg_shown = False;
+        print "Search query returned %d results" % (len(results));
+        for (rank, docIDres, score, metadata, metadata_region, H) in results:
+            boxArg="xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f" % (xl,xu,yl,yu);
+            match_compare_url = 'register?%s&docID2=%d&%s' % (query_spec1, docIDres, boxArg);
+            if H!=None:
+                boxArg+= "&H=%s" % H;
+                match_details_url = "details?%s&docID2=%d&%s" % (query_spec1, docIDres, boxArg);
+            else:
+                match_details_url = "details?%s&docID2=%d&%s&drawPutative=true" % (query_spec1, docIDres, boxArg);
 
-                hiddenPath = self.pathManager_obj[dsetname].hidePath(docIDres).decode('utf-8');
+            match_filename = self.pathManager_obj[dsetname].hidePath(docIDres).decode('utf-8');
 
-                ## convert metadata to HTML
-                region_metadata_html = 'No overlap with any manually annotated regions.';
-                if metadata != None:
-                  region_metadata_html = '''
+            ## convert metadata to HTML
+            region_metadata_html = 'No overlap with any manually annotated regions.';
+            if metadata != None and showText:
+                region_metadata_html = '''
 <strong>Metadata of overlapping region (manually annotated region shown in blue)</strong>
   <input type="checkbox" class="show_more_state" id="result_%d_region_metadata" />
   <table class="metadata_table show_more_wrap">''' % (rank);
-                  if metadata_region != "":
+                if metadata_region != "":
                     boxArg+= "&metadata_region=" + metadata_region;
 
-                  metadata_tokens = metadata.split("__SEP__");
-                  if len(metadata_tokens) != 1:
-                      metadata_index = 0;
-                      for metadata_i in metadata_tokens :
-                          keyval = metadata_i.split("__KEYVAL_SEP__");
-                          if len(keyval) == 2:
-                              if metadata_index < 4:
-                                  region_metadata_html += '<tr><td>%s</td><td>%s</td></tr>' % (keyval[0], keyval[1]);
-                              else:
-                                  region_metadata_html += '<tr class="show_more_target"><td>%s</td><td>%s</td></tr>' % (keyval[0], keyval[1]);
-                          else:
-                              if len(keyval) == 1 and keyval[0] != '':
-                                  region_metadata_html += "<tr><td>%s</td><td></td></tr>" % (keyval[0]);
+                metadata_tokens = metadata.split("__SEP__");
+                if len(metadata_tokens) != 1:
+                    metadata_index = 0;
+                    for metadata_i in metadata_tokens :
+                        keyval = metadata_i.split("__KEYVAL_SEP__");
+                        if len(keyval) == 2:
+                            if metadata_index < 4:
+                                region_metadata_html += '<tr><td>%s</td><td>%s</td></tr>' % (keyval[0], keyval[1]);
+                            else:
+                                region_metadata_html += '<tr class="show_more_target"><td>%s</td><td>%s</td></tr>' % (keyval[0], keyval[1]);
+                        else:
+                            if len(keyval) == 1 and keyval[0] != '':
+                                region_metadata_html += "<tr><td>%s</td><td></td></tr>" % (keyval[0]);
 
-                          metadata_index = metadata_index + 1;
+                        metadata_index = metadata_index + 1;
 
+                    # end of for metadata_i
+                    region_metadata_html += '</table><label for="result_%d_region_metadata" class="show_more_trigger"></label>' % (rank);
 
-                  region_metadata_html += '</table><label for="result_%d_region_metadata" class="show_more_trigger"></label>' % (rank);
+            # each file has ISTC metadata
+            istc_metadata = self.get_istc_metadata_html_table(match_filename);
 
-                istc_metadata = '''
-<table class="metadata_table">
-  <tr>
-    <td>@todo</td>
-    <td>@todo</td>
-  </tr>
-</table>
-''';
-                if (score < 50.0 and not hidden_results_msg_shown):
-                    hidden_results_msg_shown = True;
-                    body += '<div class="hidden_search_result_msg_panel">We have removed search results with low matching scores because these matches may be incorrect. <button id="toggle_hidden_search_result_button" type="button" onclick="toggle_hidden_search_result()">Toggle hidden search results</button></div>';
+            if (score < 50.0 and not hidden_results_msg_shown):
+                hidden_results_msg_shown = True;
+                body += '<div class="hidden_search_result_msg_panel">We have removed search results with low matching scores because these matches may be incorrect. <button id="toggle_hidden_search_result_button" type="button" onclick="toggle_hidden_search_result()">Toggle hidden search results</button></div>';
 
+            if tile:
+                if showText:
+                    body+= '''
+<div class="search_result_i pagecell %s">
+  <div class="header">
+    <span class="search_result_filename">Filename: <a href="file_attributes?docID=%d">%s</a></span>
+  </div>
+
+  <div class="img_panel" style="float: none; text-align: center;">
+    <a href="file_attributes?docID=%d"><img src="getImage?docID=%s&width=200&%s&crop"></a>
+  </div>
+
+  <div class="search_result_tools">
+    <span><a href="%s">Details of Match</a></span>
+  </div>
+</div>''' % ("hidden_by_default display-none" if (score < 50.0) else "",
+             docIDres,
+             match_filename,
+             docIDres,
+             docIDres,
+             boxArg,
+             match_details_url);
+
+                else:
+                    body+= '''
+<div class="search_result_i pagecell %s">
+  <div class="img_panel">
+    <a href="file_attributes?docID=%d"><img src="getImage?docID=%s&width=200&%s&crop"></a>
+  </div>
+</div>''' % ("hidden_by_default display-none" if (score < 50.0) else "",
+             docIDres,
+             docIDres,
+             boxArg);
+
+            else:
                 body+= '''
 <div class="search_result_i pagerow %s">
   <div class="header">
@@ -248,8 +295,10 @@ class doSearch:
     <span class="search_result_score" title="Matching score">%.1f</span>
   </div>
 
+  <div class="img_panel">
+    <a href="file_attributes?docID=%d"><img src="getImage?docID=%s&width=200&%s"></a>
+  </div>
   <div class="istc_metadata"><strong>ISTC Metadata</strong>%s</div>
-  <a href="file_attributes?docID=%d"><img src="getImage?docID=%s&width=200&%s"></a>
   <div class="region_metadata">%s</div>
 
   <div class="search_result_tools">
@@ -260,75 +309,15 @@ class doSearch:
 </div>''' % ("hidden_by_default display-none" if (score < 50.0) else "",
              rank + 1,
              docIDres,
-             hiddenPath,
+             match_filename,
              score,
-             istc_metadata,
              docIDres,
              docIDres,
              boxArg,
+             istc_metadata,
              region_metadata_html,
              match_details_url,
              match_compare_url);
 
-        else:
-
-            infos= [];
-            numPerRow= 4;
-
-            for (rank, docIDres, score, metadata, metadata_region, H) in results:
-
-                boxArg="xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f" % (xl,xu,yl,yu);
-                if H!=None:
-                    boxArg+= "&H=%s" % H;
-                    detailedMatches= "<br><a href=\"details?%s&docID2=%d&%s\">Detailed matches</a><br>" % (query_spec1, docIDres, boxArg);
-                else:
-                    #break;
-                    detailedMatches= "<br><a href=\"details?%s&docID2=%d&%s&drawPutative=true\">Detailed matches</a><br>" % (querySpec1, docIDres, boxArg);
-
-                hiddenPath= self.pathManager_obj[dsetname].hidePath(docIDres);
-
-                infos.append( (docIDres,score,boxArg,H!=None,hiddenPath,detailedMatches) );
-
-                if len(infos)==numPerRow:
-                    if showText:
-                        body+='<tr>\n';
-                        for (docIDres,score,boxArg,hasH,hiddenPath,detailedMatches) in infos:
-                            body+= '<td align="center">%s</td>' % hiddenPath;
-                        body+='</tr>';
-                    body+='<tr>';
-                    for (docIDres,score,boxArg,hasH,hiddenPath,detailedMatches) in infos:
-                        body+= '''
-                        <td align="center">
-                        <a href="search?docID=%d">
-                            <img src="getImage?docID=%s&width=160&%s&%s">
-                        </a>
-                        %s
-                        </td>''' % (docIDres,docIDres,boxArg, "crop" if hasH else "", detailedMatches if showText else "");
-                    body+='</tr>';
-                    if showText:
-                        body+='<tr><td colspan="%d"><hr style="border:dashed; border-width:1px 0 0 0;"></td></tr>\n' % numPerRow;
-                    infos= [];
-
-            if len(infos)>0:
-                if showText:
-                    body+='<tr>\n';
-                    for (docIDres,score,boxArg,hasH,hiddenPath,detailedMatches) in infos:
-                        body+= '<td align="center">%s</td>' % hiddenPath;
-                    if len(infos)<numPerRow:
-                        body+='<td colspan="%d"></td>' % (numPerRow-len(infos));
-                    body+='</tr>';
-                body+='<tr>';
-                for (docIDres,score,boxArg,hasH,hiddenPath,detailedMatches) in infos:
-                    body+= '''
-                    <td align="center">
-                    <a href="search?docID=%d">
-                        <img src="getImage?docID=%s&width=160&%s&%s">
-                    </a>
-                    %s
-                    </td>''' % (docIDres,docIDres,boxArg,"crop" if hasH else "", detailedMatches if showText else "");
-                if len(infos)<numPerRow:
-                    body+='<td colspan="%d"></td>' % (numPerRow-len(infos));
-                body+='</tr>';
-                infos= [];
-
+        # end of for () in results:
         return self.pt.get(title= "Exact Matches", headExtra= "", body= body);

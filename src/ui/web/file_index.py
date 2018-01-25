@@ -9,7 +9,7 @@ import copy;
 
 class file_index:
     
-  def __init__(self, pageTemplate, docMap, pathManager_obj, examples= None, externalExamples= None, browse= True, doShowPath= True):
+  def __init__(self, pageTemplate, docMap, pathManager_obj):
     # Update a copy of the template so that other pages are not impacted
     pageTemplateCopy = copy.deepcopy(pageTemplate);
     self.title_prefix = pageTemplateCopy.titlePrefix;

@@ -15,6 +15,12 @@ body {
   box-sizing: border-box;
 }
 
+/* source: https://codepen.io/thiagobraga/pen/bhDdn */
+a[target="_blank"]:after {
+  content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
+  margin: 0 0.3rem;
+}
+
 li {
   margin: 0.5rem 0;
 }
@@ -22,12 +28,21 @@ li {
 .page {
   display: block;
   margin: auto;
-  padding: 1rem;
+  padding: 0 0.5rem;
   display: block;
-  width: 1000px;
+  min-width: 920px;
+  max-width: 60%;
 }
 .pagerow {
   display: block;
+}
+
+.pagecell {
+  display: inline-block;
+}
+
+#page_header {
+  margin: 2rem 0;
 }
 
 .pagerow p {
@@ -114,25 +129,22 @@ li {
   float: right;
 }
 
-.search_result_i img {
-  float: right;
+.search_result_i .img_panel {
   margin: 1rem 1rem;
+  float: right;
 }
 
 .search_result_i .istc_metadata {
   margin-left: 1rem;
   margin-top: 1rem;
-  display: inline-block;
 }
 
 .search_result_i .region_metadata {
-  clear: both;
   margin-left: 1rem;
   margin-top: 1rem;
-  display: inline-block;
-  width: 97%;
 }
 .search_result_i .search_result_tools {
+  clear: both;
   margin-top: 1rem;
   display: block;
   padding: 1rem 0 0 0;

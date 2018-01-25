@@ -19,7 +19,7 @@ import api;
 import template, page0, dynamic_image, search_page, do_search, details;
 import template_search_result;
 import file_index;
-import file_attributes;
+import file_attributes_15cbt;
 import csv;
 
 if True:
@@ -103,7 +103,7 @@ class pathManager_open:
 
 class webserver2:
 
-    def __init__(self, API_obj, serveraddress, serverroot, docMap, enableUpload, guiOpts, pathManager= None, examples= None, externalExamples= None, file_attributes_fn= None, file_attributes_filename_colname= None):
+    def __init__(self, API_obj, serveraddress, serverroot, docMap, enableUpload, guiOpts, pathManager=None, examples=None, externalExamples=None, file_attributes_fn=None, file_attributes_filename_colname=None, istc_db_fn=None, istc_id_colname=None):
 
         def_dsetname= docMap.keys()[0];
 
@@ -129,6 +129,14 @@ class webserver2:
         self.API_obj= API_obj;
         self.upload_obj= upload.upload(self.pT, API_obj);
         self.docMap= docMap;
+
+        # file attributes page
+        self.file_index_obj = file_index.file_index( self.pT, self.docMap, self.pathManager_obj );
+        self.file_index = self.file_index_obj.index;
+        #self.file_attributes_obj = file_attributes.file_attributes( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True, file_attributes_fn=file_attributes_fn, file_attributes_filename_colname=file_attributes_filename_colname );
+        self.file_attributes_obj = file_attributes_15cbt.file_attributes_15cbt( self.pT, self.docMap, self.pathManager_obj, file_attributes_fn, file_attributes_filename_colname, istc_db_fn, istc_id_colname );
+        self.file_attributes= self.file_attributes_obj.index;
+
         self.page0_obj= page0.page0( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
         self.dynamicImage_obj= dynamic_image.dynamicImage( docMap );
         self.searchPage_obj= search_page.searchPage( self.pT, docMap, self.pathManager_obj );
@@ -138,9 +146,11 @@ class webserver2:
                                                API_obj,
                                                docMap,
                                                self.pathManager_obj,
-                                               upload_obj= self.upload_obj,
-                                               examples= examples,
-                                               guiOpts= guiOpts );
+                                               upload_obj=self.upload_obj,
+                                               examples=examples,
+                                               guiOpts=guiOpts,
+                                               file_attributes=self.file_attributes_obj );
+
         self.details_obj= details.details( self.pT, API_obj, docMap, self.pathManager_obj, doRegistration= guiOpts['registration'][def_dsetname] );
         if True:
             self.registerImages_obj= register_images.registerImages( self.pT, API_obj );
@@ -179,13 +189,6 @@ class webserver2:
         self.api_version= self.webAPI_obj.api_version;
         self.api_engine_reachable= self.webAPI_obj.api_engine_reachable;
         self.api_exec_query= self.webAPI_obj.api_exec_query;
-
-        # file attributes page
-        self.file_index_obj = file_index.file_index( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
-        self.file_index = self.file_index_obj.index;
-
-        self.file_attributes_obj = file_attributes.file_attributes( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True, file_attributes_fn=file_attributes_fn, file_attributes_filename_colname=file_attributes_filename_colname );
-        self.file_attributes= self.file_attributes_obj.index;
 
 def getOptional( f, defaultValue ):
 
@@ -305,9 +308,13 @@ def get(
         # Load all dataset files metadata
         file_attributes_fn = getOptional( lambda: config.get(dsetname, 'file_attributes_fn'), None );
         file_attributes_filename_colname = getOptional( lambda: config.get(dsetname, 'file_attributes_filename_colname'), 'filename' );
+        istc_db_fn = getOptional( lambda: config.get(dsetname, 'istc_db_fn'), None );
+        istc_id_colname = getOptional( lambda: config.get(dsetname, 'istc_id_colname'), 'id' );
 
         if ( file_attributes_fn != None ):
           print "Loading file attributes from: %s ..." %(file_attributes_fn);
+        if ( istc_db_fn != None ):
+          print "Loading istc database from: %s ..." %(istc_db_fn);
 
         # API construction
 
@@ -363,7 +370,19 @@ def get(
     if onlyAPI:
         return API_obj;
 
-    webserver_obj = webserver2( API_obj, serveraddress, serverroot, docMap_obj, enableUpload, guiOpts, pathManager= pathManager_obj, examples= examples, externalExamples= externalExamples, file_attributes_fn=file_attributes_fn, file_attributes_filename_colname=file_attributes_filename_colname );
+    webserver_obj = webserver2( API_obj,
+                                serveraddress,
+                                serverroot,
+                                docMap_obj,
+                                enableUpload,
+                                guiOpts,
+                                pathManager = pathManager_obj,
+                                examples = examples,
+                                externalExamples = externalExamples,
+                                file_attributes_fn = file_attributes_fn,
+                                file_attributes_filename_colname = file_attributes_filename_colname,
+                                istc_db_fn = istc_db_fn,
+                                istc_id_colname = istc_id_colname);
 
     return webserver_obj, conf;
 

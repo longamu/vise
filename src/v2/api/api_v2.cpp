@@ -247,17 +247,17 @@ void api_v2(std::vector< std::string > argv) {
         mq= &mqOrig;
     }
 
-    boost::optional<std::string> metadata_fn_str = pt.get_optional<std::string>( util::expandUser( dsetname+".metadata_fn" ));
-    boost::optional<std::string> preprocess_fn_str = pt.get_optional<std::string>( util::expandUser( dsetname+".preprocess_fn" ));
-    if ( metadata_fn_str && preprocess_fn_str ) {
-      boost::filesystem::path metadata_fn(metadata_fn_str.get());
-      boost::filesystem::path preprocess_fn(preprocess_fn_str.get());
-      std::cout << "\napiv2::apiv2() : metadata_fn = " << metadata_fn.string() << std::flush;
-      std::cout << "\napiv2::apiv2() : preprocess_fn = " << preprocess_fn.string() << std::flush;
-      if ( boost::filesystem::exists(metadata_fn) && boost::filesystem::exists(preprocess_fn) ) {
+    boost::optional<std::string> region_attributes_fn_str = pt.get_optional<std::string>( util::expandUser( dsetname+".region_attributes_fn" ));
+    boost::optional<std::string> vise_preprocess_fn_str = pt.get_optional<std::string>( util::expandUser( dsetname+".vise_preprocess_fn" ));
+    if ( region_attributes_fn_str && vise_preprocess_fn_str ) {
+      boost::filesystem::path region_attributes_fn(region_attributes_fn_str.get());
+      boost::filesystem::path vise_preprocess_fn(vise_preprocess_fn_str.get());
+      std::cout << "\napiv2::apiv2() : region_attributes_fn = " << region_attributes_fn.string() << std::flush;
+      std::cout << "\napiv2::apiv2() : vise_preprocess_fn = " << vise_preprocess_fn.string() << std::flush;
+      if ( boost::filesystem::exists(region_attributes_fn) && boost::filesystem::exists(vise_preprocess_fn) ) {
         std::cout << "\napiv2::apiv2() Loading image region metadata ..." << std::flush;
-        ImageMetadata::Instance()->LoadPreprocessData( preprocess_fn );
-        ImageMetadata::Instance()->LoadMetadata( metadata_fn );
+        ImageMetadata::Instance()->LoadPreprocessData( vise_preprocess_fn );
+        ImageMetadata::Instance()->LoadMetadata( region_attributes_fn );
       } else {
         std::cout << "\napiv2::apiv2() cannot find metadata_fn and preprocess_fn." << std::flush;
       }
