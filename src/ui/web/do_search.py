@@ -63,20 +63,48 @@ class doSearch:
             html += '</table>';
         return html;
 
+    def get_overlap_region_metadata_html_table(self, metadata, rank):
+        region_metadata_html = 'No overlap with any manually annotated regions.';
+        metadata_tokens = metadata.split("__SEP__");
+        if len(metadata_tokens) != 1:
+            metadata_index = 0;
+
+            region_metadata_html = '''
+<strong>Metadata of overlapping region (manually annotated region shown in blue)</strong>
+  <input type="checkbox" class="show_more_state" id="result_%d_region_metadata" />
+  <table class="metadata_table show_more_wrap">''' % (rank);
+
+            for metadata_i in metadata_tokens :
+                keyval = metadata_i.split("__KEYVAL_SEP__");
+                if len(keyval) == 2:
+                    if metadata_index < 4:
+                        region_metadata_html += '<tr><td>%s</td><td>%s</td></tr>' % (keyval[0], keyval[1]);
+                    else:
+                        region_metadata_html += '<tr class="show_more_target"><td>%s</td><td>%s</td></tr>' % (keyval[0], keyval[1]);
+                else:
+                    if len(keyval) == 1 and keyval[0] != '':
+                        region_metadata_html += "<tr><td>%s</td><td></td></tr>" % (keyval[0]);
+
+                metadata_index = metadata_index + 1;
+
+            # end of for metadata_i
+            region_metadata_html += '</table><label for="result_%d_region_metadata" class="show_more_trigger"></label>' % (rank);
+        return region_metadata_html;
+
     @cherrypy.expose
     def index(self, docID= None, uploadID= None, xl= None, xu= None, yl= None, yu= None, startFrom= "1", numberToReturn= "20", tile= None, noText= None, dsetname= None):
 
         if dsetname==None: dsetname= self.def_dsetname;
 
         emailFeedback= False;
+        showText = True;
         if tile==None:
             tile= 'tile' in self.guiOpts['defaultView'][dsetname];
         else:
             tile= (tile!='false');
-        if noText == None:
-            showText = True;
-        else:
-            showText = False;
+            if noText != None:
+                showText = False;
+
         print(showText);
 
         if xl!=None: xl= float(xl);
@@ -203,8 +231,8 @@ class doSearch:
              navigation)
 
         ## show list view (one result per row)
-        hidden_results_msg_shown = False;
         print "Search query returned %d results" % (len(results));
+        hidden_search_result_count = 0;
         for (rank, docIDres, score, metadata, metadata_region, H) in results:
             boxArg="xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f" % (xl,xu,yl,yu);
             match_compare_url = 'register?%s&docID2=%d&%s' % (query_spec1, docIDres, boxArg);
@@ -216,77 +244,19 @@ class doSearch:
 
             match_filename = self.pathManager_obj[dsetname].hidePath(docIDres).decode('utf-8');
 
-            ## convert metadata to HTML
-            region_metadata_html = 'No overlap with any manually annotated regions.';
-            if metadata != None and showText:
-                region_metadata_html = '''
-<strong>Metadata of overlapping region (manually annotated region shown in blue)</strong>
-  <input type="checkbox" class="show_more_state" id="result_%d_region_metadata" />
-  <table class="metadata_table show_more_wrap">''' % (rank);
+            is_result_hidden = False;
+            if (score < 50.0):
+                is_result_hidden = True;
+
+            ## tiled view does not require metadata
+            if not tile:
+                overlap_metadata_html = self.get_overlap_region_metadata_html_table(metadata, rank);
                 if metadata_region != "":
                     boxArg+= "&metadata_region=" + metadata_region;
 
-                metadata_tokens = metadata.split("__SEP__");
-                if len(metadata_tokens) != 1:
-                    metadata_index = 0;
-                    for metadata_i in metadata_tokens :
-                        keyval = metadata_i.split("__KEYVAL_SEP__");
-                        if len(keyval) == 2:
-                            if metadata_index < 4:
-                                region_metadata_html += '<tr><td>%s</td><td>%s</td></tr>' % (keyval[0], keyval[1]);
-                            else:
-                                region_metadata_html += '<tr class="show_more_target"><td>%s</td><td>%s</td></tr>' % (keyval[0], keyval[1]);
-                        else:
-                            if len(keyval) == 1 and keyval[0] != '':
-                                region_metadata_html += "<tr><td>%s</td><td></td></tr>" % (keyval[0]);
+                # each file has ISTC metadata
+                istc_metadata_html = self.get_istc_metadata_html_table(match_filename);
 
-                        metadata_index = metadata_index + 1;
-
-                    # end of for metadata_i
-                    region_metadata_html += '</table><label for="result_%d_region_metadata" class="show_more_trigger"></label>' % (rank);
-
-            # each file has ISTC metadata
-            istc_metadata = self.get_istc_metadata_html_table(match_filename);
-
-            if (score < 50.0 and not hidden_results_msg_shown):
-                hidden_results_msg_shown = True;
-                body += '<div class="hidden_search_result_msg_panel">We have removed search results with low matching scores because these matches may be incorrect. <button id="toggle_hidden_search_result_button" type="button" onclick="toggle_hidden_search_result()">Toggle hidden search results</button></div>';
-
-            if tile:
-                if showText:
-                    body+= '''
-<div class="search_result_i pagecell %s">
-  <div class="header">
-    <span class="search_result_filename">Filename: <a href="file_attributes?docID=%d">%s</a></span>
-  </div>
-
-  <div class="img_panel" style="float: none; text-align: center;">
-    <a href="file_attributes?docID=%d"><img src="getImage?docID=%s&width=200&%s&crop"></a>
-  </div>
-
-  <div class="search_result_tools">
-    <span><a href="%s">Details of Match</a></span>
-  </div>
-</div>''' % ("hidden_by_default display-none" if (score < 50.0) else "",
-             docIDres,
-             match_filename,
-             docIDres,
-             docIDres,
-             boxArg,
-             match_details_url);
-
-                else:
-                    body+= '''
-<div class="search_result_i pagecell %s">
-  <div class="img_panel">
-    <a href="file_attributes?docID=%d"><img src="getImage?docID=%s&width=200&%s&crop"></a>
-  </div>
-</div>''' % ("hidden_by_default display-none" if (score < 50.0) else "",
-             docIDres,
-             docIDres,
-             boxArg);
-
-            else:
                 body+= '''
 <div class="search_result_i pagerow %s">
   <div class="header">
@@ -306,7 +276,7 @@ class doSearch:
     <span><a href="%s">Compare Matching Regions</a></span>
     <span><a href="#">Use this image for further search</a></span>
   </div>
-</div>''' % ("hidden_by_default display-none" if (score < 50.0) else "",
+</div>''' % ("hidden_by_default display-none" if is_result_hidden else "",
              rank + 1,
              docIDres,
              match_filename,
@@ -314,10 +284,51 @@ class doSearch:
              docIDres,
              docIDres,
              boxArg,
-             istc_metadata,
-             region_metadata_html,
+             istc_metadata_html,
+             overlap_metadata_html,
              match_details_url,
              match_compare_url);
+
+            else:
+                if showText:
+                    body+= '''
+<div class="search_result_i pagecell %s">
+  <div class="header">
+    <span class="search_result_filename">Filename: <a href="file_attributes?docID=%d">%s</a></span>
+  </div>
+
+  <div class="img_panel" style="float: none; text-align: center;">
+    <a href="file_attributes?docID=%d"><img src="getImage?docID=%s&width=200&%s&crop"></a>
+  </div>
+
+  <div class="search_result_tools">
+    <span><a href="%s">Details of Match</a></span>
+  </div>
+</div>''' % ("hidden_by_default display-none" if is_result_hidden else "",
+             docIDres,
+             match_filename,
+             docIDres,
+             docIDres,
+             boxArg,
+             match_details_url);
+
+                else:
+                    body+= '''
+<div class="search_result_i pagecell %s">
+  <div class="img_panel">
+    <a href="file_attributes?docID=%d"><img src="getImage?docID=%s&width=200&%s&crop"></a>
+  </div>
+</div>''' % ("hidden_by_default display-none" if is_result_hidden else "",
+             docIDres,
+             docIDres,
+             boxArg);
+
+            ## We add a footer mentioning the hidden search results
+            if is_result_hidden:
+                hidden_search_result_count = hidden_search_result_count + 1;
+                if hidden_search_result_count == 1:
+                    print('writing hidden header');
+                    body += '<div class="hidden_search_result_msg_panel">We have removed search results with low matching scores because these matches may be incorrect. <button id="toggle_hidden_search_result_button" type="button" onclick="toggle_hidden_search_result()">Toggle hidden search results</button></div>';
 
         # end of for () in results:
         return self.pt.get(title= "Exact Matches", headExtra= "", body= body);
