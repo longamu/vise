@@ -20,6 +20,8 @@ import template, page0, dynamic_image, search_page, do_search, details;
 import template_search_result;
 import file_index;
 import file_attributes_15cbt;
+import istc;
+
 import csv;
 
 if True:
@@ -150,6 +152,10 @@ class webserver2:
                                                examples=examples,
                                                guiOpts=guiOpts,
                                                file_attributes=self.file_attributes_obj );
+
+        self.istc_obj = istc.istc(self.template_search_result,
+                                  file_attributes = self.file_attributes_obj);
+        self.istc = self.istc_obj.index;
 
         self.details_obj= details.details( self.pT, API_obj, docMap, self.pathManager_obj, doRegistration= guiOpts['registration'][def_dsetname] );
         if True:

@@ -1,5 +1,9 @@
-# Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
-# 8 Nov. 2017
+##
+## VISE Customized for 15th Century Booktrade Project
+##
+## Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
+## 25 Jan. 2018
+##
 
 import cherrypy;
 
@@ -36,8 +40,18 @@ class file_attributes_15cbt:
     dataset_index = {};
     dataset_index['doc_id'] = range(0, file_count);
     dataset_index['filename'] = list();
+    dataset_index['istc_id'] = list();
+    dataset_index['mei_id'] = list();
+    dataset_index['folio'] = list();
+    dataset_index['folio_group'] = list();
     for doc_id in range(0,file_count):
-      dataset_index['filename'].append(self.pathManager_obj[self.dsetname].displayPath(doc_id));
+      filename = self.pathManager_obj[self.dsetname].displayPath(doc_id);
+      istc_id, mei_id, folio = self.extract_filename_parts(filename);
+      dataset_index['filename'].append(filename);
+      dataset_index['istc_id'].append(istc_id);
+      dataset_index['mei_id'].append(mei_id);
+      dataset_index['folio'].append(folio);
+      dataset_index['folio_group'].append(folio[0]);
 
     if file_attributes_fn != None:
       csv_metadata = pd.read_csv(file_attributes_fn, encoding='utf-8');
@@ -58,12 +72,33 @@ class file_attributes_15cbt:
     return match.iloc[:]['doc_id']
 
 
-  def extract_istc_id_from_filename(self, filename):
-    # filename: ia00152000_00202205_i1v.jpg
-    first_underscore = filename.find('_', 0);
-    if first_underscore == -1:
-      print 'extract_istc_id_from_filename() : invalid filename format %s' % (filename);
-    return filename[0:first_underscore];
+  def extract_filename_parts(self, filename):
+    # filename can be in two formats
+    # ia00152000_00202205_i2v.jpg, ia00149000_00200293 a2r.jpg
+    #filename = row['filename'];
+    istc_id = '';
+    mei_id = '';
+    folio = '';
+    dot_index = filename.rfind('.');
+    if filename.count('_') == 2:
+      # format 1 : ia00152000_00202205_i2v.jpg
+        s1 = filename.find('_', 0);
+        s2 = filename.find('_', s1 + 1);
+        istc_id = filename[ 0 : s1 ]; 
+        mei_id  = filename[ (s1+1) : s2 ];
+        folio   = filename[ (s2+1) : dot_index ];
+    else:
+        if filename.count('_') == 1 and filename.count(' ') == 1:
+          # format 2 : ia00149000_00200293 a2r.jpg
+          s1 = filename.find('_', 0);
+          s2 = filename.find(' ', s1 + 1);
+          istc_id = filename[ 0 : s1 ]; 
+          mei_id  = filename[ (s1+1) : s2 ];
+          folio   = filename[ (s2+1) : dot_index ];
+
+    if folio == '':
+      folio = '_UNKNOWN_';
+    return istc_id, mei_id, folio;
 
   def get_file_metadata(self, docID=None, filename=None):
     if docID == None and filename == None:
@@ -73,10 +108,13 @@ class file_attributes_15cbt:
     if filename == None:
       filename = self.pathManager_obj[self.dsetname].displayPath(docID)
 
-    istc_id = self.extract_istc_id_from_filename(filename);
+    istc_id, mei_id, folio = self.extract_filename_parts(filename);
     istc_metadata = self.istc_db[ self.istc_db['id'] == istc_id ]
     return istc_metadata;
-    
+
+  def get_istc_metadata(self, istc_id):
+    istc_metadata = self.istc_db[ self.istc_db['id'] == istc_id ]
+    return istc_metadata;
 
   @cherrypy.expose
   def index(self, docID= None, filename=None):

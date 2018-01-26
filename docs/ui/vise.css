@@ -30,6 +30,10 @@ li {
   display: block;
 }
 
+.pagecell {
+  display: inline-block;
+}
+
 .pagerow p {
   display: block;
   text-align: center;
@@ -62,6 +66,9 @@ li {
 }
 .query_image_panel div {
   display: inline-block;
+}
+.query_image_metadata table {
+  margin: 0 1rem;
 }
 .query_image_panel img {
   float: right;
@@ -112,11 +119,6 @@ li {
 
 .search_result_i .header span:last-child {
   float: right;
-}
-
-.search_result_i img {
-  float: right;
-  margin: 1rem 1rem;
 }
 
 .search_result_i .istc_metadata {
