@@ -17,10 +17,11 @@ from auth import Authenticator;
 import api;
 
 import template, page0, dynamic_image, search_page, do_search, details;
-import template_search_result;
+import template_15cbt;
 import file_index;
 import file_attributes_15cbt;
 import istc;
+import text_search;
 
 import csv;
 
@@ -105,7 +106,7 @@ class pathManager_open:
 
 class webserver2:
 
-    def __init__(self, API_obj, serveraddress, serverroot, docMap, enableUpload, guiOpts, pathManager=None, examples=None, externalExamples=None, file_attributes_fn=None, file_attributes_filename_colname=None, istc_db_fn=None, istc_id_colname=None):
+    def __init__(self, API_obj, serveraddress, serverroot, docMap, enableUpload, guiOpts, pathManager=None, examples=None, externalExamples=None, file_attributes_fn=None, file_attributes_filename_colname=None, istc_db_fn=None, istc_id_colname=None, region_attributes_fn=None, region_attributes_filename_colname=None):
 
         def_dsetname= docMap.keys()[0];
 
@@ -132,19 +133,20 @@ class webserver2:
         self.upload_obj= upload.upload(self.pT, API_obj);
         self.docMap= docMap;
 
-        # file attributes page
-        self.file_index_obj = file_index.file_index( self.pT, self.docMap, self.pathManager_obj );
-        self.file_index = self.file_index_obj.index;
-        #self.file_attributes_obj = file_attributes.file_attributes( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True, file_attributes_fn=file_attributes_fn, file_attributes_filename_colname=file_attributes_filename_colname );
-        self.file_attributes_obj = file_attributes_15cbt.file_attributes_15cbt( self.pT, self.docMap, self.pathManager_obj, file_attributes_fn, file_attributes_filename_colname, istc_db_fn, istc_id_colname );
-        self.file_attributes= self.file_attributes_obj.index;
-
         self.page0_obj= page0.page0( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
         self.dynamicImage_obj= dynamic_image.dynamicImage( docMap );
         self.searchPage_obj= search_page.searchPage( self.pT, docMap, self.pathManager_obj );
 
-        self.template_search_result = template_search_result.template_search_result();
-        self.doSearch_obj= do_search.doSearch( self.template_search_result,
+        self.template_15cbt = template_15cbt.template_15cbt();
+
+        # file attributes page
+        self.file_index_obj = file_index.file_index( self.pT, self.docMap, self.pathManager_obj );
+        self.file_index = self.file_index_obj.index;
+        #self.file_attributes_obj = file_attributes.file_attributes( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True, file_attributes_fn=file_attributes_fn, file_attributes_filename_colname=file_attributes_filename_colname );
+        self.file_attributes_obj = file_attributes_15cbt.file_attributes_15cbt( self.template_15cbt, self.docMap, self.pathManager_obj, file_attributes_fn, file_attributes_filename_colname, istc_db_fn, istc_id_colname, region_attributes_fn, region_attributes_filename_colname );
+        self.file_attributes= self.file_attributes_obj.index;
+
+        self.doSearch_obj= do_search.doSearch( self.template_15cbt,
                                                API_obj,
                                                docMap,
                                                self.pathManager_obj,
@@ -153,7 +155,13 @@ class webserver2:
                                                guiOpts=guiOpts,
                                                file_attributes=self.file_attributes_obj );
 
-        self.istc_obj = istc.istc(self.template_search_result,
+        # text search
+        self.text_search_obj = text_search.text_search(self.template_15cbt,
+                                                       file_attributes = self.file_attributes_obj);
+        self.text_search = self.text_search_obj.index;
+
+        # istc index
+        self.istc_obj = istc.istc(self.template_15cbt,
                                   file_attributes = self.file_attributes_obj);
         self.istc = self.istc_obj.index;
 
@@ -316,14 +324,17 @@ def get(
         file_attributes_filename_colname = getOptional( lambda: config.get(dsetname, 'file_attributes_filename_colname'), 'filename' );
         istc_db_fn = getOptional( lambda: config.get(dsetname, 'istc_db_fn'), None );
         istc_id_colname = getOptional( lambda: config.get(dsetname, 'istc_id_colname'), 'id' );
+        region_attributes_fn = getOptional( lambda: config.get(dsetname, 'region_attributes_fn'), None );
+        region_attributes_filename_colname = getOptional( lambda: config.get(dsetname, 'region_attributes_filename_colname'), None );
 
         if ( file_attributes_fn != None ):
           print "Loading file attributes from: %s ..." %(file_attributes_fn);
         if ( istc_db_fn != None ):
           print "Loading istc database from: %s ..." %(istc_db_fn);
+        if ( region_attributes_fn != None ):
+          print "Loading region attributes from: %s ..." %(region_attributes_fn);
 
         # API construction
-
         apiScoreThr= getOptional( lambda: config.getfloat(dsetname, 'apiScoreThr'), None );
         print "apiScoreThr = %.f" % (apiScoreThr)
         APIhost = "localhost";
@@ -388,7 +399,9 @@ def get(
                                 file_attributes_fn = file_attributes_fn,
                                 file_attributes_filename_colname = file_attributes_filename_colname,
                                 istc_db_fn = istc_db_fn,
-                                istc_id_colname = istc_id_colname);
+                                istc_id_colname = istc_id_colname,
+                                region_attributes_fn=region_attributes_fn,
+                                region_attributes_filename_colname=region_attributes_filename_colname);
 
     return webserver_obj, conf;
 

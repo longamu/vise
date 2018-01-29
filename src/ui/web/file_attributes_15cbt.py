@@ -12,10 +12,11 @@ import template;
 import copy;
 
 import pandas as pd;
+import json;
 
 class file_attributes_15cbt:
     
-  def __init__(self, pageTemplate, docMap, pathManager_obj, file_attributes_fn= None, file_attributes_filename_colname= "filename", istc_db_fn=None, istc_id_colname="id"):
+  def __init__(self, pageTemplate, docMap, pathManager_obj, file_attributes_fn= None, file_attributes_filename_colname= "filename", istc_db_fn=None, istc_id_colname="id", region_attributes_fn=None, region_attributes_filename_colname="filename"):
     self.pT= pageTemplate;
     self.docMap= docMap;
     self.pathManager_obj= pathManager_obj;
@@ -23,9 +24,23 @@ class file_attributes_15cbt:
 
     self.attributes_available = False;
     self.file_attributes_index = None;
+    self.filename_to_docid_map = {};
+    self.istc_db = None;
+    self.region_attributes = None;
 
     self.load_istc_db(istc_db_fn, istc_id_colname);
     self.load_file_attributes(file_attributes_fn, file_attributes_filename_colname);
+    self.load_region_attributes(region_attributes_fn, region_attributes_filename_colname);
+
+  def load_region_attributes(self, region_attributes_fn, region_attributes_filename_colname):
+    #filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
+    if region_attributes_fn != None:
+      self.region_attributes = pd.read_csv(region_attributes_fn, sep=',', header=0, engine='python', encoding='utf-8');
+      self.region_attributes.drop([col for col in self.region_attributes.columns if "Unnamed" in col], axis=1, inplace=True) # remove unnamed columns
+      self.region_attributes.rename( columns={region_attributes_filename_colname: 'filename'}, inplace=True );
+      print 'Finished loading %d region attributes' % (self.region_attributes.shape[0]);
+
+    
 
   def load_istc_db(self, istc_db_fn, istc_id_colname):
     if istc_db_fn != None:
@@ -46,6 +61,7 @@ class file_attributes_15cbt:
     dataset_index['folio_group'] = list();
     for doc_id in range(0,file_count):
       filename = self.pathManager_obj[self.dsetname].displayPath(doc_id);
+      self.filename_to_docid_map[filename] = doc_id;
       istc_id, mei_id, folio = self.extract_filename_parts(filename);
       dataset_index['filename'].append(filename);
       dataset_index['istc_id'].append(istc_id);
@@ -70,7 +86,6 @@ class file_attributes_15cbt:
   def filename_to_docid(self, filename_pattern):
     match = self.file_attributes_index[ self.file_attributes_index['filename'].str.contains(filename_pattern) ]
     return match.iloc[:]['doc_id']
-
 
   def extract_filename_parts(self, filename):
     # filename can be in two formats
@@ -116,6 +131,65 @@ class file_attributes_15cbt:
     istc_metadata = self.istc_db[ self.istc_db['id'] == istc_id ]
     return istc_metadata;
 
+  def get_istc_metadata_html_table(self, filename):
+      istc_metadata = self.get_file_metadata(filename=filename);
+      html = 'ISTC metadata for ' + filename + ' not found!';
+      if istc_metadata.shape[0] == 1:
+          html = '<table class="metadata_table"><tbody>'
+          for key in istc_metadata:
+              value = istc_metadata.iloc[0][key]
+              if key == 'id':
+                  istc_url = '<a target="_blank" href="http://data.cerl.org/istc/%s">%s</a>' % (value, value);
+                  html += '<tr><td>%s</td><td>%s</td></tr>' % (key, istc_url);
+                  continue;
+              if value != '':
+                  html += '<tr><td>%s</td><td>%s</td></tr>' % (key, value);
+              else:
+                  html += '<tr><td>%s</td><td></td></tr>' % (key);
+          html += '</tbody></table>';
+      return html;
+
+  def get_region_attribute_html(self, region, rank, doc_id, region_spec):
+    if region_spec == '':
+      region_img = '';
+      usr_msg = 'Not showing non-rectangular region';
+    else:
+      region_img = '<div class="img_panel"><img src="getImage?docID=%d&height=200&%s&crop"></div>' % (doc_id, region_spec);
+      usr_msg = '';
+
+    region_metadata_html = '''
+<div class="search_result_i pagerow">
+  <div class="header">
+    <span>Region: %d</span>
+    <span style="color: red">%s</span>
+  </div>
+  %s
+  <div class="istc_metadata"><strong>Region Metadata</strong>
+    <input type="checkbox" class="show_more_state" id="region_%d_metadata" />
+    <table class="metadata_table show_more_wrap"><tbody>
+''' % (rank, usr_msg, region_img , rank);
+
+    region_json = json.loads(region);
+    metadata_index = 0;
+    for key in region_json :
+      value = region_json[key];
+      if value != '':
+        if metadata_index < 4:
+          region_metadata_html += '<tr><td>%s</td><td>%s</td></tr>' % (key, value);
+        else:
+          region_metadata_html += '<tr class="show_more_target"><td>%s</td><td>%s</td></tr>' % (key, value);
+      else:
+          region_metadata_html += "<tr><td>%s</td><td></td></tr>" % (key);
+
+      metadata_index = metadata_index + 1;
+
+    # end of for metadata_i
+    region_metadata_html += '</tbody></table><label for="region_%d_metadata" class="show_more_trigger"></label>' % (rank);
+    region_metadata_html += '</div></div>';
+
+    print(region_metadata_html)
+    return region_metadata_html;
+
   @cherrypy.expose
   def index(self, docID= None, filename=None):
     doc_id_list = pd.Series( data=[], dtype=int );
@@ -128,36 +202,7 @@ class file_attributes_15cbt:
     else:
       doc_id_list = pd.Series( data=[docID], dtype=int );
 
-    file_count = len(self.docMap[self.dsetname]);
-    navigation  = '<div id="navbar" style="display: table; width:96%;background-color:#d7f4f6;border: 1px solid #ccc;padding: 1rem;line-height: 2rem">'
-
-    if doc_id_list.size == 1:
-      doc_id = doc_id_list.iloc[0]
-      navigation += '<div style="display: table-cell;text-align: left;">Showing file %d of total %d files</div>' % (doc_id, file_count);
-    else:
-      if filename != None:
-        navigation += '<div style="display: table-cell;text-align: left;">Search keyword: %s</div>' % (filename)
-      else:
-        navigation += '<div style="display: table-cell;text-align: left;">&nbsp;</div>'
-
-    navigation += '<div style="display: table-cell;">'
-    navigation += '<form action="file_attributes" method="POST" id="filename_search">'
-    navigation += '<input type="text" name="filename" value="enter partial filename" title="search filenames using keyword or regular expression" size="12" onclick="this.value=\'\';">'
-    navigation += '&nbsp;<button type="submit" form="filename_search" value="Submit">Search</button>'
-    navigation += '</form></div>'
-    navigation += '<div style="display: table-cell; text-align: right;">'
-
-    if doc_id_list.size == 1:
-      doc_id = doc_id_list.iloc[0]
-      if doc_id > 0:
-          navigation+= '<a href="./file_attributes?docID=%d">Prev</a>&nbsp;&nbsp;|&nbsp;&nbsp;' % ( doc_id - 1 );
-      if doc_id < file_count:
-          navigation+= '<a href="./file_attributes?docID=%d">Next</a>&nbsp;&nbsp;|&nbsp;&nbsp;' % ( doc_id + 1 );
-
-    navigation += '<a target="_blank" href="file_index" title="Browse index of files in this dataset">Index</a></div>';
-    navigation += '</div>'; 
-
-    body  = navigation
+    body  = '';
 
     if doc_id_list.size == 0:
       body += "<h1>File not found</h1>"
@@ -165,23 +210,45 @@ class file_attributes_15cbt:
     elif doc_id_list.size == 1:
       doc_id = doc_id_list.iloc[0]
       filename = self.pathManager_obj[self.dsetname].displayPath(doc_id)
-      body += "<h1>File: %s</h1>" % (filename)
-      body += '<table style="width:100%;">'
-      body += '<tr><td valign="top">'
-      body += '<p><a title="Search using this image" href="search?docID=%d"><img src="getImage?docID=%d&width=400"></a></p><p><i>Click on the image to use it for searching.</i></p></td>' %(doc_id, doc_id);
+      istc_metadata = self.get_istc_metadata_html_table(filename);
 
-      metadata = self.file_attributes_index[ self.file_attributes_index['doc_id'] == doc_id ];
-      if metadata.shape[0] == 1:
-        body += '<td valign="top"><ul>';
-        for key in metadata:
-          value = metadata.iloc[0][key]
-          if type(value) == str and value.startswith('http://'):
-            value = '<a target="_blank" href="%s">%s</a>' % (value, value)
+      all_region_metadata = '';
+      regions = self.region_attributes[ self.region_attributes['filename'] == filename ];
+      for index, row in regions.iterrows():
+        filename = row['filename'];
+        shape_attributes_str = row['region_shape_attributes'];
+        sa = json.loads(shape_attributes_str);
+        if sa['name'] == 'rect':
+          rx = int(sa['x']);
+          ry = int(sa['y']);
+          rw = int(sa['width']);
+          rh = int(sa['height']);
+          region_spec = 'xl=%s&xu=%s&yl=%s&yu=%s&H=1,0,0,0,1,0,0,0,1' % (rx, rx+rw, ry, ry+rh);
+        else:
+          region_spec = '';
 
-          body += '<li>%s: %s</li>' %(key, value);
-        body += '</ul></td></tr></table>';
-      else:
-        body += '<td><p>File attributes not found</p></td>';
+        all_region_metadata += self.get_region_attribute_html( row['region_attributes'], row['region_id'], doc_id, region_spec );
+
+      body += '''
+<div class="search_result_i pagerow">
+  <div class="header">
+    <span>Filename: %s</span>
+    <span></span>
+  </div>
+
+  <div class="img_panel">
+    <a href="search?docID=%d"><img src="getImage?docID=%s&height=500"></a>
+  </div>
+  <div class="istc_metadata"><strong>ISTC Metadata</strong>%s</div>
+
+  <div class="search_result_tools">
+  <ul class="hlist">
+    <li><a href="search?docID=%d">Search using this image</a></li>
+  </ul>
+  </div>
+</div>
+%s''' % (filename, doc_id, doc_id, istc_metadata, doc_id, all_region_metadata);
+
       title = "File: %s" % (filename)
     else:
       # show a list of files

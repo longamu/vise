@@ -56,7 +56,8 @@ class istc:
         view_sel_html = '<ul><li>List View</li><li><a href="istc?id=%s">Folio View</a></li></ul>' % (id);
 
       # show an index of all images associated with an ISTC
-      istc_filelist = self.file_attributes.file_attributes_index[ self.file_attributes.file_attributes_index['istc_id'] == id ];
+      istc_filelist_unsorted = self.file_attributes.file_attributes_index[ self.file_attributes.file_attributes_index['istc_id'] == id ];
+      istc_filelist = istc_filelist_unsorted.sort_values('folio', inplace=False);
 
       # get istc metadata
       istc_metadata_html_table = self.get_istc_metadata_html_table(id);

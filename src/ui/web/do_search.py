@@ -299,7 +299,7 @@ class doSearch:
             else:
                 if showText:
                     body+= '''
-<div class="search_result_i pagecell %s">
+<div class="search_result_i pagecell_with_margin %s">
   <div class="header">
     <span class="search_result_filename">Filename: <a href="file_attributes?docID=%d">%s</a></span>
   </div>

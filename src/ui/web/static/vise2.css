@@ -45,6 +45,7 @@ li {
 
 .pagecell {
   display: inline-block;
+  margin: 1rem !important;
 }
 
 .pagecell_with_margin {
@@ -52,8 +53,17 @@ li {
   margin: 1rem 1rem !important;
 }
 
-#page_header {
+.pageheader {
   margin: 2rem 0;
+}
+.pageheader .header_control_panel {
+  border: none;
+}
+.pageheader .header_control_panel div {
+  display: inline-block;
+}
+.pageheader .header_control_panel div:last-child {
+  float: right;
 }
 
 .pagerow .title {
@@ -115,6 +125,7 @@ li {
 .search_result_panel {
   border: none;
   overflow:auto;
+  margin: 1rem 0;
 }
 .search_result_panel div {
   display: inline-block;
@@ -254,7 +265,7 @@ li {
   display: block;
   font-size: 0.8rem;
   text-align: center;
-  margin: 6rem 0 0 0;
+  margin: 6rem 0 1rem 0;
 }
 
 ul.hlist {
