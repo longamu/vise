@@ -133,14 +133,16 @@ class webserver2:
         self.upload_obj= upload.upload(self.pT, API_obj);
         self.docMap= docMap;
 
-        self.page0_obj= page0.page0( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
-        self.dynamicImage_obj= dynamic_image.dynamicImage( docMap );
-        self.searchPage_obj= search_page.searchPage( self.pT, docMap, self.pathManager_obj );
-
+        # page template for all pages
         self.template_15cbt = template_15cbt.template_15cbt();
 
+        self.page0_obj= page0.page0( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
+        self.dynamicImage_obj= dynamic_image.dynamicImage( docMap );
+        self.searchPage_obj= search_page.searchPage( self.template_15cbt, docMap, self.pathManager_obj );
+
+
         # file attributes page
-        self.file_index_obj = file_index.file_index( self.pT, self.docMap, self.pathManager_obj );
+        self.file_index_obj = file_index.file_index( self.template_15cbt, self.docMap, self.pathManager_obj );
         self.file_index = self.file_index_obj.index;
         #self.file_attributes_obj = file_attributes.file_attributes( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True, file_attributes_fn=file_attributes_fn, file_attributes_filename_colname=file_attributes_filename_colname );
         self.file_attributes_obj = file_attributes_15cbt.file_attributes_15cbt( self.template_15cbt, self.docMap, self.pathManager_obj, file_attributes_fn, file_attributes_filename_colname, istc_db_fn, istc_id_colname, region_attributes_fn, region_attributes_filename_colname );

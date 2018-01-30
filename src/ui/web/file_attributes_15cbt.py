@@ -150,11 +150,13 @@ class file_attributes_15cbt:
       return html;
 
   def get_region_attribute_html(self, region, rank, doc_id, region_spec):
+    # @todo: transform the region spec to scaled image (i.e. preprocess_log.csv)
     if region_spec == '':
       region_img = '';
       usr_msg = 'Not showing non-rectangular region';
     else:
-      region_img = '<div class="img_panel"><img src="getImage?docID=%d&height=200&%s&crop"></div>' % (doc_id, region_spec);
+      #region_img = '<div class="img_panel"><img src="getImage?docID=%d&height=200&%s&crop"></div>' % (doc_id, region_spec);
+      region_img = '';
       usr_msg = '';
 
     region_metadata_html = '''
@@ -167,7 +169,7 @@ class file_attributes_15cbt:
   <div class="istc_metadata"><strong>Region Metadata</strong>
     <input type="checkbox" class="show_more_state" id="region_%d_metadata" />
     <table class="metadata_table show_more_wrap"><tbody>
-''' % (rank, usr_msg, region_img , rank);
+''' % (rank+1, usr_msg, region_img , rank);
 
     region_json = json.loads(region);
     metadata_index = 0;
@@ -187,7 +189,6 @@ class file_attributes_15cbt:
     region_metadata_html += '</tbody></table><label for="region_%d_metadata" class="show_more_trigger"></label>' % (rank);
     region_metadata_html += '</div></div>';
 
-    print(region_metadata_html)
     return region_metadata_html;
 
   @cherrypy.expose
@@ -223,6 +224,9 @@ class file_attributes_15cbt:
           ry = int(sa['y']);
           rw = int(sa['width']);
           rh = int(sa['height']);
+          #
+          # @todo: transform the region spec to scaled image (i.e. preprocess_log.csv)
+          #
           region_spec = 'xl=%s&xu=%s&yl=%s&yu=%s&H=1,0,0,0,1,0,0,0,1' % (rx, rx+rw, ry, ry+rh);
         else:
           region_spec = '';

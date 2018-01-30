@@ -36,7 +36,6 @@ li {
 .pageresult {
   display: block;
   margin: auto;
-  text-align: center;
 }
 
 .pagerow {
@@ -103,6 +102,17 @@ li {
 }
 .query_image_panel .metadata_table td {
   border: none;
+}
+
+/* The panel showing text search keyword */
+.text_search_panel {
+  box-shadow: 10px 10px 16px -4px #e6e6e6;
+  margin: 2rem 0;
+  padding: 1rem;
+  background: #ffaaee;
+}
+.text_search_panel .title {
+  text-align: center;
 }
 
 /* The panel showing ISTC metadata for a page showing list of images associated with a ISTC id */

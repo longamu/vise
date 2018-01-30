@@ -42,14 +42,14 @@ class template_15cbt:
 
       <div class="search_panel">
         <form action="text_search" method="POST" id="text_search">
-          <input type="text" name="keyword" placeholder="Search keyword" size="10">
-          <select id="target" name="target">
-            <option value="all" selected="true">All</option>
-            <option value="filename">Image Filename</option>
-            <option value="istc_metadata">ISTC Metadata</option>
-            <option value="region_metadata">Region Metadata</option>
+          <input id="text_search_keyword" type="text" name="keyword" placeholder="Search keyword" size="10">
+          <select id="text_search_target" name="target">
+            <!--<option value="All" selected="true">All</option>-->
+            <option value="Region Attributes" selected="true">Region Attributes</option>
+            <option value="ISTC Metadata">ISTC Metadata</option>
+            <option value="Image Filename">Image Filename</option>
           </select>
-          <button type="submit" value="Search">Search</button>
+          <button type="submit" value="Search" onclick="text_search();">Search</button>
         </form>
       </div>
 

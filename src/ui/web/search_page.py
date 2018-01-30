@@ -100,7 +100,7 @@ class searchPage:
 
         body+= '''
         <center>
-        <p><input name="search1" type="button" value="Search" onclick="javascript:selSearch(event, %.4f)" style="width: 12rem; height:4rem; font-size:2rem"></p>
+        <p><input name="search1" type="button" value="Search Region" onclick="javascript:selSearch(event, %.4f)" style="font-size:2rem"></p>
         <p>To select a region, click and drag on the image below</p>
         </center>
         ''' % scale;
@@ -111,7 +111,7 @@ class searchPage:
         else:
           body+= '<center><p>Filename: %s</p></center>' % (filename);
 
-        body+= '<center><p><input name="search2" type="button" value="Search" onclick="javascript:selSearch(event, %.4f)" style="width: 12rem; height:4rem; font-size:2rem"></p></center>' % scale
+        body+= '<center><p><input name="search2" type="button" value="Search Region" onclick="javascript:selSearch(event, %.4f)" style="font-size:2rem"></p></center>' % scale
 
        
         return self.pT.get(title= "Search", headExtra= headExtra, body= body);
