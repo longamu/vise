@@ -22,12 +22,3 @@ function toggle_hidden_search_result() {
   }
 }
 
-function text_search() {
-  var keyword = document.getElementById('text_search_keyword').value;
-  var target = document.getElementById('text_search_target').value;
-  var url_str = './text_search?keyword=' + keyword + '&target=' + target;
-  url = encodeURI(url_str);
-  console.log(url_str);
-  console.log(url);
-  window.location.href = encodeURI(url);
-}

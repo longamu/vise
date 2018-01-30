@@ -35,13 +35,13 @@ class template_15cbt:
       <div class="nav_panel">
         <ul class="hlist">
           <li><a href="./page0">Home</a></li>
-          <li><a href="./file_index">Index</a></li>
-          <li>ISTC Index</li>
+          <li><a href="./file_index">File Index</a></li>
+          <li><a href="./istc">ISTC Index</a></li>
         </ul>
       </div>
 
       <div class="search_panel">
-        <form action="text_search" method="POST" id="text_search">
+        <form action="text_search" method="GET" id="text_search">
           <input id="text_search_keyword" type="text" name="keyword" placeholder="Search keyword" size="10">
           <select id="text_search_target" name="target">
             <!--<option value="All" selected="true">All</option>-->
@@ -49,7 +49,7 @@ class template_15cbt:
             <option value="ISTC Metadata">ISTC Metadata</option>
             <option value="Image Filename">Image Filename</option>
           </select>
-          <button type="submit" value="Search" onclick="text_search();">Search</button>
+          <button type="submit" value="Search">Search</button>
         </form>
       </div>
 

@@ -26,18 +26,20 @@ class file_index:
 
     # cache the index for subsequent requests
     if self.file_index_html == '':
-      self.file_index_html = '<ul style="margin-top: 2rem;">'
+      html = list();
+      html.append('<div class="pagerow"><ul style="margin-top: 2rem;">');
   
       file_count = len(self.docMap[self.dsetname]);
+      print(file_count)
       for doc_id in range(0,file_count):
       #for doc_id in range(0,100):
-          filename = self.pathManager_obj[self.dsetname].displayPath(doc_id);
-          self.file_index_html += '<li>[<a href="search?docID=%d">%.5d</a>] <a href="file_attributes?docID=%d">%s</a></li>' % (doc_id, doc_id, doc_id, filename);
+        print "Processing doc_id %d" % (doc_id);
+        filename = self.pathManager_obj[self.dsetname].displayPath(doc_id);
+        html.append('<li>[<a href="search?docID=%d">%.5d</a>] <a href="file_attributes?docID=%d">%s</a></li>' % (doc_id, doc_id, doc_id, filename) );
 
-      self.file_index_html += '</ul>';
+      html.append('</ul></div>');
+      self.file_index_html = ''.join(html);
 
     body += self.file_index_html;
     headExtra = '';
-
-
-    return self.pT.get( title= "File Index", body=body, headExtra=headExtra );
+    return self.pT.get( title= "File Index", headExtra='', body=body );

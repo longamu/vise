@@ -239,6 +239,17 @@ li {
   text-align: center;
 }
 
+/* ISTC search */
+.istc_search_panel {
+  border: 1px solid #e6e6e6;
+  border-radius: 0.5rem;
+  box-shadow: 10px 10px 16px -4px #e6e6e6;
+  background: #f9f9f9;
+  padding: 4rem 0;
+  text-align: center;
+}
+
+
 /* 
   css based "show more" or "show less" feature for large content 
   source: https://codepen.io/Idered/pen/AeBgF

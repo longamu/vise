@@ -38,17 +38,49 @@ class istc:
           html += '</tbody></table>';
       return html;
 
+  def get_istc_matches_html(self, istc_search_keyword):
+    istc_matches = self.file_attributes.istc_db[ self.file_attributes.istc_db['id'].str.contains(istc_search_keyword, case=False, na=False, regex=True) ];
+    if istc_matches.shape[0] == 0:
+      return '<p>No match found</p>'
+    else:
+      istc_matches_html = '<div class="header"><span>Showing %d matches</span><span></span></div><ul>' % (istc_matches.shape[0]);
+      for index, row in istc_matches.iterrows():
+        istc_id = row['id'];
+        img_count = self.file_attributes.file_attributes_index[ self.file_attributes.file_attributes_index['istc_id'] == istc_id ].shape[0];
+        istc_matches_html += '<li><a href="./istc?id=%s">%s</a> : (%d images) %s - %s</li>' % ( istc_id, istc_id, img_count, row['author'], row['title'] );
+      istc_matches_html += '</ul>';
+      return istc_matches_html;
+
   @cherrypy.expose
-  def index(self, id=None, search_pattern=None, listview=None):
+  def index(self, id=None, istc_search_keyword=None, listview=None):
     # groupby = {folio1, folio3}
     body = "";
+    head = "";
     if id is None:
-      if search_pattern is None:
+      if istc_search_keyword is None or istc_search_keyword == '':
         ## show an input box where users can type partial istc id
-        body += "@todo: show an input box where users can type partial istc id";
+        body += '''
+<div class="istc_search_panel pagerow">
+  <form method="GET" action="./istc" id="istc_search">
+    <input type="text" id="istc_search_keyword" name="istc_search_keyword" placeholder="Search ISTC id (e.g. ia00154000)" size="25">
+    <button type="submit" value="Search">Search</button>
+  </form>
+</div>''';
+        head += ''; # @todo add javascript to show auto-complete
       else:
         ## show a list of matched istc entries
-        body += "@todo: show a list of istc entries matching the pattern %s" % (search_pattern);
+        istc_matches_html = self.get_istc_matches_html(istc_search_keyword);
+        body += '''
+<div class="istc_search_panel pagerow">
+  <form method="GET" action="./istc" id="istc_search">
+    <input type="text" id="istc_search_keyword" name="istc_search_keyword" placeholder="Search ISTC id (e.g. ia00154000)" size="25">
+    <button type="submit" value="Search">Search</button>
+  </form>
+</div>
+<div class="search_result_i pagerow">
+%s
+</div>
+''' % (istc_matches_html);
     else:
       if listview is None:
         view_sel_html = '<ul><li><a href="istc?id=%s&listview">List View</a></li><li>Folio View</li></ul>' % (id);

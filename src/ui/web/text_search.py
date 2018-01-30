@@ -95,7 +95,7 @@ class text_search:
           region_attributes_matches_html += '''
     <div class="search_result_i pagecell">
       <div class="img_panel" style="float: none; text-align: center;">
-        <a href="./search?docID=%d"><img src="getImage?docID=%d&height=300"></a>
+        <a href="./search?docID=%d" title="Search using this image"><img src="getImage?docID=%d&height=300"></a>
       </div>
     </div>''' % (doc_id, doc_id);
 
@@ -111,8 +111,8 @@ class text_search:
       </div>
 
       <div class="search_result_tools">
-        <span><a href="./search?docID=%d">Image Search</a></span>
-        <span><a href="./file_attributes?docID=%d">More Details</a></span>
+        <span><a href="./search?docID=%d" title="Search using this image">Image Search</a></span>
+        <span><a href="./file_attributes?docID=%d" title="Show more details about this file">More Details</a></span>
       </div>
     </div>''' % (doc_id, filename, doc_id, doc_id, doc_id, doc_id);
       else:
@@ -135,9 +135,9 @@ class text_search:
       <div class="region_metadata"><strong>Region Metadata</strong>%s</div>
 
       <div class="search_result_tools">
-        <span><a href="#">See matching attributes</a></span>
+        <span><a href="./search?docID=%d" title="Search using this image">Image Search</a></span>
       </div>
-    </div>''' % (doc_id, filename, doc_id, doc_id, istc_metadata_html, region_attributes_html);
+    </div>''' % (doc_id, filename, doc_id, doc_id, istc_metadata_html, region_attributes_html, doc_id);
     # end of for index, row in match_region_attributes.iterrows():
     return region_attributes_matches_html;
 
