@@ -65,18 +65,28 @@ class text_search:
 
     # end of for metadata_i
     region_metadata_html += '</tbody></table><label for="region_%d_metadata" class="show_more_trigger"></label>' % (rank);
-    print region_metadata_html;
     return region_metadata_html;
 
-  def search_istc_metadata(self, keyword):
+  def get_istc_metadata_matches(self, keyword, numberToReturn, startFrom, tile, noText):
     # id,author,title,imprint,format
     ## iterate through each column
     N = self.file_attributes.istc_db.shape[0];
-    matches = None;
+
+    matched_istc_html = '';
     for col in self.file_attributes.istc_db.columns:
-      matches += self.file_attributes.istc_db[col].str.contains(keyword, case=False, na=False, regex=True);
-    print(matches)
-    return matches;
+      istc_matches = self.file_attributes.istc_db[ self.file_attributes.istc_db[col].str.contains(keyword, case=False, na=False, regex=True) ];
+      if istc_matches.shape[0] != 0:
+        matched_istc_html += '''
+<div class="search_result_i pagerow">
+  <div class="header">
+    <span class="search_result_filename">Search results matching ISTC field "%s"</span>
+    <span></span>
+  </div>
+  <p style="word-wrap:break-word; padding: 2rem;">''' % (col);
+        for index, row in istc_matches.iterrows():
+          matched_istc_html += '<a href="./istc?id=%s">%s</a>, ' % (row['id'], row['id'],);
+        matched_istc_html += '</p></div>';
+    return matched_istc_html;
 
   def get_region_attributes_matches(self, keyword, numberToReturn, startFrom, tile, noText):
     # filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
@@ -158,6 +168,10 @@ class text_search:
     target = urllib.unquote(target).decode('utf8');
 
     print 'search keyword = %s, target = %s' %(keyword, target);
+
+    if target == 'Image Filename':
+      return self.file_attributes.index( filename=keyword );
+
     body = '';
     result_count = int(numberToReturn);
     result_start = int(startFrom);
@@ -205,7 +219,12 @@ class text_search:
 </div>''' % (keyword, target, search_result_page_tools);
 
     body += '<div class="pageresult">';
-    body += self.get_region_attributes_matches(keyword, numberToReturn, startFrom, tile, noText);
-    
+
+    if target == 'Region Attributes':
+      body += self.get_region_attributes_matches(keyword, numberToReturn, startFrom, tile, noText);
+    if target == 'ISTC Metadata':
+      body += self.get_istc_metadata_matches(keyword, numberToReturn, startFrom, tile, noText);
+      #body += '<p color="red">Not implemented yet!</p>';
+
     body += '\n</div>';
     return self.pT.get(title= "Search Result", headExtra = "", body = body);

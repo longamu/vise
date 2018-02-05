@@ -191,79 +191,80 @@ class file_attributes_15cbt:
 
     return region_metadata_html;
 
-  @cherrypy.expose
-  def index(self, docID= None, filename=None):
-    doc_id_list = pd.Series( data=[], dtype=int );
+  def get_filename_info_html(self, doc_id):
+    doc_id = int(doc_id);
+    filename = self.pathManager_obj[self.dsetname].displayPath(doc_id)
+    istc_metadata = self.get_istc_metadata_html_table(filename);
 
-    if docID == None:
-      if filename == None:
-        doc_id_list = pd.Series( data=[0], dtype=int ); # show first image if no argument is provided
+    all_region_metadata = '';
+    regions = self.region_attributes[ self.region_attributes['filename'] == filename ];
+    for index, row in regions.iterrows():
+      filename = row['filename'];
+      shape_attributes_str = row['region_shape_attributes'];
+      sa = json.loads(shape_attributes_str);
+      if sa['name'] == 'rect':
+        rx = int(sa['x']);
+        ry = int(sa['y']);
+        rw = int(sa['width']);
+        rh = int(sa['height']);
+        #
+        # @todo: transform the region spec to scaled image (i.e. preprocess_log.csv)
+        #
+        region_spec = 'xl=%s&xu=%s&yl=%s&yu=%s&H=1,0,0,0,1,0,0,0,1' % (rx, rx+rw, ry, ry+rh);
       else:
-        doc_id_list = self.filename_to_docid(filename);
-    else:
-      doc_id_list = pd.Series( data=[docID], dtype=int );
+        region_spec = '';
 
-    body  = '';
+      all_region_metadata += self.get_region_attribute_html( row['region_attributes'], row['region_id'], doc_id, region_spec );
 
-    if doc_id_list.size == 0:
-      body += "<h1>File not found</h1>"
-      title = ""
-    elif doc_id_list.size == 1:
-      doc_id = doc_id_list.iloc[0]
-      filename = self.pathManager_obj[self.dsetname].displayPath(doc_id)
-      istc_metadata = self.get_istc_metadata_html_table(filename);
-
-      all_region_metadata = '';
-      regions = self.region_attributes[ self.region_attributes['filename'] == filename ];
-      for index, row in regions.iterrows():
-        filename = row['filename'];
-        shape_attributes_str = row['region_shape_attributes'];
-        sa = json.loads(shape_attributes_str);
-        if sa['name'] == 'rect':
-          rx = int(sa['x']);
-          ry = int(sa['y']);
-          rw = int(sa['width']);
-          rh = int(sa['height']);
-          #
-          # @todo: transform the region spec to scaled image (i.e. preprocess_log.csv)
-          #
-          region_spec = 'xl=%s&xu=%s&yl=%s&yu=%s&H=1,0,0,0,1,0,0,0,1' % (rx, rx+rw, ry, ry+rh);
-        else:
-          region_spec = '';
-
-        all_region_metadata += self.get_region_attribute_html( row['region_attributes'], row['region_id'], doc_id, region_spec );
-
-      body += '''
+    return '''
 <div class="search_result_i pagerow">
-  <div class="header">
-    <span>Filename: %s</span>
-    <span></span>
-  </div>
+<div class="header">
+  <span>Filename: %s</span>
+  <span></span>
+</div>
 
-  <div class="img_panel">
-    <a href="search?docID=%d"><img src="getImage?docID=%s&height=500"></a>
-  </div>
-  <div class="istc_metadata"><strong>ISTC Metadata</strong>%s</div>
+<div class="img_panel">
+  <a href="search?docID=%d"><img src="getImage?docID=%d&height=500"></a>
+</div>
+<div class="istc_metadata"><strong>ISTC Metadata</strong>%s</div>
 
-  <div class="search_result_tools">
-  <ul class="hlist">
-    <li><a href="search?docID=%d">Search using this image</a></li>
-  </ul>
-  </div>
+<div class="search_result_tools">
+<ul class="hlist">
+  <li><a href="search?docID=%d">Search using this image</a></li>
+</ul>
+</div>
 </div>
 %s''' % (filename, doc_id, doc_id, istc_metadata, doc_id, all_region_metadata);
 
-      title = "File: %s" % (filename)
+  @cherrypy.expose
+  def index(self, docID= None, filename=None):
+    doc_id_list = pd.Series( data=[], dtype=int );
+    body = '''
+<div class="istc_search_panel pagerow">
+  <form method="GET" action="./file_attributes" id="filename_search">
+    <input type="text" id="filename_search_keyword" name="filename" placeholder="Image filename (e.g. i3v)" size="25">
+    <button type="submit" value="Search">Search</button>
+  </form>
+</div>''';
+
+    if docID is not None:
+      body += self.get_filename_info_html( docID );
     else:
-      # show a list of files
-      body += "<h1>Search result : found %d files</h1>" %(doc_id_list.size)
-      body += "<ul>"
-      for doc_id in doc_id_list:
-        match = self.file_attributes_index[ self.file_attributes_index['doc_id'] == doc_id ]
-        body += '<li>[<a title="Search using this image" href="../search?docID=%d">%.5d</a>] <a title="View image attributes" href="file_attributes?docID=%d">%s</a></li>' % (doc_id, doc_id, doc_id, match.iloc[0]['filename']);
-      body += "</ul>"
+      if filename is not None:
+        doc_id_list = self.filename_to_docid(filename);
+        if doc_id_list.size == 1:
+          body += self.get_filename_info_html( doc_id_list.iloc[0] );
+        else:
+          # show a list of matching filename
+          filename_list_html = '<p>No match found for keyword "%s"</p>' % (filename);
 
-      title = "Search result"
+          if doc_id_list.size != 0:
+            filename_list_html = '<div class="header"><span>Showing %d matches</span><span></span></div><ul>' % (doc_id_list.size);
+            for doc_id in doc_id_list:
+              match = self.file_attributes_index[ self.file_attributes_index['doc_id'] == doc_id ]
+              filename_list_html += '<li><a title="Search using this image" href="../search?docID=%d">%.5d</a> : <a title="View image attributes" href="file_attributes?docID=%d">%s</a></li>' % (doc_id, doc_id, doc_id, match.iloc[0]['filename']);
+            filename_list_html += '</ul>';
+          body += '<div class="search_result_i pagerow">%s</div>' % (filename_list_html);
 
-    headExtra = '';
-    return self.pT.get( title=title, body=body, headExtra=headExtra );
+
+    return self.pT.get( title='Filename search', body=body, headExtra='' );
