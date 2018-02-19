@@ -257,7 +257,9 @@ void api_v2(std::vector< std::string > argv) {
       if ( boost::filesystem::exists(region_attributes_fn) && boost::filesystem::exists(vise_preprocess_fn) ) {
         std::cout << "\napiv2::apiv2() Loading image region metadata ..." << std::flush;
         ImageMetadata::Instance()->LoadPreprocessData( vise_preprocess_fn );
+        std::cout << "[loaded preprocess]" << std::flush;
         ImageMetadata::Instance()->LoadMetadata( region_attributes_fn );
+        std::cout << "[loaded metadata]" << std::flush;
       } else {
         std::cout << "\napiv2::apiv2() cannot find metadata_fn and preprocess_fn." << std::flush;
       }

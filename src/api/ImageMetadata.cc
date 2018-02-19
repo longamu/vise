@@ -84,12 +84,12 @@ void ImageMetadata::LoadPreprocessData( boost::filesystem::path preprocess_log_f
   preprocess_log_fn = preprocess_log_fn;
   std::ifstream f(preprocess_log_fn.string().c_str(), std::ifstream::in);
 
-  while( !f.eof() ) {
+  while( f ) {
     //#image_fn,original_size,original_width,original_height,tx_size,tx_width,tx_height
     std::string csvline;
     std::getline( f, csvline);
 
-    if ( csvline[0] != '#' ) {
+    if ( csvline[0] != '#' && csvline.length() != 0) {
       // ignore header lines
       std::vector<std::string> tokens;
       ParseCsvLine(csvline, tokens);
