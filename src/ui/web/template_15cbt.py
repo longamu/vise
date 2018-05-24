@@ -28,9 +28,8 @@ class template_15cbt:
 </head>
 <body>
 <div class="page">
+  <div style="display:block;margin-bottom:1em;background-color:#002147;"><a href="page0" title="Show home page"><img src="static/images/headers/15cbt_logo.png" alt="15cBOOKTRADE Logo"></a></div>
   <div class="pagerow pageheader">
-    <h1>15cBOOKTRADE Project</h1>
-
     <div class="header_control_panel">
       <div class="nav_panel">
         <ul class="hlist">
@@ -59,9 +58,7 @@ class template_15cbt:
 
   %s
 
-  <div class="page_footer">
-    VGG Image Search Engine (<a href="http://www.robots.ox.ac.uk/~vgg/software/vise/">VISE</a>) is an open source project developed by the Visual Geometry Group (<a href="http://www.robots.ox.ac.uk/~vgg/">VGG</a>).
-  </div>
+  <div class="page_footer">This image search tool is based on <a href="http://www.robots.ox.ac.uk/~vgg/software/vise/">VGG Image Search Engine (VISE)</a> and has been developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group (VGG)</a>.</div>
 </div>
 </body>
 </html>''' % ( self.html_title_prefix, title, headExtra, body );

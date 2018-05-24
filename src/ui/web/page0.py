@@ -53,7 +53,7 @@ class page0:
             sampleImages= range(startFrom,endBefore);
             lastPage= (total_num+numPerPage-1)/numPerPage-1;
             
-            navigation  = '<div id="navbar" style="display:table; width:96%; background-color:#d7f4f6; border:1px solid #ccc; padding:1rem; line-height:2rem">'
+            navigation  = '<div id="navbar" style="display:table; width:100%; background-color:#e6e6e6; border:1px solid #ccc; padding:1rem; line-height:2rem">'
             navigation += '<div style="display: table-cell;text-align: left;">Showing %d to %d of total %d files</div>' % (startFrom+1, endBefore, total_num);
             navigation += '<div style="display: table-cell;">'
             navigation += '<form action="file_attributes" method="POST" id="filename_search">'
@@ -134,7 +134,7 @@ class page0:
                     if iImage+jImage >= len(sampleImages):
                         body+= '<td colspan="%d"></td>' % (numPerRow-jImage);
                         break;
-                    body+= '<td align="center"><a href="file_attributes?docID=%d">%s</a></td>' % ( iImage+jImage, self.pathManager_obj[dsetname].displayPath(sampleImages[iImage+jImage]) if self.doShowPath else "");
+                    body+= '<td align="center"><a class="filename" href="file_attributes?docID=%d">%s</a></td>' % ( iImage+jImage, self.pathManager_obj[dsetname].displayPath(sampleImages[iImage+jImage]) if self.doShowPath else "");
                 body+='</tr>\n';
                 body+="<tr>\n";
             

@@ -21,10 +21,10 @@ class template:
         
         self.titlePrefix= titlePrefix if not(titlePrefix==None) else "Image Search:";
         self.titlePrefix+= ' ';
-        self.homeText= homeText if not(homeText==None) else "VGG Image <br>Search Engine";
+        self.homeText= "";
         self.headerImage= ("style=\"background: url('%s') no-repeat;\"" % headerImage) if not(headerImage==None or len(headerImage)<3) else "";
         self.topLink= topLink if not(topLink==None) else "page0";
-        self.bottomText= bottomText if not(bottomText==None) else '<div style="text-align: center;font-size:small;"><a href="http://www.robots.ox.ac.uk/~vgg/software/vise/">VGG Image Search Engine (VISE)</a> is an open source project developed by the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group (VGG)</a>.</div>';
+        self.bottomText= bottomText if not(bottomText==None) else '<div style="text-align: center;font-size:small;">This image search tool is based on <a href="http://www.robots.ox.ac.uk/~vgg/software/vise/">VGG Image Search Engine (VISE)</a> and has been developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group (VGG)</a>.</div>';
         self.haveLogout= haveLogout;
         self.enableUpload= enableUpload;
         
@@ -66,44 +66,19 @@ class template:
     """ % ( self.titlePrefix, title, headExtra );
         
         res+= '<div id="page"><div id="header">';
-    
-        res+= """
-        <table width="100%%" cellpadding="0" cellspacing="10" border="0">
-        
-        <tr>
-        
-            <td width="200" align="center">
-                <a href="page0">
-                <div id="navHome">
-                <h3>%s</h3>
-                </div>
-                </a>
-            </td>
-        
-            <td align="center">
-                <a href="%s">
-                <div id="navName" %s>
-                <!--<h1>Ballad</h1>-->
-                </div>
-                </a>
-            </td>
-        """ % (self.homeText, self.topLink, self.headerImage );
+        res+= """<div style="display:block;margin-bottom:1em;"><a href="page0" title="Show home page"><img src="static/images/headers/15cbt_logo.png" alt="15cBOOKTRADE Logo"></a></div>
+        <table width="100%%" cellpadding="0" cellspacing="0" border="0">""";
         
         if self.haveLogout:
-            
-            res+= """
+            res+= """<tr>
             <td width="100" align="center">
                 <a href="logout">
                 <div id="navHome">
                 <h3>Log out</h3>
                 </dov>
                 </a>
-            </td>
+            </td></tr>
             """;
-        
-        res+= "</tr>";
-            
-        
         
         if self.enableUpload:
             res+= """

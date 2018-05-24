@@ -64,6 +64,9 @@ class doSearch:
         return html;
 
     def get_overlap_region_metadata_html_table(self, metadata, rank):
+        if metadata is None:
+          return ''
+
         region_metadata_html = 'No overlap with any manually annotated regions.';
         metadata_tokens = metadata.split("__SEP__");
         if len(metadata_tokens) != 1:
@@ -158,19 +161,31 @@ class doSearch:
 
         query_img_url = 'search?%s' % (query_spec0);
         query_img_src = 'getImage?%s&width=200&xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f&H=1,0,0,0,1,0,0,0,1%s' % (query_spec0, xl, xu, yl, yu, "&crop" if tile else "");
-        query_istc_metadata = self.get_istc_metadata_html_table(query_filename);
 
-        body +='''
-<div id="query_image_panel" class="query_image_panel pagerow">
-  <span class="title">Query Image Region</span>
-  <div id="query_image_metadata">
-    <ul>
-      <li>Filename: <a href="file_attributes?%s">%s</a></li>
-      <li>ISTC Metadata: %s</li>
-    </ul>
-  </div>
-  <a href="file_attributes?%s"><img src="%s"></a>
-</div>''' % (query_spec0, query_filename, query_istc_metadata, query_spec0, query_img_src);
+        if uploadID==None:
+          query_istc_metadata = self.get_istc_metadata_html_table(query_filename);
+          body +='''
+  <div id="query_image_panel" class="query_image_panel pagerow">
+    <span class="title">Query Image Region</span>
+    <div id="query_image_metadata">
+      <ul>
+        <li>Filename: <a href="file_attributes?%s">%s</a></li>
+        <li>ISTC Metadata: %s</li>
+      </ul>
+    </div>
+    <a href="file_attributes?%s"><img src="%s"></a>
+  </div>''' % (query_spec0, query_filename, query_istc_metadata, query_spec0, query_img_src);
+        else:
+          body +='''
+  <div id="query_image_panel" class="query_image_panel pagerow">
+    <span class="title">Query Image Region</span>
+    <div id="query_image_metadata">
+      <ul>
+        <li>Filename: %s (uploaded file)</li>
+      </ul>
+    </div>
+    <a href="search?%s"><img src="%s"></a>
+  </div>''' % (query_filename,query_spec0, query_img_src);
 
         # navigation
 
@@ -234,7 +249,7 @@ class doSearch:
         for (rank, docIDres, score, metadata, metadata_region, H) in results:
             boxArg="xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f" % (xl,xu,yl,yu);
             match_compare_url = 'register?%s&docID2=%d&%s' % (query_spec1, docIDres, boxArg);
-            if H!=None:
+            if H != None:
                 boxArg+= "&H=%s" % H;
                 match_details_url = "details?%s&docID2=%d&%s" % (query_spec1, docIDres, boxArg);
             else:
@@ -254,9 +269,12 @@ class doSearch:
 
             ## tiled view does not require metadata
             if not tile:
-                overlap_metadata_html = self.get_overlap_region_metadata_html_table(metadata, rank);
-                if metadata_region != "":
-                    boxArg+= "&metadata_region=" + metadata_region;
+                if metadata is not None:
+                  overlap_metadata_html = self.get_overlap_region_metadata_html_table(metadata, rank);
+                  if metadata_region != "":
+                      boxArg+= "&metadata_region=" + metadata_region;
+                else:
+                  overlap_metadata_html = ''
 
                 # each file has ISTC metadata
                 istc_metadata_html = self.get_istc_metadata_html_table(match_filename);
