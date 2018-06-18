@@ -37,3 +37,6 @@ data/
 *.out
 *.app
 
+bin/*
+cmake_build/*
+*.*~
