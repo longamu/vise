@@ -1,0 +1,4 @@
+## [2.0.0] - not released yet
+ * REST API for indexing, administration and query of search engines
+ * a basic user interface based solely on HTML, CSS and Javascript
+
