@@ -35,6 +35,8 @@ if __name__=='__main__':
     if len(sys.argv)>1: dsetname= sys.argv[1];
     configFn= "../src/ui/web/config/config.cfg";
     if len(sys.argv)>2: configFn= sys.argv[2];
+    num_iteration = 10;
+    if len(sys.argv)>3: num_iteration= int(sys.argv[3]);
     
     config= ConfigParser.ConfigParser();
     config.read( configFn );
@@ -49,7 +51,7 @@ if __name__=='__main__':
     seed= 43;
     
     compute_clusters(clstFn, pntsFn, vocSize,
-                     30, approx=True, seed= seed,
+                     num_iteration, approx=True, seed= seed,
                      featureWrapper= ("hell" if RootSIFT else None) );
     
     mpi.finalize();
