@@ -15,7 +15,7 @@
 import os.path;
 import cherrypy;
 from cherrypy.lib.static import serve_file;
-import Image;
+from PIL import Image;
 try:
     import PngImagePlugin, JpegImagePlugin, TiffImagePlugin, GifImagePlugin, BmpImagePlugin, PpmImagePlugin; # all this stuff for cx_freeze
 except:

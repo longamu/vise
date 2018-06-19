@@ -40,3 +40,5 @@ data/
 bin/*
 cmake_build/*
 *.*~
+
+*.pyc

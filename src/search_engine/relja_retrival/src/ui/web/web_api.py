@@ -14,7 +14,7 @@
 
 import cherrypy;
 import os.path;
-import Image;
+from PIL import Image;
 
 import numpy as np;
 

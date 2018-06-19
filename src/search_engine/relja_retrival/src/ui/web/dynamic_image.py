@@ -15,12 +15,12 @@
 import cherrypy, os;
 
 import numpy as np;
-import Image;
+from PIL import Image;
 try:
     import PngImagePlugin, JpegImagePlugin, TiffImagePlugin, GifImagePlugin, BmpImagePlugin, PpmImagePlugin; # all this stuff for cx_freeze
 except:
     pass;
-import ImageDraw;
+from PIL import ImageDraw;
 import StringIO;
 
 from upload import savedTemp;
