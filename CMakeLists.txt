@@ -80,5 +80,5 @@ message("ImageMagick_INCLUDE_DIRS: " ${ImageMagick_INCLUDE_DIRS} )
 
 include_directories("${PROJECT_INCLUDE_DIR}")
 add_subdirectory("${PROJECT_SOURCE_DIR}" )
-add_subdirectory("${PROJECT_TEST_DIR}" )
+#add_subdirectory("${PROJECT_TEST_DIR}" )
 
