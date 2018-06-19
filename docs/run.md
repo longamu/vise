@@ -6,4 +6,6 @@ mpirun -np 8 compute_index_v2 index ox5k /home/tlm/dset/vise/ox5k_100/search_eng
 
 LD_LIBRARY_PATH="/home/tlm/deps/vise/lib/lib" ./api_v2 9999 ox5k /home/tlm/dset/vise/ox5k_100/search_engine_config.txt
 
+python webserver.py 8080 ox5k1 9999 0 /home/tlm/dset/vise/ox5k_100/search_engine_config.txt
+
 
