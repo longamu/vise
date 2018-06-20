@@ -15,6 +15,9 @@
 
 #include <boost/filesystem.hpp>
 
+#define BOOST_LOG_DYN_LINK 1
+#include <boost/log/trivial.hpp>
+
 // to generate uuid
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -27,14 +30,15 @@
 #include "http_server/http_request.h"
 #include "http_server/http_response.h"
 
+#include "vise/util.h"
+
 using namespace std;
 using namespace Eigen;
 
 // uses C++ singleton design pattern
 class vise_request_handler {
-  boost::filesystem::path upload_dir_;
-  boost::filesystem::path result_dir_;
-  boost::filesystem::path asset_dir_;
+  boost::filesystem::path data_dir_;  // storage for vise internal data, search engine repo.
+  boost::filesystem::path asset_dir_; // location of ui, logo, etc.
 
   vise_request_handler() { };
   vise_request_handler(const vise_request_handler& sh) { };
@@ -44,23 +48,12 @@ class vise_request_handler {
 
   static vise_request_handler* vise_request_handler_;
 
-  // _upload
-  bool save_user_upload(const http_request& request, string& fid);
-
-  // _compare
-  void register_images();
-
-  // result
-  bool has_invalid_char(const std::string s);
-  bool load_file_contents(const boost::filesystem::path fn,
-                          std::string& file_contents);
-
   public:
   static vise_request_handler* instance();
 
-  void init(const boost::filesystem::path upload_dir,
-            const boost::filesystem::path result_dir,
+  void init(const boost::filesystem::path data_dir,
             const boost::filesystem::path asset_dir);
   void handle_http_request(const http_request& request, http_response& response);
+  void respond_with_static_file(http_response& response, boost::filesystem::path fn);
 };
 #endif

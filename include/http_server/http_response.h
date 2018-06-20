@@ -73,6 +73,9 @@ class http_response {
     else if( ext == "txt" ) {
       ctype = "text/plain";
     }
+    else if( ext == "ico" ) {
+      ctype = "image/x-icon";
+    }
 
     set_field("Content-Type", ctype);
   }
