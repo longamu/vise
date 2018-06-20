@@ -1,4 +1,4 @@
-/** @file   vise_request_handler.h
+/** @file   search_engine_manager.h
  *  @brief  A singleton class which handles http requests related to vise
  *
  *
@@ -6,8 +6,8 @@
  *  @date   18 June 2018
  */
 
-#ifndef _VISE_REQUEST_HANDLER_H_
-#define _VISE_REQUEST_HANDLER_H_
+#ifndef _VISE_SEARCH_ENGINE_MANAGER_H_
+#define _VISE_SEARCH_ENGINE_MANAGER_H_
 
 #include <iostream>
 #include <sstream>
@@ -31,30 +31,31 @@
 #include "http_server/http_response.h"
 
 #include "vise/util.h"
-#include "vise/search_engine_manager.h"
 
 using namespace std;
 using namespace Eigen;
 
 // uses C++ singleton design pattern
-class vise_request_handler {
+class search_engine_manager {
   boost::filesystem::path data_dir_;  // storage for vise internal data, search engine repo.
   boost::filesystem::path asset_dir_; // location of ui, logo, etc.
 
-  vise_request_handler() { };
-  vise_request_handler(const vise_request_handler& sh) { };
-  vise_request_handler* operator=(const vise_request_handler &) {
+  search_engine_manager() { };
+  search_engine_manager(const search_engine_manager& sh) { };
+  search_engine_manager* operator=(const search_engine_manager &) {
     return 0;
   }
 
-  static vise_request_handler* vise_request_handler_;
+  static search_engine_manager* search_engine_manager_;
 
   public:
-  static vise_request_handler* instance();
+  static search_engine_manager* instance();
 
-  void init(const boost::filesystem::path data_dir,
-            const boost::filesystem::path asset_dir);
-  void handle_http_request(const http_request& request, http_response& response);
-  void respond_with_static_file(http_response& response, boost::filesystem::path fn);
+  void init(const boost::filesystem::path data_dir);
+  void process_cmd(const std::string search_engine_name,
+                   const std::string search_engine_version,
+                   const std::string search_engine_command,
+                   const std::string payload,
+                   http_response& response);
 };
 #endif

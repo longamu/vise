@@ -36,6 +36,53 @@ bool vise::util::contains(const std::string &s, const std::string substr) {
   }
 }
 
+std::vector<std::string> vise::util::split(const std::string &s, const char separator) {
+  std::vector<std::string> chunks;
+  std::vector<std::size_t> seperator_index_list;
+
+  std::size_t start = 0;
+  std::size_t sep_index;
+  while ( start < s.length() ) {
+    sep_index = s.find(separator, start);
+    if ( sep_index == std::string::npos ) {
+      break;
+    } else {
+      chunks.push_back( s.substr(start, sep_index - start) );
+      start = sep_index + 1;
+    }
+  }
+  if ( start != s.length() ) {
+    chunks.push_back( s.substr(start) );
+  }
+  return chunks;
+}
+
+std::vector<std::string> vise::util::split(const std::string &s, const char separator, const std::string stop_string) {
+  std::vector<std::string> chunks;
+  std::vector<std::size_t> seperator_index_list;
+
+  std::size_t start = 0;
+  std::size_t sep_index;
+  std::size_t stop_index = s.find(stop_string);
+  if ( stop_index == std::string::npos ) {
+    stop_index = s.length();
+  }
+
+  while ( start < stop_index ) {
+    sep_index = s.find(separator, start);
+    if ( sep_index == std::string::npos ) {
+      break;
+    } else {
+      chunks.push_back( s.substr(start, sep_index - start) );
+      start = sep_index + 1;
+    }
+  }
+  if ( start != stop_index ) {
+    chunks.push_back( s.substr(start) );
+  }
+  return chunks;
+}
+
 //
 // file i/o
 //
@@ -110,3 +157,13 @@ bool vise::util::has_special_char(const std::string &s) {
   return false;
 }
 
+//
+// i/o
+//
+void vise::util::print_vector( std::string name, std::vector<std::string> v ) {
+  std::ostringstream s;
+  for ( std::size_t i = 0; i < v.size(); ++i ) {
+    s << v[i] << ",";
+  }
+  BOOST_LOG_TRIVIAL(debug) << name << " = [" << s.str() << "]";
+}

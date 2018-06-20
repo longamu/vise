@@ -81,7 +81,19 @@ int main(int argc, char** argv) {
     boost::filesystem::create_directories(data_dir);
   }
 
+  boost::filesystem::path search_engine_data_dir = data_dir / "repo";
+  if ( !boost::filesystem::exists(search_engine_data_dir) ) {
+    boost::filesystem::create_directories( search_engine_data_dir );
+  } else {
+    // cleanup
+    boost::filesystem::remove_all( search_engine_data_dir );
+    boost::filesystem::create_directories( search_engine_data_dir );
+  }
+
+  // initialize http request handler
   vise_request_handler::instance()->init(data_dir, asset_dir);
+  // initialize search engine manager
+  search_engine_manager::instance()->init(search_engine_data_dir);
 
   http_server server(address, port, thread_pool_size);
   std::cout << "\n\nNotes:";

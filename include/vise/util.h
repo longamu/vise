@@ -26,6 +26,8 @@ namespace util {
 bool starts_with(const std::string &s, const std::string prefix);
 bool ends_with(const std::string &s, const std::string suffix);
 bool contains(const std::string &s, const std::string substr);
+std::vector<std::string> split(const std::string &s, const char separator);
+std::vector<std::string> split(const std::string &s, const char separator, const std::string stop_string);
 
 //
 // file i/o
@@ -36,6 +38,12 @@ bool load_file_content(const boost::filesystem::path fn, std::string& file_conte
 // http uri parsing util
 //
 bool has_special_char(const std::string &s);
+
+//
+// i/o
+//
+void print_vector( std::string name, std::vector<std::string> v );
+
 
 } // end of namespace util
 } // end of namespace vise
