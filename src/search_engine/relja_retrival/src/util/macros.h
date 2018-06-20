@@ -19,7 +19,7 @@ No usage or redistribution is allowed without explicit permission.
 #include <cstdlib>
 
 // assert which works in Release mode too
-#define ASSERT(expression) if (!(expression)) { std::cerr << "ASSERT failed: " #expression " in "  << __FUNCTION__ << " ("__FILE__ ":" << __LINE__ << ")\n"; exit(1); }
+#define ASSERT(expression) if (!(expression)) { std::cerr << "ASSERT failed: " #expression " in "  << __FUNCTION__ << " (" __FILE__ ":" << __LINE__ << ")\n"; exit(1); }
 
 // apply assert and evaluate expression only for debugging
 #if 0
