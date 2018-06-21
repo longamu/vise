@@ -13,8 +13,20 @@
 #include <sstream>
 #include <fstream>
 
+// thread
+#include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
+#include <boost/thread.hpp>
+#include <boost/process.hpp>
+
+// for config file i/o
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+
+// for filesystem i/o
 #include <boost/filesystem.hpp>
 
+// for logging
 #define BOOST_LOG_DYN_LINK 1
 #include <boost/log/trivial.hpp>
 
@@ -66,6 +78,8 @@ class search_engine_manager {
                             const std::string search_engine_version);
   bool create_search_engine(const std::string search_engine_name,
                             const std::string search_engine_version);
+  bool create_default_config(const std::string search_engine_name,
+                             const std::string search_engine_version);
   boost::filesystem::path get_search_engine_dir(const std::string search_engine_name,
                                                 const std::string search_engine_version);
   boost::filesystem::path get_image_data_dir(const std::string search_engine_name,
@@ -74,9 +88,25 @@ class search_engine_manager {
                                             const std::string search_engine_version);
   boost::filesystem::path get_log_data_dir(const std::string search_engine_name,
                                            const std::string search_engine_version);
-  // image i/o
+  boost::filesystem::path get_temp_data_dir(const std::string search_engine_name,
+                                            const std::string search_engine_version);
+  boost::filesystem::path get_image_filename(const std::string search_engine_name,
+                                             const std::string search_engine_version,
+                                             const std::map<std::string, std::string>& uri_param );
+  boost::filesystem::path get_config_filename(const std::string search_engine_name,
+                                              const std::string search_engine_version);
+  boost::filesystem::path get_image_list_filename(const std::string search_engine_name,
+                                                  const std::string search_engine_version);
+
+    // image i/o
   bool add_image_from_http_payload(const boost::filesystem::path filename,
                                    const std::string& request_body);
+
+  // threads
+  boost::thread* search_engine_index_thread_;
+  bool index_start(const std::string search_engine_name,
+                   const std::string search_engine_version);
+  bool run_shell_command(std::string name, std::string cmd);
 
 };
 #endif
