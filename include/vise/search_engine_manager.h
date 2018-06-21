@@ -55,7 +55,28 @@ class search_engine_manager {
   void process_cmd(const std::string search_engine_name,
                    const std::string search_engine_version,
                    const std::string search_engine_command,
-                   const std::string payload,
+                   const std::map<std::string, std::string> uri_param,
+                   const std::string request_body,
                    http_response& response);
+
+  // search engine data dir management
+  boost::filesystem::path convert_to_unique_filename(boost::filesystem::path filename);
+  std::string get_unique_filename(std::string extension="");
+  bool search_engine_exists(const std::string search_engine_name,
+                            const std::string search_engine_version);
+  bool create_search_engine(const std::string search_engine_name,
+                            const std::string search_engine_version);
+  boost::filesystem::path get_search_engine_dir(const std::string search_engine_name,
+                                                const std::string search_engine_version);
+  boost::filesystem::path get_image_data_dir(const std::string search_engine_name,
+                                             const std::string search_engine_version);
+  boost::filesystem::path get_vise_data_dir(const std::string search_engine_name,
+                                            const std::string search_engine_version);
+  boost::filesystem::path get_log_data_dir(const std::string search_engine_name,
+                                           const std::string search_engine_version);
+  // image i/o
+  bool add_image_from_http_payload(const boost::filesystem::path filename,
+                                   const std::string& request_body);
+
 };
 #endif

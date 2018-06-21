@@ -19,8 +19,6 @@
 #include "http_server/http_server.h"
 #include "vise/vise_request_handler.h"
 
-#define BOOST_LOG_DYN_LINK 1
-
 #if defined(_WIN32) || defined(WIN32)
   #include <windows.h>
   #include <ShellAPI.h>

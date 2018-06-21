@@ -76,6 +76,9 @@ class http_response {
     else if( ext == "ico" ) {
       ctype = "image/x-icon";
     }
+    else if( ext == "json" ) {
+      ctype = "application/json";
+    }
 
     set_field("Content-Type", ctype);
   }

@@ -1,7 +1,8 @@
 cd /home/tlm/dev/vise/cmake_build
 /home/tlm/deps/imcomp/lib/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="/home/tlm/deps/vise/lib" -DCMAKE_MODULE_PATH="/home/tlm/dev/vise/src/search_engine/relja_retrival/forbuild" ../
 
-/home/tlm/deps/imcomp/lib/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="/home/tlm/deps/vise/lib" -DCMAKE_MODULE_PATH="/home/tlm/dev/vise/src/search_engine/relja_retrival/forbuild" ../
+/home/tlm/deps/imcomp/lib/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="/home/tlm/deps/vise/lib" -DCMAKE_MODULE_PATH="/home/tlm/dev/vise/src/search_engine/relja_retrival/forbuild" ../
+make -j 8 && ../bin/vise_server 0.0.0.0 9973 4 /home/tlm/dev/vise/asset /home/tlm/tmp/vise
 
 
 
