@@ -1,0 +1,47 @@
+/*
+Stylesheet for web browser based user interface of VGG Image Search Engine (VISE)
+
+Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
+Date:   22 June 2018
+*/
+
+body { padding:0; margin:0; font-family:sans-serif; }
+* { box-sizing: border-box; }
+a { text-decoration:none; }
+
+.page { width:100%; padding:0.5rem; }
+.page .top { display:block; width:100%; }
+
+/* panel containing VISE logo and some links */
+.page .top .top_left_box { display:inline-block; border:1px solid #808080; vertical-align:top; margin-right:2rem; }
+.page .top .top_left_box .logo img { height: 5rem; }
+.page .top .top_left_box .links { font-size:0.8rem; text-align:center; padding:0.4rem 0;}
+
+/* panel to create new search engine and show its indexing status */
+.page .top .top_right_box { display:inline-block; border:1px solid #e6e6e6; overflow-y:hidden; overflow-x:auto; font-size:0.8rem; height:7.2rem; }
+.page .top .top_right_box * { vertical-align:middle;}
+.page .top .top_right_box .title { display:block; background-color:#f2f2f2; text-align:center; padding:0.2rem 0; }
+.page .top .top_right_box .new_search_engine_control_panel { display:inline-block; width:6rem; margin-left:2rem; }
+
+.page .top .top_right_box .new_search_engine_control_panel button { font-size:0.8rem; }
+
+.page .top .top_right_box #new_search_engine_image_preview_panel { display:inline-block; text-align:center; width:8rem; margin-left:4rem; margin-right:2rem; padding-top:0.4rem; }
+.page .top .top_right_box #new_search_engine_image_preview_panel img { display:block; height:3.8rem; margin:auto; }
+.page .top .top_right_box #new_search_engine_image_preview_panel select { display:block; height:1.4rem; border:1px solid #cccccc; background:none; width:8rem; }
+.page .top .top_right_box #new_search_engine_indexing_progress_panel {display:inline-block;}
+/*
+.page .top .top_right_box #new_search_engine_image_preview_panel { display:inline-block; height:100%; vertical-align:middle; width:20rem; border:1px solid red; }
+.page .top .top_right_box #new_search_engine_image_preview_panel img { display:inline-block; height:4rem; }
+*/
+.page .top .top_right_box #new_search_engine_indexing_progress_panel { display:inline-block; font-size:0.8rem; width:16rem;}
+.page .top .top_right_box #new_search_engine_indexing_progress_panel ol { margin:0; margin-left:-0.5rem; }
+.page .top .top_right_box #new_search_engine_indexing_progress_panel .done:after { content: " \02713"; color:green; font-size:1rem;}
+.page .top .top_right_box #new_search_engine_indexing_progress_panel .ongoing { font-weight:bold; margin-left:0.2rem;}
+
+/* panel showing existing search engines */
+.page .middle_panel { display:block; width:100%; border:1px solid #e6e6e6; margin-top:2rem; }
+.page .middle_panel .title { display:block; font-size:0.8em; background-color:#f2f2f2; text-align:center; padding:0.2rem 0;}
+.page .middle_panel .search_engine { display:inline-block; height:14rem; width:10rem; overflow:hidden; border:0px solid #212121; margin:1rem; text-align:center; vertical-align:top; }
+.page .middle_panel .search_engine img {height:70%; margin-bottom:1rem; }
+.page .middle_panel .search_engine span { display:block; font-size:0.8rem; color: #212121; }
+.page .middle_panel .search_engine a:hover span { color:blue; }

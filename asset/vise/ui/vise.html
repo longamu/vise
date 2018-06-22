@@ -11,7 +11,92 @@
 </head>
 
 <body>
-<img src="images/vise_logo.png" alt="VISE Logo" title="VISE Logo" height="60">
+  <div class="page">
+    <div class="top">
+      <div class="top_left_box" id="logo_panel">
+        <div class="logo"><img src="images/vise_logo.png" alt="VISE Logo" title="VISE Logo"></div>
+        <div class="links"><a href="#">home</a>&nbsp;|&nbsp;<a href="#">help</a>&nbsp;|&nbsp;<a href="#">about</a></div>
+      </div>
+
+      <div class="top_right_box" id="new_search_engine_panel">
+        <span class="title">Create New Search Engine</span>
+        <div class="new_search_engine_control_panel">
+          <button id="new_search_engine_select_image_button">Add Images</button>
+        </div>
+
+        <div id="new_search_engine_image_preview_panel">
+          <img id="new_search_engine_preview_image" title="Preview of added image" src="images/mock/ox5k.jpg">
+          <select id="new_search_engine_select_preview_image">
+            <option value="ox5k.jpg">ox5k.jpg</option>
+            <option value="ox5k.jpg">ox5k.jpg</option>
+            <option value="ox5k.jpg">ox5k.jpg</option>
+          </select>
+          <!--
+          <span id="new_search_engine_image_count">image count = 0</span>
+          -->
+        </div>
+
+        <div class="new_search_engine_control_panel">
+          <button id="new_search_engine_start_indexing_button">Start Indexing</button>
+        </div>
+
+        <div id="new_search_engine_indexing_progress_panel">
+          <ol>
+            <li class="done">Computing descriptors</li>
+            <li class="done">Clustering descriptors</li>
+            <li class="ongoing">Assigning clusters</li>
+            <li>Computing embeddings</li>
+            <li>Indexing</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="middle_panel" id="load_search_engine_panel">
+      <span class="title">Search Engines</span>
+      <div class="search_engine">
+        <a href="/vise/repo/15cbt/1/query" title="Click to load and query this search engine.">
+          <img class="search_engine_image" src="images/mock/15cbt.jpg">
+          <span class="search_engine_description">15th Century Booktrade (1204 images)</span>
+        </a>
+      </div>
+
+      <div class="search_engine">
+        <a href="/vise/repo/ballads/1/query" title="Click to load and query this search engine.">
+        <img class="search_engine_image" src="images/mock/ballads.jpg">
+        <span class="search_engine_description">Bodelian Ballads (800 images)</span>
+        </a>
+      </div>
+
+      <div class="search_engine">
+        <a href="/vise/repo/bl_bindings/1/query" title="Click to load and query this search engine.">
+        <img class="search_engine_image" src="images/mock/bl_bindings.jpg">
+        <span class="search_engine_description">British Library Book Bindings (5055 images)</span>
+        </a>
+      </div>
+
+      <div class="search_engine">
+        <a href="/vise/repo/coins/1/query" title="Click to load and query this search engine.">
+        <img class="search_engine_image" src="images/mock/coins.jpg">
+        <span class="search_engine_description">UK Coins (1600 images)</span>
+        </a>
+      </div>
+
+      <div class="search_engine">
+        <a href="/vise/repo/mon/1/query" title="Click to load and query this search engine.">
+          <img class="search_engine_image" src="images/mock/mon.jpg">
+          <span class="search_engine_description">Monuments of Nepal (10112 images)</span>
+        </a>
+      </div>
+
+      <div class="search_engine">
+        <a href="/vise/repo/ox5k/1/query" title="Click to load and query this search engine.">
+          <img class="search_engine_image" src="images/mock/ox5k.jpg">
+          <span class="search_engine_description">Oxford Buildings (5062 images)</span>
+        </a>
+      </div>
+    </div>
+
 </body>
 
 </html>
