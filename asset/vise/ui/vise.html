@@ -10,8 +10,9 @@
   <link rel="stylesheet" type="text/css" href="vise.css" />
 </head>
 
-<body>
+<body onload="vise_init()">
   <div class="page">
+    <input type="file" id="invisible_file_input" name="files[]" style="display:none">
     <div class="top">
       <div class="top_left_box" id="logo_panel">
         <div class="logo"><img src="images/vise_logo.png" alt="VISE Logo" title="VISE Logo"></div>
@@ -21,23 +22,19 @@
       <div class="top_right_box" id="new_search_engine_panel">
         <span class="title">Create New Search Engine</span>
         <div class="new_search_engine_control_panel">
-          <button id="new_search_engine_select_image_button">Add Images</button>
+          <button onclick="sel_local_images()" id="new_search_engine_select_image_button">Add Images</button>
         </div>
 
         <div id="new_search_engine_image_preview_panel">
-          <img id="new_search_engine_preview_image" title="Preview of added image" src="images/mock/ox5k.jpg">
-          <select id="new_search_engine_select_preview_image">
-            <option value="ox5k.jpg">ox5k.jpg</option>
-            <option value="ox5k.jpg">ox5k.jpg</option>
-            <option value="ox5k.jpg">ox5k.jpg</option>
-          </select>
+          <img id="new_search_engine_preview_image" title="Preview of added image" src="">
+          <select id="new_search_engine_select_preview_image" onchange="on_new_search_engine_filename_dropdown_update(this)"></select>
           <!--
-          <span id="new_search_engine_image_count">image count = 0</span>
-          -->
+              <span id="new_search_engine_image_count">image count = 0</span>
+              -->
         </div>
 
         <div class="new_search_engine_control_panel">
-          <button id="new_search_engine_start_indexing_button">Start Indexing</button>
+          <button id="new_search_engine_start_indexing_button" onclick="vise_start_indexing()">Start Indexing</button>
         </div>
 
         <div id="new_search_engine_indexing_progress_panel">
@@ -63,22 +60,22 @@
 
       <div class="search_engine">
         <a href="/vise/repo/ballads/1/query" title="Click to load and query this search engine.">
-        <img class="search_engine_image" src="images/mock/ballads.jpg">
-        <span class="search_engine_description">Bodelian Ballads (800 images)</span>
+          <img class="search_engine_image" src="images/mock/ballads.jpg">
+          <span class="search_engine_description">Bodelian Ballads (800 images)</span>
         </a>
       </div>
 
       <div class="search_engine">
         <a href="/vise/repo/bl_bindings/1/query" title="Click to load and query this search engine.">
-        <img class="search_engine_image" src="images/mock/bl_bindings.jpg">
-        <span class="search_engine_description">British Library Book Bindings (5055 images)</span>
+          <img class="search_engine_image" src="images/mock/bl_bindings.jpg">
+          <span class="search_engine_description">British Library Book Bindings (5055 images)</span>
         </a>
       </div>
 
       <div class="search_engine">
         <a href="/vise/repo/coins/1/query" title="Click to load and query this search engine.">
-        <img class="search_engine_image" src="images/mock/coins.jpg">
-        <span class="search_engine_description">UK Coins (1600 images)</span>
+          <img class="search_engine_image" src="images/mock/coins.jpg">
+          <span class="search_engine_description">UK Coins (1600 images)</span>
         </a>
       </div>
 
@@ -97,6 +94,13 @@
       </div>
     </div>
 
+    <!-- to show status messages -->
+    <div id="message_panel">
+      <div id="message_panel_content" class="content"></div>
+    </div>
+  </div> <!-- end of page -->
+
+  <script src="vise.js"></script>
 </body>
 
 </html>

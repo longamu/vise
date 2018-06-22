@@ -22,7 +22,21 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
                                         http_response& response) {
   BOOST_LOG_TRIVIAL(debug) << "processing search engine command: " << search_engine_name << "," << search_engine_version << "," << search_engine_command << ": payload=" << request_body.size() << " bytes";
 
-  if ( search_engine_command == "add_image" ) {
+  if ( search_engine_command == "init" ) {
+    if ( search_engine_exists(search_engine_name, search_engine_version) ) {
+      response.set_status(400);
+      response.set_field("Content-Type", "application/json");
+      response.set_payload( "{error:\"search engine already exists\"}" );
+    } else {
+      create_search_engine(search_engine_name, search_engine_version);
+      response.set_status(200);
+      response.set_field("Content-Type", "application/json");
+      response.set_payload("{ok:\"search engine created\"}");
+    }
+    return;
+  }
+
+  if ( search_engine_command == "add_file" ) {
     if ( ! search_engine_exists(search_engine_name, search_engine_version) ) {
       create_search_engine(search_engine_name, search_engine_version);
     }
@@ -30,7 +44,7 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
     bool ok = add_image_from_http_payload(image_filename, request_body);
     if ( ok ) {
       std::ostringstream s;
-      s << "{filename:\"" << image_filename.string() << "\"}";
+      s << "{filename:\"" << image_filename.filename().string() << "\"}";
       response.set_status(200);
       response.set_field("Content-Type", "application/json");
       response.set_payload(s.str());
@@ -39,6 +53,7 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
       response.set_field("Content-Type", "application/json");
       response.set_payload("{error:\"failed to add image\"}");
     }
+    return;
   }
 
   if ( search_engine_command == "index_start" ) {
@@ -54,12 +69,16 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
       response.set_field("Content-Type", "application/json");
       response.set_payload( s.str() );
     }
+    return;
   }
+
+  // unhandled cases
+  response.set_status(400);
 }
 
 bool search_engine_manager::index_start(const std::string search_engine_name,
                                         const std::string search_engine_version) {
-  run_shell_command( "pwd", "pwd" );
+  // @todo: find a way to automatically located these executables
   std::string index_exec   = "/home/tlm/dev/vise/bin/compute_index_v2";
   std::string cluster_exec = "/home/tlm/dev/vise/src/search_engine/relja_retrival/src/v2/indexing/compute_clusters.py";
   boost::filesystem::path config_fn = get_config_filename(search_engine_name, search_engine_version);
@@ -83,7 +102,7 @@ bool search_engine_manager::index_start(const std::string search_engine_name,
   s.str("");
   s.clear();
   s << "mpirun -np 8 python " << cluster_exec
-    << " " << search_engine_name << " " << config_fn.string() << " 4";
+    << " " << search_engine_name << " " << config_fn.string() << " 8";
   run_shell_command( "cluster", s.str() );
 
   // 4. trainAssign

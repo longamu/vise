@@ -23,7 +23,7 @@ bool test_search_engine_manager_add_image() {
   map<string, string> uri_param;
   string search_engine_name = "ox5k";
   string search_engine_version = "1";
-  string search_engine_command = "add_image?filename=\"all_souls_00001.jpg\"";
+  string search_engine_command = "add_file?filename=\"all_souls_00001.jpg\"";
   string payload = "base64 image data";
   search_engine_manager::instance()->process_cmd(search_engine_name, search_engine_version, search_engine_command, uri_param, payload, response);
 }

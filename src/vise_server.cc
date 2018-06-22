@@ -75,8 +75,8 @@ int main(int argc, char** argv) {
     boost::filesystem::create_directories(data_dir);
   } else {
     // cleanup
-    boost::filesystem::remove_all( data_dir );
-    boost::filesystem::create_directories(data_dir);
+    //boost::filesystem::remove_all( data_dir );
+    //boost::filesystem::create_directories(data_dir);
   }
 
   boost::filesystem::path search_engine_data_dir = data_dir / "repo";
@@ -84,8 +84,8 @@ int main(int argc, char** argv) {
     boost::filesystem::create_directories( search_engine_data_dir );
   } else {
     // cleanup
-    boost::filesystem::remove_all( search_engine_data_dir );
-    boost::filesystem::create_directories( search_engine_data_dir );
+    //boost::filesystem::remove_all( search_engine_data_dir );
+    //boost::filesystem::create_directories( search_engine_data_dir );
   }
 
   // initialize http request handler

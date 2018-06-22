@@ -45,3 +45,7 @@ a { text-decoration:none; }
 .page .middle_panel .search_engine img {height:70%; margin-bottom:1rem; }
 .page .middle_panel .search_engine span { display:block; font-size:0.8rem; color: #212121; }
 .page .middle_panel .search_engine a:hover span { color:blue; }
+
+/* misc */
+#message_panel         { display:block; width:100%; position:fixed; bottom:0px; z-index:9999; text-align:center; }
+#message_panel .content { display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
