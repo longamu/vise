@@ -77,9 +77,16 @@ class search_engine_manager {
   bool search_engine_exists(const std::string search_engine_name,
                             const std::string search_engine_version);
   bool create_search_engine(const std::string search_engine_name,
-                            const std::string search_engine_version);
+                            const std::string search_engine_version,
+                            const std::string search_engine_description);
   bool create_default_config(const std::string search_engine_name,
-                             const std::string search_engine_version);
+                             const std::string search_engine_version,
+                             const std::string search_engine_description);
+  bool set_search_engine_config(const std::string search_engine_name,
+                                const std::string search_engine_version,
+                                const std::string config_name,
+                                const std::string config_value);
+
   boost::filesystem::path get_search_engine_dir(const std::string search_engine_name,
                                                 const std::string search_engine_version);
   boost::filesystem::path get_image_data_dir(const std::string search_engine_name,
@@ -97,16 +104,30 @@ class search_engine_manager {
                                               const std::string search_engine_version);
   boost::filesystem::path get_image_list_filename(const std::string search_engine_name,
                                                   const std::string search_engine_version);
+  boost::filesystem::path get_index_log_filename(const std::string search_engine_name,
+                                                 const std::string search_engine_version);
 
-    // image i/o
+  // image i/o
   bool add_image_from_http_payload(const boost::filesystem::path filename,
                                    const std::string& request_body);
 
   // threads
   boost::thread* search_engine_index_thread_;
+  bool search_engine_index_thread_running_;
+
+  std::string now_search_engine_name;
+  std::string now_search_engine_version;
+  std::map<std::string, std::string> now_search_engine_index_steps_done_;
+  std::map<std::string, std::string> now_search_engine_index_steps_count_;
+  std::map<std::string, std::string> now_search_engine_index_state_;
+  std::vector<std::string> search_engine_index_state_name_list;
+  std::vector<std::string> search_engine_index_state_desc_list;
+
   bool index_start(const std::string search_engine_name,
                    const std::string search_engine_version);
-  bool run_shell_command(std::string name, std::string cmd);
+  void clear_now_search_engine_index_state(void);
+  bool run_shell_command(std::string name,
+                         std::string cmd);
 
 };
 #endif

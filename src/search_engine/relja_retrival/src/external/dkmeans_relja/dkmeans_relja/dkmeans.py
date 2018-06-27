@@ -12,6 +12,7 @@ import dkmeans_utils
 import mpi_queue
 from feature_map import featureNoWrapper, toHellinger;
 from io_util import *
+import datetime
 
 _proc_status = '/proc/%d/status' % os.getpid()
 _scale = {'kB': 1024.0, 'mB': 1024.0*1024.0,
@@ -171,7 +172,8 @@ def dkmeans3(pnts_fn, nk, niters, clst_fn, nn_class=nn.nn, seed=42, pnts_step=50
 
       t2 = time.time()
 
-      print 'Iteration %d, sse = %g, mem = %.2fMB, took %.2fs' % (iter_num+1, distortion[0], resident()/2**20, t2-t1)
+      #print 'Iteration %d, sse = %g, mem = %.2fMB, took %.2fs' % (iter_num+1, distortion[0], resident()/2**20, t2-t1)
+      print 'relja_retrival,dkmeans::cluster,%s,%d,%d,%g' % (str(datetime.datetime.now()), iter_num+1, niters, distortion[0] )
 
       # Potentially save the clusters.
       if checkpoint:

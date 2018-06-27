@@ -20,7 +20,7 @@ void vise_request_handler::init(const boost::filesystem::path data_dir,
 }
 
 void vise_request_handler::handle_http_request(const http_request& request, http_response& response) {
-  BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
+  //BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
 
   if ( request.method_ == "POST" ) {
     if ( vise::util::starts_with(request.uri_, "/vise/repo/") ) {

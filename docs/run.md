@@ -12,3 +12,8 @@ python webserver.py 8080 ox5k1 9999 0 /home/tlm/dset/vise/ox5k_100/search_engine
 curl -X POST localhost:9973/vise/repo/ox5k/1/add_image?filename="all_souls_00001.jpg"
 
 
+sciam
+  LD_LIBRARY_PATH="/home/tlm/deps/vise/lib/lib" ./api_v2 9999 sciam /home/tlm/dset/vise/sciam/vise_data/config.txtnew
+  python webserver.py 8080 sciam 9999 0 /home/tlm/dset/vise/sciam/vise_data/config.txt
+
+
