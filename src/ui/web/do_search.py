@@ -67,7 +67,7 @@ class doSearch:
         if metadata is None:
           return ''
 
-        region_metadata_html = 'No overlap with any manually annotated regions.';
+        region_metadata_html = '';
         metadata_tokens = metadata.split("__SEP__");
         if len(metadata_tokens) != 1:
             metadata_index = 0;
