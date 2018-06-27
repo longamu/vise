@@ -4,7 +4,8 @@ cd /home/tlm/dev/vise/cmake_build
 /home/tlm/deps/imcomp/lib/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="/home/tlm/deps/vise/lib" -DCMAKE_MODULE_PATH="/home/tlm/dev/vise/src/search_engine/relja_retrival/forbuild" ../
 make -j 8 && ../bin/vise_server 0.0.0.0 9973 4 /home/tlm/dev/vise/asset /home/tlm/tmp/vise
 
-
+# for 0x04 (xi linux pc)
+/home/tlm/deps/vise/lib/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="/home/tlm/deps/vise/lib" -DCMAKE_MODULE_PATH="/home/tlm/dev/vise/src/search_engine/relja_retrival/forbuild" ../
 
 #compile imagemagick q8
 
@@ -17,3 +18,34 @@ echo "using mpi ;" >> project-config.jam
 ./b2 --with-filesystem --with-system --with-thread --with-date_time --with-chrono --with-atomic --with-timer --with-mpi --with-log variant=release threading=multi toolset=gcc install
 
 ./b2 --clean
+
+#compile eigen
+/home/tlm/deps/vise/lib/bin/cmake -DCMAKE_INSTALL_PREFIX=/home/tlm/deps/vise/lib ../
+make -j8 && make install
+
+# compile fastann
+PREFIX=/home/tlm/deps/vise/lib /home/tlm/deps/vise/lib/bin/cmake /home/tlm/dev/vise/src/search_engine/relja_retrival/src/external/fastann/src
+
+
+# compile pypar 
+sudo apt-get install openmpi-bin libopenmpi-dev
+
+cd /home/tlm/dev/vise/src/search_engine/relja_retrival/src/external/pypar_2.1.4_94/source
+
+python compile_pypar_locally.py 
+sudo python setup.py install
+sudo ln -s /usr/lib/libmpi.so /usr/lib/libmpi.so.0
+mpirun -np 3 python -c "import pypar; pypar.finalize();"
+>> Pypar (version 2.1.4) initialised MPI OK with 3 processors
+
+# compile dkmeans
+cd /home/tlm/dev/vise/src/search_engine/relja_retrival/src/external/dkmeans_relja
+python setup.py build
+sudo python setup.py install
+
+# compile jpdraw
+cd /home/tlm/dev/vise/src/search_engine/relja_retrival/src/external/jp_draw
+python setup.py build
+sudo python setup.py install
+
+

@@ -15,6 +15,15 @@ DEP_SRCDIR="${DEP_BASEDIR}tmp_libsrc"
 #
 # Install cmake
 #
+CMAKE_LIBDIR=$DEP_LIBDIR"cmake/"
+if [ -d "$CMAKE_LIBDIR" ]; then
+  echo "Skipping cmake library as it already exists at "$CMAKE_LIBDIR
+else
+  echo "Installing cmake at "$CMAKE_LIBDIR
+	wget https://cmake.org/files/v3.11/cmake-3.11.4.tar.gz
+	tar -zxvf cmake-3.11.4.tar.gz && cd cmake-3.11.4
+	./configure --prefix=/home/tlm/deps/vise/lib
+fi
 
 
 #
@@ -31,7 +40,8 @@ else
     #wget -O ImageMagick-7.0.5-6.tar.gz http://git.imagemagick.org/repos/ImageMagick/repository/archive.tar.gz?ref=7.0.5-6
     #wget -O ImageMagick-6.9.8-8.tar.gz http://git.imagemagick.org/repos/ImageMagick/repository/archive.tar.gz?ref=6.9.8-8
     #tar -zxvf ImageMagick-6.9.8-8.tar.gz
-    wget https://www.imagemagick.org/download/releases/ImageMagick-6.9.10-1.zip
+    #wget https://www.imagemagick.org/download/releases/ImageMagick-6.9.10-1.zip
+		wget https://www.imagemagick.org/download/releases/ImageMagick-6.9.10-3.zip
     cd ImageMagick-6.9.8-8
     ./configure --prefix=$IMAGEMAGICK_LIBDIR -enable-hdri=no --with-quantum-depth=8 --disable-dependency-tracking --with-x=no --without-perl
     make -j8
@@ -68,7 +78,7 @@ else
     cd eigen-3.3.4/
     mkdir build
     cd build
-    /ssd/adutta/build_deps/lib/cmake/bin/cmake -DCMAKE_INSTALL_PREFIX=/ssd/adutta/build_deps/lib/eigen ../
+    /ssd/adutta/build_deps/lib/cmake/bin/cmake -DCMAKE_INSTALL_PREFIX=/ssd/adutta/build_deps/lib ../
     make install
 fi
 
@@ -84,7 +94,8 @@ else
     tar -zxvf boost_1_64_0.tar.gz
     cd boost_1_64_0
     ./bootstrap.sh --prefix=$BOOST_LIBDIR --with-toolset=gcc --with-libraries=filesystem,system,thread,date_time,chrono,atomic,timer,mpi
-    sed -i.old 's/using gcc ;/using gcc : 6.3.0 : g++-6 ;/g' project-config.jam
+    #sed -i.old 's/using gcc ;/using gcc : 6.3.0 : g++-6 ;/g' project-config.jam
+		echo "using mpi ;" >> project-config.jam
     ./b2 --with-filesystem --with-system --with-thread --with-date_time --with-chrono --with-atomic --with-timer variant=release threading=multi toolset=gcc install
 
     #@todo
