@@ -24,6 +24,7 @@ echo "using mpi ;" >> project-config.jam
 make -j8 && make install
 
 # compile fastann
+## may need: yasm -f elf64 ../dist_l2_funcs_exp_64.asm -o dist_l2_funcs_exp_64.o
 PREFIX=/home/tlm/deps/vise/lib /home/tlm/deps/vise/lib/bin/cmake /home/tlm/dev/vise/src/search_engine/relja_retrival/src/external/fastann/src
 
 
