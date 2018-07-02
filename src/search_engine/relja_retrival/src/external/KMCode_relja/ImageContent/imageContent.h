@@ -24,6 +24,13 @@ using namespace std;
 const int PNG_BYTES_TO_CHECK = 4;
 const int ERROR = -1;
 
+// added by @Abhishek to support compilation in Mac/CentOS
+#define png_voidp_NULL    (png_voidp)NULL
+#define png_infopp_NULL   (png_infopp)NULL
+#define png_set_gray_1_2_4_to_8(arg) png_set_expand_gray_1_2_4_to_8(arg)
+typedef unsigned int uint;
+
+
 class ImageContent;
 typedef ImageContent DARY;
 class ImageContent {

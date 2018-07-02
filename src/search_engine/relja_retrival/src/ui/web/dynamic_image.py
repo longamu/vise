@@ -82,7 +82,7 @@ class dynamicImage:
         if (xl!=None and xu!=None and yl!=None and yu!=None):
             xl= float(xl); xu= float(xu); yl= float(yl); yu= float(yu);
         
-        if H!=None:
+        if H is not None:
             H_= [float(hi) for hi in H.split(',')];
             H= np.array( H_ ).reshape( (3,3) );
             X= np.array([[xl,yl,1.0], [xu,yl,1.0], [xu,yu,1.0], [xl,yu,1.0]]).T;
@@ -92,7 +92,7 @@ class dynamicImage:
         drawBox= (drawBox=="true") and not(crop);
         
         if crop:
-            if H==None:
+            if H is None:
                 cropBox= (xl,yl,xu,yu);
             else:
                 XP = np.dot(H, X);
@@ -105,7 +105,7 @@ class dynamicImage:
         else:
             cropw,croph= imw,imh;
         
-        if (H!=None and drawBox) or width!=None or height!=None:
+        if (H is not None and drawBox) or width!=None or height!=None:
             
             # if you change scale computation don't forget to change do_search scale!!
             
@@ -127,7 +127,7 @@ class dynamicImage:
             else:
                 im= im.resize( ( int(imw*scale), int(imh*scale) ) );
             
-            if H!=None and drawBox:
+            if H is not None and drawBox:
                 
                 S= np.array( [[scale,0,0],[0,scale,0],[0,0,1]] );
                 X= np.array([[xl,yl,1.0], [xu,yl,1.0], [xu,yu,1.0], [xl,yu,1.0]]).T;
