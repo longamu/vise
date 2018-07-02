@@ -202,7 +202,10 @@ class doSearch:
             if emailFeedback: js_imageNames= [];
             
             for (rank, docIDres, score, H) in results:
-                
+                # do not show any results below the threshold
+                if score < self.API_obj[self.def_dsetname].scoreThr:
+                  break;
+
                 boxArg="xl=%.2f&xu=%.2f&yl=%.2f&yu=%.2f" % (xl,xu,yl,yu);
                 if H!=None:
                     boxArg+= "&H=%s" % H;
