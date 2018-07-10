@@ -9,6 +9,9 @@
 #ifndef _VISE_SEARCH_ENGINE_MANAGER_H_
 #define _VISE_SEARCH_ENGINE_MANAGER_H_
 
+#include "vise/util.h"
+#include "search_engine.h"
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -42,34 +45,66 @@
 #include "http_server/http_request.h"
 #include "http_server/http_response.h"
 
-#include "vise/util.h"
-
 using namespace std;
 using namespace Eigen;
 
 // uses C++ singleton design pattern
 class search_engine_manager {
+
   boost::filesystem::path data_dir_;  // storage for vise internal data, search engine repo.
   boost::filesystem::path asset_dir_; // location of ui, logo, etc.
 
+  bool auto_load_search_engine_;
+
+  static search_engine_manager* search_engine_manager_;
+
+  // threads
+  boost::thread* search_engine_index_thread_;
+  bool search_engine_index_thread_running_;
+
+  std::string now_search_engine_name_;
+  std::string now_search_engine_version_;
+  std::map<std::string, std::string> now_search_engine_index_steps_done_;
+  std::map<std::string, std::string> now_search_engine_index_steps_count_;
+  std::map<std::string, std::string> now_search_engine_index_state_;
+  std::vector<std::string> search_engine_index_state_name_list_;
+  std::vector<std::string> search_engine_index_state_desc_list_;
+  std::map<std::string, vise::search_engine > search_engine_list_;
+  
   search_engine_manager() { };
   search_engine_manager(const search_engine_manager& sh) { };
   search_engine_manager* operator=(const search_engine_manager &) {
     return 0;
   }
 
-  static search_engine_manager* search_engine_manager_;
+  bool load_search_engine(std::string search_engine_name, std::string search_engine_version);
+  bool unload_search_engine(std::string search_engine_name, std::string search_engine_version);
+  bool load_search_engine_check(std::string search_engine_name, std::string search_engine_version);
+
 
   public:
   static search_engine_manager* instance();
 
   void init(const boost::filesystem::path data_dir);
+  // POST /vise/admin/_NAME_/_VERSION_/_COMMAND_
   void process_cmd(const std::string search_engine_name,
                    const std::string search_engine_version,
                    const std::string search_engine_command,
                    const std::map<std::string, std::string> uri_param,
                    const std::string request_body,
                    http_response& response);
+  // POST /vise/admin/_COMMAND_
+  void admin(const std::string command,
+             const std::map<std::string, std::string> uri_param,
+             const std::string request_body,
+             http_response& response);
+  // POST /vise/admin/_NAME_/_VERSION_/_COMMAND_
+  void query(const std::string search_engine_name,
+             const std::string search_engine_version,
+             const std::string search_engine_query,
+             const std::map<std::string, std::string> uri_param,
+             const std::string request_body,
+             http_response& response);
 
   // search engine data dir management
   boost::filesystem::path convert_to_unique_filename(boost::filesystem::path filename);
@@ -110,18 +145,6 @@ class search_engine_manager {
   // image i/o
   bool add_image_from_http_payload(const boost::filesystem::path filename,
                                    const std::string& request_body);
-
-  // threads
-  boost::thread* search_engine_index_thread_;
-  bool search_engine_index_thread_running_;
-
-  std::string now_search_engine_name;
-  std::string now_search_engine_version;
-  std::map<std::string, std::string> now_search_engine_index_steps_done_;
-  std::map<std::string, std::string> now_search_engine_index_steps_count_;
-  std::map<std::string, std::string> now_search_engine_index_state_;
-  std::vector<std::string> search_engine_index_state_name_list;
-  std::vector<std::string> search_engine_index_state_desc_list;
 
   bool index_start(const std::string search_engine_name,
                    const std::string search_engine_version);

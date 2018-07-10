@@ -16,18 +16,21 @@ void search_engine_manager::init(const boost::filesystem::path data_dir) {
   search_engine_index_thread_running_ = false;
   now_search_engine_index_state_.clear();
 
-  search_engine_index_state_name_list.clear();
-  search_engine_index_state_name_list.push_back("relja_retrival:trainDescs");
-  search_engine_index_state_name_list.push_back("relja_retrival:cluster");
-  search_engine_index_state_name_list.push_back("relja_retrival:trainAssign");
-  search_engine_index_state_name_list.push_back("relja_retrival:trainHamm");
-  search_engine_index_state_name_list.push_back("relja_retrival:index");
-  search_engine_index_state_desc_list.clear();
-  search_engine_index_state_desc_list.push_back("Computing image descriptors");
-  search_engine_index_state_desc_list.push_back("Clustering descriptors");
-  search_engine_index_state_desc_list.push_back("Assigning descriptors");
-  search_engine_index_state_desc_list.push_back("Computing embeddings");
-  search_engine_index_state_desc_list.push_back("Indexing");
+  search_engine_index_state_name_list_.clear();
+  search_engine_index_state_name_list_.push_back("relja_retrival:trainDescs");
+  search_engine_index_state_name_list_.push_back("relja_retrival:cluster");
+  search_engine_index_state_name_list_.push_back("relja_retrival:trainAssign");
+  search_engine_index_state_name_list_.push_back("relja_retrival:trainHamm");
+  search_engine_index_state_name_list_.push_back("relja_retrival:index");
+  search_engine_index_state_desc_list_.clear();
+  search_engine_index_state_desc_list_.push_back("Computing image descriptors");
+  search_engine_index_state_desc_list_.push_back("Clustering descriptors");
+  search_engine_index_state_desc_list_.push_back("Assigning descriptors");
+  search_engine_index_state_desc_list_.push_back("Computing embeddings");
+  search_engine_index_state_desc_list_.push_back("Indexing");
+
+  // automatically load a search engine based on user query
+  auto_load_search_engine_ = true;
 }
 
 void search_engine_manager::process_cmd(const std::string search_engine_name,
@@ -83,8 +86,8 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
   if ( search_engine_command == "index_start" ) {
     if ( search_engine_index_thread_running_ ) {
       std::ostringstream s;
-      s << "{\"error\":\"indexing ongoing for " << now_search_engine_name
-        << ":" << now_search_engine_version << "\"}";
+      s << "{\"error\":\"indexing ongoing for " << now_search_engine_name_
+        << ":" << now_search_engine_version_ << "\"}";
       response.set_status(400);
       response.set_field("Content-Type", "application/json");
       response.set_payload( s.str() );
@@ -111,9 +114,9 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
       std::ostringstream s;
       std::string name, desc;
       s << "[";
-      for ( std::size_t i = 0; i < search_engine_index_state_name_list.size(); ++i ) {
-        name = search_engine_index_state_name_list.at(i);
-        desc = search_engine_index_state_desc_list.at(i);
+      for ( std::size_t i = 0; i < search_engine_index_state_name_list_.size(); ++i ) {
+        name = search_engine_index_state_name_list_.at(i);
+        desc = search_engine_index_state_desc_list_.at(i);
         if ( i != 0 ) {
           s << ",";
         }
@@ -209,16 +212,16 @@ void search_engine_manager::clear_now_search_engine_index_state(void) {
   now_search_engine_index_steps_count_.clear();
   now_search_engine_index_state_.clear();
 
-  for ( std::size_t i = 0; i < search_engine_index_state_name_list.size(); ++i ) {
-    now_search_engine_index_state_[ search_engine_index_state_name_list.at(i) ] = "not_started";
+  for ( std::size_t i = 0; i < search_engine_index_state_name_list_.size(); ++i ) {
+    now_search_engine_index_state_[ search_engine_index_state_name_list_.at(i) ] = "not_started";
   }
 }
 
 bool search_engine_manager::index_start(const std::string search_engine_name,
                                         const std::string search_engine_version) {
   search_engine_index_thread_running_ = true;
-  now_search_engine_name = search_engine_name;
-  now_search_engine_version = search_engine_version;
+  now_search_engine_name_ = search_engine_name;
+  now_search_engine_version_ = search_engine_version;
   clear_now_search_engine_index_state();
 
   // @todo: find a way to automatically located these executables
@@ -530,4 +533,51 @@ bool search_engine_manager::add_image_from_http_payload(const boost::filesystem:
     BOOST_LOG_TRIVIAL(debug) << "exception occured while writing file [" << filename.string() << "] : " << e.what();
     return false;
   }
+}
+
+//
+// search engine load/unload/maintenance
+//
+bool search_engine_manager::load_search_engine(std::string search_engine_name, std::string search_engine_version) {
+  if ( ! search_engine_exists(search_engine_name, search_engine_version) ) {
+    return false;
+  }
+  boost::filesystem::path vise_data_dir = get_vise_data_dir(search_engine_name, search_engine_version);
+
+  boost::filesystem::path dset_fn = vise_data_dir / "dset.v2bin";
+  boost::filesystem::path clst_fn = vise_data_dir / "clst.e3bin";
+  boost::filesystem::path iidx_fn = vise_data_dir / "iidx.v2bin";
+  boost::filesystem::path fidx_fn = vise_data_dir / "fidx.v2bin";
+  boost::filesystem::path wght_fn = vise_data_dir / "wght.v2bin";
+  boost::filesystem::path image_dir = get_image_data_dir(search_engine_name, search_engine_version);
+
+  std::string search_engine_id = vise::search_engine::get_search_engine_id(search_engine_name, search_engine_version);
+  vise::search_engine se(search_engine_id, dset_fn, clst_fn, iidx_fn, fidx_fn, wght_fn, image_dir);
+  se.load();
+  //search_engine_list_.insert( std::pair<std::string, vise::search_engine>(search_engine_id, se) );
+  return true;
+}
+
+//
+// search engine query
+//
+void search_engine_manager::query(const std::string search_engine_name,
+                                  const std::string search_engine_version,
+                                  const std::string search_engine_command,
+                                  const std::map<std::string, std::string> uri_param,
+                                  const std::string request_body,
+                                  http_response& response) {
+
+  load_search_engine(search_engine_name, search_engine_version);
+}
+
+
+//
+// search engine admin
+//
+void search_engine_manager::admin(const std::string command,
+                                  const std::map<std::string, std::string> uri_param,
+                                  const std::string request_body,
+                                  http_response& response) {
+  BOOST_LOG_TRIVIAL(debug) << "admin command: [" << command << "]"; 
 }
