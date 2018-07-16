@@ -46,7 +46,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 ## Boost
-find_package(Boost 1.64.0 COMPONENTS mpi filesystem system thread atomic log REQUIRED)
+find_package(Boost 1.64.0 COMPONENTS mpi filesystem system thread atomic log serialization REQUIRED)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	set( Boost_USE_MULTITHREADED ON )
   set( Boost_USE_DEBUG_RUNTIME OFF )

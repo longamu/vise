@@ -40,7 +40,10 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
                                         const std::string request_body,
                                         http_response& response) {
   if ( search_engine_command != "index_status" ) {
-    BOOST_LOG_TRIVIAL(debug) << "processing search engine command: " << search_engine_name << "," << search_engine_version << "," << search_engine_command << ": payload=" << request_body.size() << " bytes";
+    BOOST_LOG_TRIVIAL(debug) << "processing search engine command: "
+			     << search_engine_name << "," << search_engine_version
+			     << "," << search_engine_command << ": payload="
+			     << request_body.size() << " bytes";
   }
 
   if ( search_engine_command == "init" ) {
@@ -62,23 +65,6 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
         << "\"search_engine_version\":\"" << search_engine_version << "\"}";
 
       response.set_payload( s.str() );
-    }
-    return;
-  }
-
-  if ( search_engine_command == "add_file" ) {
-    boost::filesystem::path image_filename = get_image_filename(search_engine_name, search_engine_version, uri_param);
-    bool ok = add_image_from_http_payload(image_filename, request_body);
-    if ( ok ) {
-      std::ostringstream s;
-      s << "{\"filename\":\"" << image_filename.filename().string() << "\"}";
-      response.set_status(200);
-      response.set_field("Content-Type", "application/json");
-      response.set_payload(s.str());
-    } else {
-      response.set_status(400);
-      response.set_field("Content-Type", "application/json");
-      response.set_payload("{\"error\":\"failed to add image\"}");
     }
     return;
   }
@@ -105,7 +91,7 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
       response.set_status(400);
       response.set_field("Content-Type", "application/json");
       response.set_payload( s.str() );
-}
+    }
     return;
   }
 
@@ -144,34 +130,6 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
     return;
   }
 
-  if ( search_engine_command == "rename" ) {
-    if ( search_engine_exists(search_engine_name, search_engine_version) ) {
-      if ( uri_param.count("new_search_engine_name") ) {
-        std::string new_search_engine_name = uri_param.at("new_search_engine_name");
-        boost::filesystem::path old_name = get_search_engine_dir(search_engine_name, search_engine_version);
-        boost::filesystem::path new_name = get_search_engine_dir(new_search_engine_name, search_engine_version);
-        if ( !search_engine_exists(new_search_engine_name, search_engine_version) ) {
-          boost::filesystem::rename(old_name, new_name);
-          std::ostringstream s;
-          s << "{\"ok\":\"search engine renamed\","
-            << "\"new_search_engine_name\":\"" << new_search_engine_name << "\","
-            << "\"new_search_engine_version\":\"" << search_engine_version << "\"}";
-          response.set_status(200);
-          response.set_field("Content-Type", "application/json");
-          response.set_payload( s.str() );
-          return;
-        }
-      }
-    }
-
-    std::ostringstream s;
-    s << "{\"error\":\"could not rename search engine\"}";
-    response.set_status(400);
-    response.set_field("Content-Type", "application/json");
-    response.set_payload( s.str() );
-    return;
-  }
-
   if ( search_engine_command == "engine_exists" ) {
     response.set_status(200);
     response.set_field("Content-Type", "application/json");
@@ -180,26 +138,6 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
     } else {
       response.set_payload( "{\"no\":\"search engine does not exist\"}" );
     }
-    return;
-  }
-
-  if ( search_engine_command == "set_config" ) {
-    if ( search_engine_exists(search_engine_name, search_engine_version) ) {
-      if ( uri_param.count("config_name") && uri_param.count("config_value") ) {
-        set_search_engine_config(search_engine_name,
-                                 search_engine_version,
-                                 uri_param.at("config_name"),
-                                 uri_param.at("config_value")
-                                 );
-        response.set_status(200);
-        response.set_field("Content-Type", "application/json");
-        response.set_payload( "{\"ok\":\"config updated\"}" );
-        return;
-      }
-    }
-    response.set_status(400);
-    response.set_field("Content-Type", "application/json");
-    response.set_payload( "{\"error\":\"failed to update config\"}" );
     return;
   }
 
@@ -224,6 +162,7 @@ bool search_engine_manager::index_start(const std::string search_engine_name,
   now_search_engine_version_ = search_engine_version;
   clear_now_search_engine_index_state();
 
+  /*
   // @todo: find a way to automatically located these executables
   std::string index_exec   = "/home/tlm/dev/vise/bin/compute_index_v2";
   std::string cluster_exec = "/home/tlm/dev/vise/src/search_engine/relja_retrival/src/v2/indexing/compute_clusters.py";
@@ -335,38 +274,7 @@ bool search_engine_manager::run_shell_command(std::string cmd_name,
     now_search_engine_index_state_[ cmd_name ] = "done";
     return true;
   }
-}
-
-
-boost::filesystem::path search_engine_manager::get_image_filename(const std::string search_engine_name,
-                                                                  const std::string search_engine_version,
-                                                                  const std::map<std::string, std::string>& uri_param ) {
-  boost::filesystem::path image_filename = get_image_data_dir(search_engine_name, search_engine_version);
-  std::string filename;
-  if ( uri_param.count("filename") ) {
-    filename = uri_param.at("filename");
-    // ensure that image_filename has .jpg extension
-    std::size_t dotindex = filename.rfind(".");
-    std::string ext = filename.substr(dotindex + 1);
-    if ( ext != "jpg" ) {
-      filename.replace(dotindex, filename.size() - dotindex, ".jpg");
-    }
-  } else{
-    filename = get_unique_filename(".jpg");
-  }
-  image_filename = image_filename / boost::filesystem::path(filename).filename();
-
-  if ( boost::filesystem::exists(image_filename) ) {
-    image_filename = convert_to_unique_filename(image_filename);
-  }
-  return image_filename;
-}
-
-boost::filesystem::path search_engine_manager::convert_to_unique_filename(boost::filesystem::path filename) {
-  boost::filesystem::path newfn = filename.parent_path() / ( filename.stem().string() +
-                                                             boost::filesystem::unique_path("_%%%%%").string() +
-                                                             filename.extension().string() );
-  return newfn;
+  */
 }
 
 std::string search_engine_manager::get_unique_filename(std::string extension) {
@@ -388,126 +296,6 @@ bool search_engine_manager::search_engine_exists(const std::string search_engine
 bool search_engine_manager::create_search_engine(const std::string search_engine_name,
                                                  const std::string search_engine_version,
                                                  const std::string search_engine_description) {
-  boost::filesystem::path search_engine_dir = get_search_engine_dir(search_engine_name, search_engine_version);
-  if ( boost::filesystem::exists(search_engine_dir) ) {
-    boost::filesystem::remove_all(search_engine_dir);
-    BOOST_LOG_TRIVIAL(debug) << "removing existing search engine directory [" << search_engine_dir.string() << "]";
-  }
-  boost::filesystem::create_directories( search_engine_dir );
-  boost::filesystem::create_directories( get_image_data_dir(search_engine_name, search_engine_version) );
-  boost::filesystem::create_directories( get_vise_data_dir(search_engine_name, search_engine_version)  );
-  boost::filesystem::create_directories( get_log_data_dir(search_engine_name, search_engine_version)   );
-  boost::filesystem::create_directories( get_temp_data_dir(search_engine_name, search_engine_version)  );
-
-  create_default_config(search_engine_name, search_engine_version, search_engine_description);
-
-  BOOST_LOG_TRIVIAL(debug) << "created search engine directory [" << search_engine_dir.string() << "]";
-}
-
-boost::filesystem::path search_engine_manager::get_config_filename(const std::string search_engine_name,
-                                                                   const std::string search_engine_version) {
-  return ( get_vise_data_dir(search_engine_name, search_engine_version) / "config.txt" );
-}
-
-boost::filesystem::path search_engine_manager::get_image_list_filename(const std::string search_engine_name,
-                                                                       const std::string search_engine_version) {
-  return ( get_vise_data_dir(search_engine_name, search_engine_version) / "image_filename_list.txt" );
-}
-
-bool search_engine_manager::create_default_config(const std::string search_engine_name,
-                                                  const std::string search_engine_version,
-                                                  const std::string search_engine_description) {
-  boost::filesystem::path config_fn = get_config_filename(search_engine_name, search_engine_version);
-  try {
-    boost::property_tree::ptree pt;
-    //std::string prefix = search_engine_name + "." + search_engine_version;
-    std::string prefix = search_engine_name;
-    std::string vise_data_dir = get_vise_data_dir(search_engine_name, search_engine_version).string() + boost::filesystem::path::preferred_separator;
-    std::string image_data_dir = get_image_data_dir(search_engine_name, search_engine_version).string() + boost::filesystem::path::preferred_separator;
-    std::string temp_data_dir  = get_temp_data_dir(search_engine_name, search_engine_version).string() + boost::filesystem::path::preferred_separator;
-
-    pt.put( prefix + ".titlePrefix", search_engine_description);
-    pt.put( prefix + ".RootSIFT", "true");
-    pt.put( prefix + ".SIFTscale3", "true");
-    pt.put( prefix + ".hammEmbBits", "64");
-    pt.put( prefix + ".imagelistFn", get_image_list_filename(search_engine_name, search_engine_version).string());
-    pt.put( prefix + ".databasePath", image_data_dir );
-    pt.put( prefix + ".trainFilesPrefix", vise_data_dir );
-    pt.put( prefix + ".dsetFn", (vise_data_dir + "dset.v2bin") );
-    pt.put( prefix + ".clstFn", (vise_data_dir + "clst.e3bin") );
-    pt.put( prefix + ".iidxFn", (vise_data_dir + "iidx.v2bin") );
-    pt.put( prefix + ".fidxFn", (vise_data_dir + "fidx.v2bin") );
-    pt.put( prefix + ".wghtFn", (vise_data_dir + "wght.v2bin") );
-    pt.put( prefix + ".tmpDir", temp_data_dir);
-    pt.put( prefix + ".trainNumDescs", "-1");
-    pt.put( prefix + ".vocSize", "1000");
-    boost::property_tree::ini_parser::write_ini(config_fn.string(), pt);
-    BOOST_LOG_TRIVIAL(debug) << "written search engine config to [" << config_fn.string() << "]";
-    return true;
-  }  catch( std::exception &e ) {
-    BOOST_LOG_TRIVIAL(debug) << "exception occured while writing config file [" << config_fn.string() << "] : " << e.what();
-    return false;
-  }
-}
-
-bool search_engine_manager::set_search_engine_config(const std::string search_engine_name,
-                                                     const std::string search_engine_version,
-                                                     const std::string config_name,
-                                                     const std::string config_value) {
-  boost::filesystem::path config_fn = get_config_filename(search_engine_name, search_engine_version);
-  try {
-    boost::property_tree::ptree pt;
-    boost::property_tree::ini_parser::read_ini(config_fn.string(), pt);
-    //std::string prefix = search_engine_name + "." + search_engine_version;
-    std::string prefix = search_engine_name;
-    pt.put( prefix + "." + config_name, config_value);
-    boost::property_tree::ini_parser::write_ini(config_fn.string(), pt);
-    BOOST_LOG_TRIVIAL(debug) << "updated search engine config " << config_name << "=" << config_value << "in config file [" << config_fn.string() << "]";
-    return true;
-  }  catch( std::exception &e ) {
-    BOOST_LOG_TRIVIAL(debug) << "exception occured while updating config file [" << config_fn.string() << "] : " << e.what();
-    return false;
-  }
-}
-
-boost::filesystem::path search_engine_manager::get_search_engine_dir(const std::string search_engine_name,
-                                                                     const std::string search_engine_version) {
-  boost::filesystem::path dir = data_dir_ / search_engine_name;
-  return dir / search_engine_version;
-}
-
-boost::filesystem::path search_engine_manager::get_image_data_dir(const std::string search_engine_name,
-                                                                  const std::string search_engine_version) {
-  boost::filesystem::path dir = data_dir_ / search_engine_name;
-  dir = dir / search_engine_version;
-  return dir / "images";;
-}
-
-boost::filesystem::path search_engine_manager::get_vise_data_dir(const std::string search_engine_name,
-                                                                 const std::string search_engine_version) {
-  boost::filesystem::path dir = data_dir_ / search_engine_name;
-  dir = dir / search_engine_version;
-  return dir / "vise_data";
-}
-
-boost::filesystem::path search_engine_manager::get_temp_data_dir(const std::string search_engine_name,
-                                                                 const std::string search_engine_version) {
-  boost::filesystem::path dir = data_dir_ / search_engine_name;
-  dir = dir / search_engine_version;
-  return dir / "temp";
-}
-
-boost::filesystem::path search_engine_manager::get_log_data_dir(const std::string search_engine_name,
-                                                                const std::string search_engine_version) {
-  boost::filesystem::path dir = data_dir_ / search_engine_name;
-  dir = dir / search_engine_version;
-  return dir / "log_data";
-}
-
-boost::filesystem::path search_engine_manager::get_index_log_filename(const std::string search_engine_name,
-                                                                      const std::string search_engine_version) {
-  boost::filesystem::path dir = get_log_data_dir(search_engine_name, search_engine_version);
-  return dir / "index.log";
 }
 
 //
@@ -542,20 +330,25 @@ bool search_engine_manager::load_search_engine(std::string search_engine_name, s
   if ( ! search_engine_exists(search_engine_name, search_engine_version) ) {
     return false;
   }
-  boost::filesystem::path vise_data_dir = get_vise_data_dir(search_engine_name, search_engine_version);
 
-  boost::filesystem::path dset_fn = vise_data_dir / "dset.v2bin";
-  boost::filesystem::path clst_fn = vise_data_dir / "clst.e3bin";
-  boost::filesystem::path iidx_fn = vise_data_dir / "iidx.v2bin";
-  boost::filesystem::path fidx_fn = vise_data_dir / "fidx.v2bin";
-  boost::filesystem::path wght_fn = vise_data_dir / "wght.v2bin";
-  boost::filesystem::path image_dir = get_image_data_dir(search_engine_name, search_engine_version);
+  std::string search_engine_id = vise::relja_retrival::get_search_engine_id(search_engine_name, search_engine_version);
 
-  std::string search_engine_id = vise::search_engine::get_search_engine_id(search_engine_name, search_engine_version);
-  vise::search_engine se(search_engine_id, dset_fn, clst_fn, iidx_fn, fidx_fn, wght_fn, image_dir);
-  se.load();
-  //search_engine_list_.insert( std::pair<std::string, vise::search_engine>(search_engine_id, se) );
+  boost::filesystem::path se_dir = data_dir_ / search_engine_id;
+  vise::search_engine *se = new vise::relja_retrival(search_engine_id, se_dir);
+  se->init();
+  se->load();
+  search_engine_list_.insert( std::pair<std::string, vise::search_engine*>(search_engine_id, se) );
   return true;
+}
+
+bool search_engine_manager::unload_all_search_engine() {
+  // unload all the search engines from search_engine_list_
+  std::map<std::string, vise::search_engine* >::iterator it;
+  for ( it =  search_engine_list_.begin(); it !=  search_engine_list_.end(); ++it ) {
+    BOOST_LOG_TRIVIAL(debug) << "unloading search engine: " << it->second->id();
+    it->second->unload();
+    delete it->second;
+  }
 }
 
 //
@@ -579,5 +372,5 @@ void search_engine_manager::admin(const std::string command,
                                   const std::map<std::string, std::string> uri_param,
                                   const std::string request_body,
                                   http_response& response) {
-  BOOST_LOG_TRIVIAL(debug) << "admin command: [" << command << "]"; 
+  BOOST_LOG_TRIVIAL(debug) << "admin command: [" << command << "]";
 }

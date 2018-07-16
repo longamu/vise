@@ -88,6 +88,7 @@ int main(int argc, char** argv) {
     //boost::filesystem::create_directories( search_engine_data_dir );
   }
 
+  // this is critical to avoid race conditions for vise_request_handler::instance()
   // initialize http request handler
   vise_request_handler::instance()->init(data_dir, asset_dir);
   // initialize search engine manager

@@ -28,10 +28,24 @@ bool test_search_engine_manager_add_image() {
   search_engine_manager::instance()->process_cmd(search_engine_name, search_engine_version, search_engine_command, uri_param, payload, response);
 }
 
+bool test_search_engine_manager_load_search_engine() {
+  string search_engine_name = "ox5k";
+  string search_engine_version = "1";
+
+  search_engine_manager::instance()->load_search_engine(search_engine_name, search_engine_version);
+  //search_engine_manager::instance()->unload_all_search_engine();
+}
+
 int main(int argc, char** argv) {
-  boost::filesystem::path data_dir( boost::filesystem::temp_directory_path() / "vise" );
+  // boost::filesystem::path data_dir( boost::filesystem::temp_directory_path() / "vise" );
+  // boost::filesystem::path search_engine_data_dir = data_dir / "repo";
+  // search_engine_manager::instance()->init(search_engine_data_dir);
+  // test_search_engine_manager_add_image();
+
+  boost::filesystem::path data_dir( "/home/tlm/mydata/vise" );
   boost::filesystem::path search_engine_data_dir = data_dir / "repo";
   search_engine_manager::instance()->init(search_engine_data_dir);
+  test_search_engine_manager_load_search_engine();
 
-  test_search_engine_manager_add_image();
+  delete search_engine_manager::instance(); // leads to memory leak if not invoked
 }
