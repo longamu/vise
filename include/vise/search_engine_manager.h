@@ -97,7 +97,6 @@ class search_engine_manager {
   // POST /vise/admin/_NAME_/_VERSION_/_COMMAND_
   void query(const std::string search_engine_name,
              const std::string search_engine_version,
-             const std::string search_engine_query,
              const std::map<std::string, std::string> uri_param,
              const std::string request_body,
              http_response& response);

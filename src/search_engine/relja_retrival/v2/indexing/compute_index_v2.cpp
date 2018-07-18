@@ -107,8 +107,11 @@ int main(int argc, char* argv[]){
         uint32_t const hammEmbBits= pt.get<uint32_t>( dsetname+".hammEmbBits" );
         std::string const trainFilesPrefix= util::expandUser(pt.get<std::string>( dsetname+".trainFilesPrefix" ));
         std::string const trainDescsFn= trainFilesPrefix+"descs.e3bin";
-        std::string const trainAssignsFn= trainFilesPrefix + util::uintToShortStr(vocSize) + "_assigns.bin";
-        std::string const trainHammFn= trainFilesPrefix + util::uintToShortStr(vocSize) + "_hamm" + boost::lexical_cast<std::string>(hammEmbBits) + ".v2bin";
+        //std::string const trainAssignsFn= trainFilesPrefix + util::uintToShortStr(vocSize) + "_assigns.bin";
+        std::string const trainAssignsFn = trainFilesPrefix + "assign.bin";
+
+        //std::string const trainHammFn= trainFilesPrefix + util::uintToShortStr(vocSize) + "_hamm" + boost::lexical_cast<std::string>(hammEmbBits) + ".v2bin";
+        std::string const trainHammFn = trainFilesPrefix + "hamm.v2bin";
         
         buildIndex::computeHamming(clstFn, useRootSIFT, trainDescsFn, trainAssignsFn, trainHammFn, hammEmbBits);
         

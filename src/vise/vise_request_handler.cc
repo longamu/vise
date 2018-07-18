@@ -136,13 +136,14 @@ void vise_request_handler::handle_http_request(const http_request& request, http
         BOOST_LOG_TRIVIAL(debug) << "search engine uri [" << request.uri_ << "] contains invalid character";
         return;
       }
-
+      /*
       search_engine_manager::instance()->query(search_engine_name,
                                                search_engine_version,
                                                search_engine_query,
                                                uri_param,
                                                request.payload_.str(),
                                                response);
+      */
     }
   }
 

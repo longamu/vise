@@ -142,12 +142,12 @@ bool vise::relja_retrival::load() {
   } else {
     multi_query_ = multi_query_max_;
   }
-
-  system("sleep 5");
+  BOOST_LOG_TRIVIAL(debug) << "finished loading search engine [" << search_engine_id_ << "]";
 }
 
 bool vise::relja_retrival::unload() {
-  std::cout << "\nvise::relja_retrival::unload()" << std::flush;
+  BOOST_LOG_TRIVIAL(debug) << "vise::relja_retrival::unload()";
+
   delete cons_queue_;
 
   if ( hamming_emb_ != NULL ) {
@@ -177,7 +177,38 @@ bool vise::relja_retrival::unload() {
   delete dbFidx_;
   delete dbIidx_;
 }
-bool vise::relja_retrival::query() { }
+
+bool vise::relja_retrival::query_using_upload_region() { }
+bool vise::relja_retrival::query_using_file_region(uint32_t file_id, unsigned int x, unsigned int y, unsigned int w, unsigned int h, uint32_t from, uint32_t to, double score_threshold) {
+  query qobj(file_id, true, "", x, x + w, y, y + h);
+  std::vector<indScorePair> result;
+  std::map<uint32_t, homography> H;
+  spatial_retriever_->spatialQuery(qobj, result, H);
+
+  if ( to > result.size() ) {
+    to = result.size();
+  }
+
+  BOOST_LOG_TRIVIAL(debug) << "query(): total files = " << dataset_->getNumDoc();
+  BOOST_LOG_TRIVIAL(debug) << "query(): search result = " << result.size();
+  if ( from > result.size() || to > result.size() ) {
+    BOOST_LOG_TRIVIAL(debug) << "query(): 0 <= {from,to} <= " << result.size();
+  }
+
+  std::cout << "\nquery(): Showing results from " << from << " to " << to;
+  for ( uint32_t i = from; i < to; ++i ) {
+    uint32_t file_id = result[i].first;
+    double score = result[i].second;
+    if ( score > score_threshold ) {
+      std::cout << "\n  [" << i << "], file_id=" << file_id
+                << ", score=" << result[i].second
+                << ", file=" << dataset_->getFn( file_id )
+                << std::flush;
+    }
+  }
+  std::cout << "\nquery(): results end";
+}
+
 bool vise::relja_retrival::index() { }
 
 // helper functions

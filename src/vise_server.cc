@@ -25,6 +25,7 @@
 #endif
 
 int main(int argc, char** argv) {
+  MPI_INIT_ENV
   std::cout << VISE_SERVER_NAME << " "
             << VISE_SERVER_VERSION_MAJOR << "."
             << VISE_SERVER_VERSION_MINOR << "."

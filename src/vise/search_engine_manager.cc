@@ -356,12 +356,46 @@ bool search_engine_manager::unload_all_search_engine() {
 //
 void search_engine_manager::query(const std::string search_engine_name,
                                   const std::string search_engine_version,
-                                  const std::string search_engine_command,
                                   const std::map<std::string, std::string> uri_param,
                                   const std::string request_body,
                                   http_response& response) {
+  std::string search_engine_id = vise::relja_retrival::get_search_engine_id(search_engine_name, search_engine_version);
 
-  load_search_engine(search_engine_name, search_engine_version);
+  uint32_t file_id;
+  std::stringstream ss;
+  ss << uri_param.find("file_id")->second;
+  ss >> file_id;
+
+  ss.clear();
+  ss.str("");
+  ss << uri_param.find("region")->second;
+  unsigned int x, y, w, h;
+  char t;
+  ss >> x >> t >> y >> t >> w >> t >> h;
+
+  ss.clear();
+  ss.str("");
+  uint32_t from;
+  ss << uri_param.find("from")->second;
+  ss >> from;
+
+  ss.clear();
+  ss.str("");
+  uint32_t to;
+  ss << uri_param.find("to")->second;
+  ss >> to;
+
+  ss.clear();
+  ss.str("");
+  double score_threshold;
+  ss << uri_param.find("score_threshold")->second;
+  ss >> score_threshold;
+
+  BOOST_LOG_TRIVIAL(debug) << "starting query ";
+  search_engine_list_[ search_engine_id ]->query_using_file_region(file_id,
+                                                                   x, y, w, h,
+                                                                   from, to,
+                                                                   score_threshold);
 }
 
 

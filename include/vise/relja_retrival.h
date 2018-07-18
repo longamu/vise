@@ -47,6 +47,13 @@
 #include "spatial_verif_v2.h"
 #include "mq_filter_outliers.h"
 
+//#include "query.h"
+//#include "multi_query.h"
+//#include "util.h"
+//#include "par_queue.h"
+//#include "macros.h"
+//#include "mpi_queue.h"
+
 using namespace std;
 
 namespace vise {
@@ -110,7 +117,13 @@ namespace vise {
     bool is_load_possible();
     bool load();
     bool unload();
-    bool query();
+
+    bool query_using_upload_region();
+    bool query_using_file_region(uint32_t file_id,
+                                 unsigned int x, unsigned int y, unsigned int w, unsigned int h,
+                                 uint32_t from, uint32_t to,
+                                 double score_threshold);
+
     bool index();
 
 
