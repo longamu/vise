@@ -127,8 +127,8 @@ def get_mpi_flags():
                 lib_name = 'mpich'
             output = 'gcc -L%(sdk_prefix)s\lib -l%(lib_name)s -I%(sdk_prefix)s\include' % {'sdk_prefix' : sdk_prefix, 'lib_name' : lib_name}
         else:
-            output = 'cc -L/usr/opt/mpi -lmpi -lelan'
-
+            #output = 'cc -L/usr/opt/mpi -lmpi -lelan'
+            output = 'cc -L/ssd/adutta/dep/common/lib/lib -I/ssd/adutta/dep/common/lib/include -lmpi'
 
     # Now get the include, library dirs and the libs to link with.
     flags = string.split(output)
