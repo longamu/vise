@@ -7,8 +7,9 @@
 
 var _vise_server_hostname = 'http://localhost';
 var _vise_server_port     = '9973';
-var _vise_server_ns       = 'vise/repo';
-var _vise_server_uri      = _vise_server_hostname + ':' + _vise_server_port + '/' + _vise_server_ns;
+var _vise_admin_ns       = 'vise/admin/';
+var _vise_query_ns       = 'vise/query/';
+var _vise_server_uri      = _vise_server_hostname + ':' + _vise_server_port + '/';
 var _vise_new_search_engine = {};
 
 // state variables

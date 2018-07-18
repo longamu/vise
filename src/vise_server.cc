@@ -39,7 +39,9 @@ int main(int argc, char** argv) {
             << std::endl;
 
   if ( argc != 5 && argc != 6 && argc != 1) {
-    std::cout << "\nUsage: " << argv[0] << " hostname port thread_count asset_dir [application_data_dir]\n" << std::flush;
+    std::cout << "\nUsage: " << argv[0]
+              << " hostname port thread_count asset_dir [application_data_dir]\n"
+              << std::flush;
     return 0;
   }
 

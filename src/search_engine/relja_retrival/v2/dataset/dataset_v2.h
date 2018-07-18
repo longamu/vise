@@ -79,9 +79,11 @@ class datasetV2 : public datasetAbs {
         std::vector<uint32_t> hashTable_;
         boost::hash<std::string> hashFunc_;
         static uint32_t const emptyEntry_;
-    
+
+/*    
     private:
         DISALLOW_COPY_AND_ASSIGN(datasetV2)
+*/
 };
 
 

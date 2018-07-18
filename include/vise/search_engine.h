@@ -21,9 +21,11 @@ namespace vise {
   public:
     virtual string id()             = 0;
     virtual bool init()             = 0;
-    virtual bool is_load_possible() = 0;
     virtual bool load()             = 0;
     virtual bool unload()           = 0;
+
+    virtual bool is_load_possible() = 0;
+    virtual bool is_loaded()        = 0;
 
     virtual bool query_using_upload_region() = 0;
     virtual bool query_using_file_region(uint32_t file_id,
@@ -32,6 +34,16 @@ namespace vise {
                                          double score_threshold) = 0;
 
     virtual bool index()            = 0;
+
+    virtual void get_filelist(const uint32_t from, const uint32_t to,
+                              std::vector<uint32_t> &file_id_list,
+                              std::vector<std::string> &filename_list) = 0;
+    virtual uint32_t get_filelist_size() = 0;
+
+    static std::string get_search_engine_id(std::string name, std::string version) {
+      return name + "/" + version;
+    }
+
   };
 }
 #endif

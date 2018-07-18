@@ -13,6 +13,10 @@
 
 #include <string>
 
+// for thread management
+#include <thread>
+#include <mutex>
+
 // for filesystem i/o
 #include <boost/filesystem.hpp>
 
@@ -88,7 +92,7 @@ namespace vise {
     boost::filesystem::path imlist_fn_;
 
     // search engine data structures
-    datasetAbs *dataset_;
+    datasetV2 *dataset_;
     sequentialConstructions *cons_queue_;
     protoDbFile *dbFidx_file_;
     protoDbFile *dbIidx_file_;
@@ -110,13 +114,18 @@ namespace vise {
     multiQuery *multi_query_;
     multiQueryMax *multi_query_max_;
 
+    // threads management
+    std::mutex load_mutex_;
+
   public:
     relja_retrival( const std::string search_engine_id, const boost::filesystem::path data_dir );
     std::string id();
     bool init();
-    bool is_load_possible();
     bool load();
     bool unload();
+
+    bool is_loaded();
+    bool is_load_possible();
 
     bool query_using_upload_region();
     bool query_using_file_region(uint32_t file_id,
@@ -126,10 +135,10 @@ namespace vise {
 
     bool index();
 
-
-    static std::string get_search_engine_id(std::string name, std::string version) {
-      return name + "/" + version;
-    }
+    void get_filelist(const uint32_t from, const uint32_t to,
+                      std::vector<uint32_t> &file_id_list,
+                      std::vector<std::string> &filename_list);
+    uint32_t get_filelist_size();
   };
 }
 #endif

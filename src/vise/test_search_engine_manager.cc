@@ -32,10 +32,10 @@ bool test_search_engine_manager_add_image() {
 }
 
 bool test_search_engine_manager_load_search_engine() {
-  string search_engine_name = "ox5k";
-  string search_engine_version = "1";
+  string search_engine_id = "ox5k/1";
+  string search_engine_command = "query";
 
-  search_engine_manager::instance()->load_search_engine(search_engine_name, search_engine_version);
+  search_engine_manager::instance()->load_search_engine(search_engine_id);
 
   std::map<std::string, std::string> uri_param;
   uri_param[ "file_id" ] = "2";
@@ -46,8 +46,8 @@ bool test_search_engine_manager_load_search_engine() {
   std::string body;
   http_response response;
 
-  search_engine_manager::instance()->query(search_engine_name,
-                                           search_engine_version,
+  search_engine_manager::instance()->query(search_engine_id,
+                                           search_engine_command,
                                            uri_param,
                                            body,
                                            response);

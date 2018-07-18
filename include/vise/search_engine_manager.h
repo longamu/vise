@@ -17,6 +17,10 @@
 #include <sstream>
 #include <fstream>
 
+// for thread management
+#include <thread>
+#include <mutex>
+
 // thread
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
@@ -55,9 +59,10 @@ class search_engine_manager {
 
   static search_engine_manager* search_engine_manager_;
 
-  // threads
+  // threads management
   boost::thread* search_engine_index_thread_;
   bool search_engine_index_thread_running_;
+  std::mutex load_search_engine_mutex_;
 
   std::string now_search_engine_name_;
   std::string now_search_engine_version_;
@@ -95,17 +100,19 @@ class search_engine_manager {
              const std::string request_body,
              http_response& response);
   // POST /vise/admin/_NAME_/_VERSION_/_COMMAND_
-  void query(const std::string search_engine_name,
-             const std::string search_engine_version,
+  void query(const std::string search_engine_id,
+             const std::string search_engine_command,
              const std::map<std::string, std::string> uri_param,
              const std::string request_body,
              http_response& response);
 
   // management
-  bool load_search_engine(std::string search_engine_name, std::string search_engine_version);
+  void load_search_engine(std::string search_engine_id);
   bool unload_search_engine(std::string search_engine_name, std::string search_engine_version);
   bool unload_all_search_engine();
   bool load_search_engine_check(std::string search_engine_name, std::string search_engine_version);
+
+  bool is_search_engine_loaded(std::string search_engine_id);
 
   // search engine data dir management
   boost::filesystem::path convert_to_unique_filename(boost::filesystem::path filename);

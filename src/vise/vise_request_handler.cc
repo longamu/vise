@@ -20,7 +20,7 @@ void vise_request_handler::init(const boost::filesystem::path data_dir,
 }
 
 void vise_request_handler::handle_http_request(const http_request& request, http_response& response) {
-  //BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
+  BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
   std::vector<std::string> uri_components;
   std::map<std::string, std::string> uri_param;
   vise::util::decompose_uri(request.uri_, uri_components, uri_param);
@@ -90,17 +90,13 @@ void vise_request_handler::handle_http_request(const http_request& request, http
   // For the sake of completeness, vise includes a minimal (and possibly inefficient) file content server.
   // In production environments, the GET requests should be handled by ngnix server.
   if ( request.method_ == "GET" ) {
+    /*
     if ( vise::util::has_special_char(request.uri_) ) {
       response.set_status(400);
       BOOST_LOG_TRIVIAL(debug) << "http uri [" << request.uri_ << "] contains invalid character";
       return;
     }
-
-    if ( vise::util::starts_with(request.uri_, "/vise/ui") ) {
-      boost::filesystem::path fn = asset_dir_ / request.uri_;
-      respond_with_static_file( response, fn );
-      return;
-    }
+    */
 
     if ( vise::util::starts_with(request.uri_, "/vise/file/") ) {
       // POST /vise/admin/_NAME_/_VERSION_/_COMMAND_
@@ -125,26 +121,49 @@ void vise_request_handler::handle_http_request(const http_request& request, http
     }
 
     if ( vise::util::starts_with(request.uri_, "/vise/query/") ) {
-      std::string search_engine_name    = uri_components[3];
-      std::string search_engine_version = uri_components[4];
-      std::string search_engine_query   = uri_components[5];
+      std::string search_engine_name      = uri_components[3];
+      std::string search_engine_version   = uri_components[4];
+      std::string search_engine_command   = uri_components[5];
 
       if ( vise::util::has_special_char(search_engine_name) ||
            vise::util::has_special_char(search_engine_version) ||
-           vise::util::has_special_char(search_engine_query) ) {
+           vise::util::has_special_char(search_engine_command) ) {
         response.set_status(400);
         BOOST_LOG_TRIVIAL(debug) << "search engine uri [" << request.uri_ << "] contains invalid character";
         return;
       }
-      /*
-      search_engine_manager::instance()->query(search_engine_name,
-                                               search_engine_version,
-                                               search_engine_query,
+
+      std::string search_engine_id = vise::search_engine::get_search_engine_id(search_engine_name, search_engine_version);
+      if ( ! search_engine_manager::instance()->is_search_engine_loaded(search_engine_id) ) {
+        search_engine_manager::instance()->load_search_engine(search_engine_id);
+
+        if ( ! search_engine_manager::instance()->is_search_engine_loaded(search_engine_id) ) {
+          response.set_status(400);
+          BOOST_LOG_TRIVIAL(debug) << "failed to load search engine: " << search_engine_id;
+          return;
+        }
+      }
+
+      BOOST_LOG_TRIVIAL(debug) << "running [" << search_engine_command << "] on [" << search_engine_id << "]";
+      search_engine_manager::instance()->query(search_engine_id,
+                                               search_engine_command,
                                                uri_param,
                                                request.payload_.str(),
                                                response);
-      */
     }
+
+    if ( vise::util::starts_with(request.uri_, "/vise") ) {
+      boost::filesystem::path fn = asset_dir_ / request.uri_;
+      if ( request.uri_ == "/vise" ||
+           request.uri_ == "/vise/"  ||
+           request.uri_ == "/vise/index.html") {
+        fn = asset_dir_ / "/vise/vise.html";
+      }
+
+      respond_with_static_file( response, fn );
+      return;
+    }
+
   }
 
   // all unhandled cases result in HTTP response 400 (Bad Request)

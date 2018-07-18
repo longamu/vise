@@ -326,19 +326,26 @@ bool search_engine_manager::add_image_from_http_payload(const boost::filesystem:
 //
 // search engine load/unload/maintenance
 //
-bool search_engine_manager::load_search_engine(std::string search_engine_name, std::string search_engine_version) {
-  if ( ! search_engine_exists(search_engine_name, search_engine_version) ) {
+bool search_engine_manager::is_search_engine_loaded(std::string search_engine_id) {
+  if ( search_engine_list_.find(search_engine_id) == search_engine_list_.end() ) {
     return false;
+  } else {
+    return true;
+  }
+}
+
+void search_engine_manager::load_search_engine(std::string search_engine_id) {
+  load_search_engine_mutex_.lock();
+
+  if ( ! is_search_engine_loaded(search_engine_id) ) {
+    boost::filesystem::path se_dir = data_dir_ / search_engine_id;
+    vise::search_engine *se = new vise::relja_retrival(search_engine_id, se_dir);
+    se->init();
+    se->load();
+    search_engine_list_.insert( std::pair<std::string, vise::search_engine*>(search_engine_id, se) );
   }
 
-  std::string search_engine_id = vise::relja_retrival::get_search_engine_id(search_engine_name, search_engine_version);
-
-  boost::filesystem::path se_dir = data_dir_ / search_engine_id;
-  vise::search_engine *se = new vise::relja_retrival(search_engine_id, se_dir);
-  se->init();
-  se->load();
-  search_engine_list_.insert( std::pair<std::string, vise::search_engine*>(search_engine_id, se) );
-  return true;
+  load_search_engine_mutex_.unlock();
 }
 
 bool search_engine_manager::unload_all_search_engine() {
@@ -354,48 +361,105 @@ bool search_engine_manager::unload_all_search_engine() {
 //
 // search engine query
 //
-void search_engine_manager::query(const std::string search_engine_name,
-                                  const std::string search_engine_version,
+
+void search_engine_manager::query(const std::string search_engine_id,
+                                  const std::string search_engine_command,
                                   const std::map<std::string, std::string> uri_param,
                                   const std::string request_body,
                                   http_response& response) {
-  std::string search_engine_id = vise::relja_retrival::get_search_engine_id(search_engine_name, search_engine_version);
+  if ( search_engine_command == "_filelist_subset" ) {
+    unsigned int from, to;
+    unsigned int default_to = 10;
+    unsigned int filelist_size = search_engine_list_[ search_engine_id ]->get_filelist_size();
 
-  uint32_t file_id;
-  std::stringstream ss;
-  ss << uri_param.find("file_id")->second;
-  ss >> file_id;
+    if ( uri_param.count("from") != 1 ||
+         uri_param.count("to") != 1 ) {
+      // use defaults when from and to are not provided
+      from = 0;
+      if ( filelist_size > default_to ) {
+        to = default_to;
+      } else {
+        to = filelist_size;
+      }
+    } else {
+      std::stringstream ss;
+      ss << uri_param.find("from")->second;
+      ss >> from;
+      ss.clear();
+      ss.str("");
+      ss << uri_param.find("to")->second;
+      ss >> to;
+    }
 
-  ss.clear();
-  ss.str("");
-  ss << uri_param.find("region")->second;
-  unsigned int x, y, w, h;
-  char t;
-  ss >> x >> t >> y >> t >> w >> t >> h;
+    std::vector<uint32_t> file_id_list;
+    std::vector<std::string> filename_list;
+    search_engine_list_[ search_engine_id ]->get_filelist(from, to, file_id_list, filename_list);
 
-  ss.clear();
-  ss.str("");
-  uint32_t from;
-  ss << uri_param.find("from")->second;
-  ss >> from;
+    // prepare json
+    std::ostringstream ss;
+    ss << "{\"filelist_size\":" << filelist_size << ","
+       << "\"from\":" << from << ","
+       << "\"to\":" << to << "," << "\"filelist_subset\":[";
+    uint32_t file_id;
+    std::string filename_uri;
+    for ( uint32_t i = 0; i < file_id_list.size(); ++i ) {
+      file_id = file_id_list[i];
+      filename_uri = "/vise/file/" + search_engine_id + "/images/" + filename_list[i];
+      if ( i != 0 ) {
+        ss << ",";
+      }
+      ss << "{\"id\":" << file_id << ","
+         << "\"filename\":\"" << filename_uri << "\"}";
+    }
+    ss << "]}";
+    response.set_field("Content-Type", "application/json");
+    response.set_payload(ss.str());
+    return;
+  }
 
-  ss.clear();
-  ss.str("");
-  uint32_t to;
-  ss << uri_param.find("to")->second;
-  ss >> to;
+  if ( search_engine_command == "_search" ) {
+    // validation
+    if ( uri_param.count("file_id") != 1 ||
+         uri_param.count("region") != 1 ) {
+      response.set_status(400);
+    }
 
-  ss.clear();
-  ss.str("");
-  double score_threshold;
-  ss << uri_param.find("score_threshold")->second;
-  ss >> score_threshold;
+    uint32_t file_id;
+    std::stringstream ss;
+    ss << uri_param.find("file_id")->second;
+    ss >> file_id;
 
-  BOOST_LOG_TRIVIAL(debug) << "starting query ";
-  search_engine_list_[ search_engine_id ]->query_using_file_region(file_id,
-                                                                   x, y, w, h,
-                                                                   from, to,
-                                                                   score_threshold);
+    ss.clear();
+    ss.str("");
+    ss << uri_param.find("region")->second;
+    unsigned int x, y, w, h;
+    char t;
+    ss >> x >> t >> y >> t >> w >> t >> h;
+
+    ss.clear();
+    ss.str("");
+    uint32_t from;
+    ss << uri_param.find("from")->second;
+    ss >> from;
+
+    ss.clear();
+    ss.str("");
+    uint32_t to;
+    ss << uri_param.find("to")->second;
+    ss >> to;
+
+    ss.clear();
+    ss.str("");
+    double score_threshold;
+    ss << uri_param.find("score_threshold")->second;
+    ss >> score_threshold;
+
+    BOOST_LOG_TRIVIAL(debug) << "starting query ";
+    search_engine_list_[ search_engine_id ]->query_using_file_region(file_id,
+                                                                     x, y, w, h,
+                                                                     from, to,
+                                                                     score_threshold);
+  }
 }
 
 
