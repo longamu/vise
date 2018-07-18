@@ -21,42 +21,68 @@ void vise_request_handler::init(const boost::filesystem::path data_dir,
 
 void vise_request_handler::handle_http_request(const http_request& request, http_response& response) {
   //BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
+  std::vector<std::string> uri_components;
+  std::map<std::string, std::string> uri_param;
+  vise::util::decompose_uri(request.uri_, uri_components, uri_param);
+  //vise::util::print_vector("uri_components", uri_components);
+  //vise::util::print_map("uri_param", uri_param);
 
   if ( request.method_ == "POST" ) {
-    if ( vise::util::starts_with(request.uri_, "/vise/repo/") ) {
-      std::vector<std::string> uri_components;
-      std::map<std::string, std::string> uri_param;
-      vise::util::decompose_uri(request.uri_, uri_components, uri_param);
-      //vise::util::print_vector("uri_components", uri_components);
-      //vise::util::print_map("uri_param", uri_param);
-
-      if ( uri_components.size() != 6 ) {
+    if ( vise::util::starts_with(request.uri_, "/vise/admin/") ) {
+      if ( uri_components.size() < 3 ) {
         response.set_status(400);
         return;
       }
-      if ( uri_components[1] != "vise" || uri_components[2] != "repo" ) {
+      if ( uri_components.size() != 6 || uri_components.size() != 4) {
+        response.set_status(400);
+        return;
+      }
+      if ( uri_components[1] != "vise" || uri_components[2] != "admin" ) {
         response.set_status(400);
         return;
       }
 
-      std::string search_engine_name    = uri_components[3];
-      std::string search_engine_version = uri_components[4];
-      std::string search_engine_command = uri_components[5];
+      // POST /vise/admin/_NAME_/_VERSION_/_COMMAND_
+      if ( uri_components.size() == 6 ) {
+        std::string search_engine_name    = uri_components[3];
+        std::string search_engine_version = uri_components[4];
+        std::string search_engine_command = uri_components[5];
 
-      if ( vise::util::has_special_char(search_engine_name) ||
-           vise::util::has_special_char(search_engine_version) ||
-           vise::util::has_special_char(search_engine_command) ) {
-        response.set_status(400);
-        BOOST_LOG_TRIVIAL(debug) << "search engine uri [" << request.uri_ << "] contains invalid character";
+        if ( vise::util::has_special_char(search_engine_name) ||
+             vise::util::has_special_char(search_engine_version) ||
+             vise::util::has_special_char(search_engine_command) ) {
+          response.set_status(400);
+          BOOST_LOG_TRIVIAL(debug) << "search engine uri [" << request.uri_ << "] contains invalid character";
+          return;
+        }
+
+        search_engine_manager::instance()->process_cmd(search_engine_name,
+                                                       search_engine_version,
+                                                       search_engine_command,
+                                                       uri_param,
+                                                       request.payload_.str(),
+                                                       response);
         return;
       }
 
-      search_engine_manager::instance()->process_cmd(search_engine_name,
-                                                     search_engine_version,
-                                                     search_engine_command,
-                                                     uri_param,
-                                                     request.payload_.str(),
-                                                     response);
+      // POST /vise/admin/_COMMAND_
+      if ( uri_components.size() == 4 ) {
+        std::string admin_command = uri_components[3];
+
+        if ( vise::util::has_special_char(admin_command) ) {
+          response.set_status(400);
+          BOOST_LOG_TRIVIAL(debug) << "admin command [" << request.uri_ << "] contains invalid character";
+          return;
+        }
+
+        search_engine_manager::instance()->admin(admin_command,
+                                                 uri_param,
+                                                 request.payload_.str(),
+                                                 response);
+        return;
+      }
+
+      response.set_status(400);
       return;
     }
   }
@@ -76,12 +102,47 @@ void vise_request_handler::handle_http_request(const http_request& request, http
       return;
     }
 
-    if ( vise::util::starts_with(request.uri_, "/vise/search_engine_repo/") ) {
-      if ( vise::util::contains(request.uri_, "/images/") ) {
+    if ( vise::util::starts_with(request.uri_, "/vise/file/") ) {
+      // POST /vise/admin/_NAME_/_VERSION_/_COMMAND_
+      if ( uri_components.size() > 5 ) {
+        std::string search_engine_name    = uri_components[3];
+        std::string search_engine_version = uri_components[4];
+        std::string search_engine_file    = uri_components[5];
+
+        if ( vise::util::has_special_char(search_engine_name) ||
+             vise::util::has_special_char(search_engine_version) ||
+             vise::util::has_special_char(search_engine_file) ) {
+          response.set_status(400);
+          BOOST_LOG_TRIVIAL(debug) << "search engine uri [" << request.uri_ << "] contains invalid character";
+          return;
+        }
+
+        // @todo : respond with file contents
         boost::filesystem::path fn = data_dir_ / request.uri_;
         respond_with_static_file( response, fn );
         return;
       }
+    }
+
+    if ( vise::util::starts_with(request.uri_, "/vise/query/") ) {
+      std::string search_engine_name    = uri_components[3];
+      std::string search_engine_version = uri_components[4];
+      std::string search_engine_query   = uri_components[5];
+
+      if ( vise::util::has_special_char(search_engine_name) ||
+           vise::util::has_special_char(search_engine_version) ||
+           vise::util::has_special_char(search_engine_query) ) {
+        response.set_status(400);
+        BOOST_LOG_TRIVIAL(debug) << "search engine uri [" << request.uri_ << "] contains invalid character";
+        return;
+      }
+
+      search_engine_manager::instance()->query(search_engine_name,
+                                               search_engine_version,
+                                               search_engine_query,
+                                               uri_param,
+                                               request.payload_.str(),
+                                               response);
     }
   }
 

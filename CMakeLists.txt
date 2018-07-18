@@ -46,7 +46,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 ## Boost
-find_package(Boost 1.64.0 COMPONENTS mpi filesystem system thread atomic log REQUIRED)
+find_package(Boost 1.64.0 COMPONENTS mpi filesystem system thread atomic log serialization REQUIRED)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	set( Boost_USE_MULTITHREADED ON )
   set( Boost_USE_DEBUG_RUNTIME OFF )
@@ -72,11 +72,27 @@ include_directories( ${ImageMagick_INCLUDE_DIRS} )
 # Eigen
 # requires EIGEN_DIR to be set to the location where Eigen3 is built using cmake
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+include_directories( ${EIGEN3_INCLUDE_DIR} )
+
+## Protocol Buffer
+## required by "search_engine/relja_retrival"
+include(FindProtobuf)
+find_package( Protobuf REQUIRED )
+include_directories( ${PROTOBUF_INCLUDE_DIR} )
+
+## James's FASTANN (download from robots/software)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/src/search_engine/relja_retrival/")
+find_package(fastann REQUIRED)
+include_directories( ${fastann_INCLUDE_DIRS} )
 
 message("Boost_LIBRARIES: " ${Boost_LIBRARIES})
 message("Boost_INCLUDE_DIRS: " ${Boost_INCLUDE_DIRS})
 message("ImageMagick_LIBRARIES: " ${ImageMagick_LIBRARIES} )
 message("ImageMagick_INCLUDE_DIRS: " ${ImageMagick_INCLUDE_DIRS} )
+message("EIGEN3_INCLUDE_DIR: " ${EIGEN3_INCLUDE_DIR} )
+message("PROTOBUF_INCLUDE_DIR: " ${PROTOBUF_INCLUDE_DIR} )
+message("Protobuf_LIBRARIES: " ${Protobuf_LIBRARIES} )
+message("fastann_INCLUDE_DIRS: " ${fastann_INCLUDE_DIRS} )
 
 include_directories("${PROJECT_INCLUDE_DIR}")
 add_subdirectory("${PROJECT_SOURCE_DIR}" )

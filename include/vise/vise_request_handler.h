@@ -54,7 +54,9 @@ class vise_request_handler {
 
   void init(const boost::filesystem::path data_dir,
             const boost::filesystem::path asset_dir);
-  void handle_http_request(const http_request& request, http_response& response);
   void respond_with_static_file(http_response& response, boost::filesystem::path fn);
+
+  // request handler endpoints: see docs/vise_server_api.org
+  void handle_http_request(const http_request& request, http_response& response);
 };
 #endif
