@@ -38,10 +38,13 @@ int main(int argc, char** argv) {
 //            << "\nRelease: " << VISE_SERVER_CURRENT_RELEASE_DATE
             << std::endl;
 
-  if ( argc != 5 && argc != 6 && argc != 1) {
+  if ( argc != 6 && argc != 8 && argc != 1) {
     std::cout << "\nUsage: " << argv[0]
-              << " hostname port thread_count asset_dir [application_data_dir]\n"
-              << std::flush;
+              << " hostname port thread_count vise_asset_dir [vise_data_dir | search_engine_{data,asset,temp}_dir]]\n"
+              << "\ne.g.: ./" << argv[0] << " 0.0.0.0 9973 4 /home/tlm/dev/vise/asset"
+              << "\n      ./" << argv[0] << " 0.0.0.0 9973 4 /home/tlm/dev/vise/asset /ssd/data/vise"
+              << "\n      ./" << argv[0] << " 0.0.0.0 9973 4 /home/tlm/dev/vise/asset /ssd/vise/data /data/vise/asset /tmp/vise"
+              << std::endl;
     return 0;
   }
 
@@ -51,51 +54,63 @@ int main(int argc, char** argv) {
   boost::filesystem::path exec_dir( argv[0] );
 
   Magick::InitializeMagick(exec_dir.parent_path().string().c_str());
-  std::cout << "\nMagick::InitializeMagick = " << exec_dir.parent_path().string().c_str() << std::endl;
+  //std::cout << "\nMagick::InitializeMagick = " << exec_dir.parent_path().string().c_str() << std::endl;
 
-  boost::filesystem::path asset_dir( exec_dir.parent_path() / "asset");
-  unsigned int thread_pool_size = 3;
+  boost::filesystem::path vise_asset_dir( exec_dir.parent_path() / "asset");
+  unsigned int thread_pool_size = 4;
 
-  boost::filesystem::path data_dir( boost::filesystem::temp_directory_path() / "vise" );
+  boost::filesystem::path vise_data_dir( boost::filesystem::temp_directory_path() / "vise" );
+  boost::filesystem::path se_data_dir  = vise_data_dir / "data";
+  boost::filesystem::path se_asset_dir = vise_data_dir / "asset";
+  boost::filesystem::path se_temp_dir  = vise_data_dir / "temp";
 
-  if( argc == 5 || argc == 6 ) {
+  if ( argc >= 5 ) {
+    // vise_data_dir not provided, use /temp
     address = argv[1];
     port    = argv[2];
-    asset_dir = boost::filesystem::path(argv[4]);
 
     std::stringstream s;
     s.clear(); s.str(argv[3]);
     s >> thread_pool_size;
 
+    vise_asset_dir = boost::filesystem::path(argv[4]);
+
     if ( argc == 6 ) {
-      data_dir = boost::filesystem::path( argv[5] );
+      vise_data_dir = boost::filesystem::path( argv[5] );
+    }
+    if ( argc == 8 ) {
+      se_data_dir  = boost::filesystem::path( argv[5] );
+      se_asset_dir = boost::filesystem::path( argv[6] );
+      se_temp_dir  = boost::filesystem::path( argv[7] );
+      vise_data_dir = boost::filesystem::path( argv[5] );
     }
   } else {
     cout << "\nUsing default settings ...";
   }
 
-  if ( !boost::filesystem::exists(data_dir) ) {
-    boost::filesystem::create_directories(data_dir);
+  if ( !boost::filesystem::exists(vise_data_dir) ) {
+    boost::filesystem::create_directories(vise_data_dir);
   } else {
     // cleanup
     //boost::filesystem::remove_all( data_dir );
     //boost::filesystem::create_directories(data_dir);
   }
 
-  boost::filesystem::path search_engine_data_dir = data_dir / "repo";
-  if ( !boost::filesystem::exists(search_engine_data_dir) ) {
-    boost::filesystem::create_directories( search_engine_data_dir );
-  } else {
-    // cleanup
-    //boost::filesystem::remove_all( search_engine_data_dir );
-    //boost::filesystem::create_directories( search_engine_data_dir );
+  if ( !boost::filesystem::exists(se_data_dir) ) {
+    boost::filesystem::create_directories( se_data_dir );
+  }
+  if ( !boost::filesystem::exists(se_asset_dir) ) {
+    boost::filesystem::create_directories( se_asset_dir );
+  }
+  if ( !boost::filesystem::exists(se_temp_dir) ) {
+    boost::filesystem::create_directories( se_temp_dir );
   }
 
   // this is critical to avoid race conditions for vise_request_handler::instance()
   // initialize http request handler
-  vise_request_handler::instance()->init(data_dir, asset_dir);
+  vise::vise_request_handler::instance()->init(vise_asset_dir);
   // initialize search engine manager
-  search_engine_manager::instance()->init(search_engine_data_dir);
+  vise::search_engine_manager::instance()->init(se_data_dir, se_asset_dir, se_temp_dir);
 
   http_server server(address, port, thread_pool_size);
   std::cout << "\n\nNotes:";

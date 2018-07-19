@@ -73,8 +73,8 @@ namespace vise {
 
     // resources
     boost::filesystem::path data_dir_;
-    boost::filesystem::path vise_data_dir_;
     boost::filesystem::path temp_dir_;
+    boost::filesystem::path asset_dir_;
 
     // state variable
     bool is_search_engine_loaded_;
@@ -88,6 +88,8 @@ namespace vise {
     boost::filesystem::path hamm_fn_;
     boost::filesystem::path assign_fn_;
     boost::filesystem::path image_dir_;
+    boost::filesystem::path thumbnail_dir_;
+    boost::filesystem::path original_dir_;
     boost::filesystem::path config_fn_;
     boost::filesystem::path imlist_fn_;
 
@@ -118,7 +120,10 @@ namespace vise {
     std::mutex load_mutex_;
 
   public:
-    relja_retrival( const std::string search_engine_id, const boost::filesystem::path data_dir );
+    relja_retrival( const std::string search_engine_id,
+                    const boost::filesystem::path data_dir,
+                    const boost::filesystem::path asset_dir,
+                    const boost::filesystem::path temp_dir);
     std::string id();
     bool init();
     bool load();
@@ -139,6 +144,12 @@ namespace vise {
                       std::vector<uint32_t> &file_id_list,
                       std::vector<std::string> &filename_list);
     uint32_t get_filelist_size();
+
+    std::string get_filename(unsigned int file_id);
+    bool file_exists(std::string filename);
+    bool file_exists(unsigned int file_id);
+    std::string get_filename_absolute_path(std::string filename);
+    std::string get_filename_absolute_path(unsigned int file_id);
   };
 }
 #endif

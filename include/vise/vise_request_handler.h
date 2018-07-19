@@ -36,6 +36,7 @@
 using namespace std;
 using namespace Eigen;
 
+namespace vise {
 // uses C++ singleton design pattern
 class vise_request_handler {
   boost::filesystem::path data_dir_;  // storage for vise internal data, search engine repo.
@@ -52,11 +53,11 @@ class vise_request_handler {
   public:
   static vise_request_handler* instance();
 
-  void init(const boost::filesystem::path data_dir,
-            const boost::filesystem::path asset_dir);
+  void init(const boost::filesystem::path vise_asset_dir);
   void respond_with_static_file(http_response& response, boost::filesystem::path fn);
 
   // request handler endpoints: see docs/vise_server_api.org
   void handle_http_request(const http_request& request, http_response& response);
 };
+}
 #endif

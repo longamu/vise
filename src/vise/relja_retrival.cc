@@ -1,23 +1,29 @@
 #include "vise/relja_retrival.h"
 
-vise::relja_retrival::relja_retrival(const std::string search_engine_id, const boost::filesystem::path data_dir) {
+vise::relja_retrival::relja_retrival(const std::string search_engine_id,
+                                     const boost::filesystem::path data_dir,
+                                     const boost::filesystem::path asset_dir,
+                                     const boost::filesystem::path temp_dir) {
   is_search_engine_loaded_ = false;
   search_engine_id_ = search_engine_id;
-  data_dir_ = data_dir;
+  data_dir_  = data_dir;
+  asset_dir_ = asset_dir;
+  temp_dir_  = temp_dir;
 
-  vise_data_dir_ = data_dir_ / "vise_data";
-  image_dir_     = data_dir_ / "images";
-  temp_dir_      = data_dir_ / "temp";
-  dset_fn_ = vise_data_dir_ / "dset.v2bin";
-  clst_fn_ = vise_data_dir_ / "clst.e3bin";
-  iidx_fn_ = vise_data_dir_ / "iidx.v2bin";
-  fidx_fn_ = vise_data_dir_ / "fidx.v2bin";
-  wght_fn_ = vise_data_dir_ / "wght.v2bin";
-  hamm_fn_ = vise_data_dir_ / "hamm.v2bin";
-  assign_fn_ = vise_data_dir_ / "assign.bin";
+  image_dir_     = asset_dir_ / "image";
+  thumbnail_dir_ = asset_dir_ / "thumbnail";
+  original_dir_  = asset_dir_ / "original";
 
-  imlist_fn_ = vise_data_dir_ / "imlist.txt";
-  config_fn_ = vise_data_dir_ / "config.txt";
+  dset_fn_   = data_dir_ / "dset.v2bin";
+  clst_fn_   = data_dir_ / "clst.e3bin";
+  iidx_fn_   = data_dir_ / "iidx.v2bin";
+  fidx_fn_   = data_dir_ / "fidx.v2bin";
+  wght_fn_   = data_dir_ / "wght.v2bin";
+  hamm_fn_   = data_dir_ / "hamm.v2bin";
+  assign_fn_ = data_dir_ / "assign.bin";
+
+  imlist_fn_ = data_dir_ / "imlist.txt";
+  config_fn_ = data_dir_ / "config.txt";
 }
 
 std::string vise::relja_retrival::id() {
@@ -37,7 +43,7 @@ bool vise::relja_retrival::load() {
 
   if ( is_search_engine_loaded_ ) {
     load_mutex_.unlock();
-    return;
+    return is_search_engine_loaded_;
   }
 
   try {
@@ -160,6 +166,7 @@ bool vise::relja_retrival::load() {
     BOOST_LOG_TRIVIAL(debug) << e.what();
   }
   load_mutex_.unlock();
+  return is_search_engine_loaded_;
 }
 
 bool vise::relja_retrival::unload() {
@@ -270,6 +277,30 @@ uint32_t vise::relja_retrival::get_filelist_size() {
   return dataset_->getNumDoc();
 }
 
+std::string vise::relja_retrival::get_filename(unsigned int file_id) {
+  return dataset_->getInternalFn(file_id);
+}
+
+bool vise::relja_retrival::file_exists(std::string filename) {
+  return dataset_->containsFn(filename);
+}
+bool vise::relja_retrival::file_exists(unsigned int file_id) {
+  if ( file_id < 0 || file_id > dataset_->getNumDoc() ) {
+    return false;
+  } else {
+    return false;
+  }
+}
+
+std::string vise::relja_retrival::get_filename_absolute_path(std::string filename) {
+  boost::filesystem::path fn_abs_path = image_dir_ / filename;
+  return fn_abs_path.string();
+}
+std::string vise::relja_retrival::get_filename_absolute_path(unsigned int file_id) {
+  boost::filesystem::path fn_abs_path = image_dir_ / get_filename(file_id);
+  return fn_abs_path.string();
+}
+
 bool vise::relja_retrival::index() { }
 
 // helper functions
@@ -302,7 +333,7 @@ void vise::relja_retrival::set_default_config() {
     config_.put( search_engine_id_ + ".hammEmbBits", "64");
     config_.put( search_engine_id_ + ".imagelistFn", imlist_fn_);
     config_.put( search_engine_id_ + ".databasePath", image_dir_ );
-    config_.put( search_engine_id_ + ".trainFilesPrefix", vise_data_dir_ );
+    config_.put( search_engine_id_ + ".trainFilesPrefix", data_dir_ );
     config_.put( search_engine_id_ + ".dsetFn", dset_fn_ );
     config_.put( search_engine_id_ + ".clstFn", clst_fn_ );
     config_.put( search_engine_id_ + ".iidxFn", iidx_fn_ );

@@ -50,12 +50,12 @@ using namespace std;
 using namespace Eigen;
 
 // uses C++ singleton design pattern
+namespace vise {
 class search_engine_manager {
 
-  boost::filesystem::path data_dir_;  // storage for vise internal data, search engine repo.
-  boost::filesystem::path asset_dir_; // location of ui, logo, etc.
-
-  bool auto_load_search_engine_;
+  boost::filesystem::path data_dir_;  // storage for vise internal data
+  boost::filesystem::path asset_dir_; // images, thumbnails, etc
+  boost::filesystem::path temp_dir_;
 
   static search_engine_manager* search_engine_manager_;
 
@@ -86,10 +86,13 @@ class search_engine_manager {
     unload_all_search_engine();
   }
 
-  void init(const boost::filesystem::path data_dir);
+  // must be called before any thread start using search_engine_manager
+  void init(const boost::filesystem::path data_dir,
+            const boost::filesystem::path asset_dir,
+            const boost::filesystem::path temp_dir);
+
   // POST /vise/admin/_NAME_/_VERSION_/_COMMAND_
-  void process_cmd(const std::string search_engine_name,
-                   const std::string search_engine_version,
+  void process_cmd(const std::string search_engine_id,
                    const std::string search_engine_command,
                    const std::map<std::string, std::string> uri_param,
                    const std::string request_body,
@@ -99,9 +102,17 @@ class search_engine_manager {
              const std::map<std::string, std::string> uri_param,
              const std::string request_body,
              http_response& response);
-  // POST /vise/admin/_NAME_/_VERSION_/_COMMAND_
+  // POST /vise/query/_NAME_/_VERSION_/_COMMAND_
   void query(const std::string search_engine_id,
              const std::string search_engine_command,
+             const std::map<std::string, std::string> uri_param,
+             const std::string request_body,
+             http_response& response);
+
+  // GET /vise/asset/_NAME_/_VERSION/{image,thumbnail,original}/{filename,file_id}
+  void asset(const std::string search_engine_id,
+             const std::string asset_type,
+             const std::string asset_name,
              const std::map<std::string, std::string> uri_param,
              const std::string request_body,
              http_response& response);
@@ -117,11 +128,8 @@ class search_engine_manager {
   // search engine data dir management
   boost::filesystem::path convert_to_unique_filename(boost::filesystem::path filename);
   std::string get_unique_filename(std::string extension="");
-  bool search_engine_exists(const std::string search_engine_name,
-                            const std::string search_engine_version);
-  bool create_search_engine(const std::string search_engine_name,
-                            const std::string search_engine_version,
-                            const std::string search_engine_description);
+  bool search_engine_exists(const std::string search_engine_id);
+  bool create_search_engine(const std::string search_engine_id);
 
   // image i/o
   bool add_image_from_http_payload(const boost::filesystem::path filename,
@@ -134,4 +142,5 @@ class search_engine_manager {
                          std::string cmd);
 
 };
+}
 #endif

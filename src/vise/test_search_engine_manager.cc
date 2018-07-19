@@ -24,18 +24,17 @@ using namespace std;
 bool test_search_engine_manager_add_image() {
   http_response response;
   map<string, string> uri_param;
-  string search_engine_name = "ox5k";
-  string search_engine_version = "1";
+  string search_engine_id = "ox5k/1";
   string search_engine_command = "add_file?filename=\"all_souls_00001.jpg\"";
   string payload = "base64 image data";
-  search_engine_manager::instance()->process_cmd(search_engine_name, search_engine_version, search_engine_command, uri_param, payload, response);
+  vise::search_engine_manager::instance()->process_cmd(search_engine_id, search_engine_command, uri_param, payload, response);
 }
 
 bool test_search_engine_manager_load_search_engine() {
   string search_engine_id = "ox5k/1";
   string search_engine_command = "query";
 
-  search_engine_manager::instance()->load_search_engine(search_engine_id);
+  vise::search_engine_manager::instance()->load_search_engine(search_engine_id);
 
   std::map<std::string, std::string> uri_param;
   uri_param[ "file_id" ] = "2";
@@ -46,11 +45,11 @@ bool test_search_engine_manager_load_search_engine() {
   std::string body;
   http_response response;
 
-  search_engine_manager::instance()->query(search_engine_id,
-                                           search_engine_command,
-                                           uri_param,
-                                           body,
-                                           response);
+  vise::search_engine_manager::instance()->query(search_engine_id,
+                                                 search_engine_command,
+                                                 uri_param,
+                                                 body,
+                                                 response);
   //search_engine_manager::instance()->unload_all_search_engine();
 }
 
@@ -62,9 +61,13 @@ int main(int argc, char** argv) {
   // test_search_engine_manager_add_image();
 
   boost::filesystem::path data_dir( "/home/tlm/mydata/vise" );
-  boost::filesystem::path search_engine_data_dir = data_dir / "repo";
-  search_engine_manager::instance()->init(search_engine_data_dir);
+  boost::filesystem::path search_engine_data_dir  = data_dir / "data";
+  boost::filesystem::path search_engine_asset_dir = data_dir / "asset";
+  boost::filesystem::path search_engine_temp_dir  = data_dir / "temp";
+  vise::search_engine_manager::instance()->init(search_engine_data_dir,
+                                                search_engine_asset_dir,
+                                                search_engine_temp_dir);
   test_search_engine_manager_load_search_engine();
 
-  delete search_engine_manager::instance(); // leads to memory leak if not invoked
+  delete vise::search_engine_manager::instance(); // leads to memory leak if not invoked
 }

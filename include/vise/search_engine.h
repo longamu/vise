@@ -40,6 +40,12 @@ namespace vise {
                               std::vector<std::string> &filename_list) = 0;
     virtual uint32_t get_filelist_size() = 0;
 
+    virtual bool file_exists(std::string filename) = 0;
+    virtual bool file_exists(unsigned int file_id) = 0;
+    virtual std::string get_filename_absolute_path(std::string filename) = 0;
+    virtual std::string get_filename_absolute_path(unsigned int file_id) = 0;
+    virtual std::string get_filename(unsigned int file_id)               = 0;
+
     static std::string get_search_engine_id(std::string name, std::string version) {
       return name + "/" + version;
     }

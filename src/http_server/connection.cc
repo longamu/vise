@@ -48,7 +48,7 @@ void connection::on_request_data(const boost::system::error_code& e, std::size_t
     //cout << "\n" << request_.print(false) << flush;
     //cout << "\npayload={" << request_.payload_.str() << "}" << flush;
 
-    vise_request_handler::instance()->handle_http_request(request_, response_);
+    vise::vise_request_handler::instance()->handle_http_request(request_, response_);
     send_response();
     return;
 

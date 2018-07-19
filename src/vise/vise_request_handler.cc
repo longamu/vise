@@ -1,25 +1,22 @@
 #include "vise/vise_request_handler.h"
 
-vise_request_handler *vise_request_handler::vise_request_handler_ = NULL;
+vise::vise_request_handler *vise::vise_request_handler::vise_request_handler_ = NULL;
 
-vise_request_handler* vise_request_handler::instance() {
+vise::vise_request_handler* vise::vise_request_handler::instance() {
   if ( !vise_request_handler_ ) {
-    vise_request_handler_ = new vise_request_handler;
+    vise_request_handler_ = new vise::vise_request_handler;
   }
   return vise_request_handler_;
 }
 
-void vise_request_handler::init(const boost::filesystem::path data_dir,
-                                const boost::filesystem::path asset_dir) {
-  data_dir_ = data_dir;
-  asset_dir_ = asset_dir;
+void vise::vise_request_handler::init(const boost::filesystem::path vise_asset_dir) {
+  asset_dir_ = vise_asset_dir;
   BOOST_LOG_TRIVIAL(debug) << "ImageMagick Magick++ quantum depth = " << MAGICKCORE_QUANTUM_DEPTH << flush;
   BOOST_LOG_TRIVIAL(debug) << "vise_request_handler::init() : initializing http request handler" << flush;
-  BOOST_LOG_TRIVIAL(debug) << "vise_request_handler::init() : data_dir=" << data_dir_.string() << flush;
   BOOST_LOG_TRIVIAL(debug) << "vise_request_handler::init() : asset_dir=" << asset_dir_.string() << flush;
 }
 
-void vise_request_handler::handle_http_request(const http_request& request, http_response& response) {
+void vise::vise_request_handler::handle_http_request(const http_request& request, http_response& response) {
   BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
   std::vector<std::string> uri_components;
   std::map<std::string, std::string> uri_param;
@@ -56,32 +53,14 @@ void vise_request_handler::handle_http_request(const http_request& request, http
           return;
         }
 
-        search_engine_manager::instance()->process_cmd(search_engine_name,
-                                                       search_engine_version,
-                                                       search_engine_command,
-                                                       uri_param,
-                                                       request.payload_.str(),
-                                                       response);
+        std::string search_engine_id = vise::search_engine::get_search_engine_id(search_engine_name, search_engine_version);
+        vise::search_engine_manager::instance()->process_cmd(search_engine_id,
+                                                             search_engine_command,
+                                                             uri_param,
+                                                             request.payload_.str(),
+                                                             response);
         return;
       }
-
-      // POST /vise/admin/_COMMAND_
-      if ( uri_components.size() == 4 ) {
-        std::string admin_command = uri_components[3];
-
-        if ( vise::util::has_special_char(admin_command) ) {
-          response.set_status(400);
-          BOOST_LOG_TRIVIAL(debug) << "admin command [" << request.uri_ << "] contains invalid character";
-          return;
-        }
-
-        search_engine_manager::instance()->admin(admin_command,
-                                                 uri_param,
-                                                 request.payload_.str(),
-                                                 response);
-        return;
-      }
-
       response.set_status(400);
       return;
     }
@@ -91,53 +70,33 @@ void vise_request_handler::handle_http_request(const http_request& request, http
   // In production environments, the GET requests should be handled by ngnix server.
   if ( request.method_ == "GET" ) {
     /*
-    if ( vise::util::has_special_char(request.uri_) ) {
+      if ( vise::util::has_special_char(request.uri_) ) {
       response.set_status(400);
       BOOST_LOG_TRIVIAL(debug) << "http uri [" << request.uri_ << "] contains invalid character";
       return;
-    }
-    */
-
-    if ( vise::util::starts_with(request.uri_, "/vise/file/") ) {
-      // POST /vise/admin/_NAME_/_VERSION_/_COMMAND_
-      if ( uri_components.size() > 5 ) {
-        std::string search_engine_name    = uri_components[3];
-        std::string search_engine_version = uri_components[4];
-        std::string search_engine_file    = uri_components[5];
-
-        if ( vise::util::has_special_char(search_engine_name) ||
-             vise::util::has_special_char(search_engine_version) ||
-             vise::util::has_special_char(search_engine_file) ) {
-          response.set_status(400);
-          BOOST_LOG_TRIVIAL(debug) << "search engine uri [" << request.uri_ << "] contains invalid character";
-          return;
-        }
-
-        // @todo : respond with file contents
-        boost::filesystem::path fn = data_dir_ / request.uri_;
-        respond_with_static_file( response, fn );
-        return;
       }
-    }
+    */
 
     if ( vise::util::starts_with(request.uri_, "/vise/query/") ) {
       std::string search_engine_name      = uri_components[3];
       std::string search_engine_version   = uri_components[4];
       std::string search_engine_command   = uri_components[5];
 
-      if ( vise::util::has_special_char(search_engine_name) ||
-           vise::util::has_special_char(search_engine_version) ||
-           vise::util::has_special_char(search_engine_command) ) {
+      /*
+        if ( vise::util::has_special_char(search_engine_name) ||
+        vise::util::has_special_char(search_engine_version) ||
+        vise::util::has_special_char(search_engine_command) ) {
         response.set_status(400);
         BOOST_LOG_TRIVIAL(debug) << "search engine uri [" << request.uri_ << "] contains invalid character";
         return;
-      }
+        }
+      */
 
       std::string search_engine_id = vise::search_engine::get_search_engine_id(search_engine_name, search_engine_version);
-      if ( ! search_engine_manager::instance()->is_search_engine_loaded(search_engine_id) ) {
-        search_engine_manager::instance()->load_search_engine(search_engine_id);
+      if ( ! vise::search_engine_manager::instance()->is_search_engine_loaded(search_engine_id) ) {
+        vise::search_engine_manager::instance()->load_search_engine(search_engine_id);
 
-        if ( ! search_engine_manager::instance()->is_search_engine_loaded(search_engine_id) ) {
+        if ( ! vise::search_engine_manager::instance()->is_search_engine_loaded(search_engine_id) ) {
           response.set_status(400);
           BOOST_LOG_TRIVIAL(debug) << "failed to load search engine: " << search_engine_id;
           return;
@@ -145,11 +104,51 @@ void vise_request_handler::handle_http_request(const http_request& request, http
       }
 
       BOOST_LOG_TRIVIAL(debug) << "running [" << search_engine_command << "] on [" << search_engine_id << "]";
-      search_engine_manager::instance()->query(search_engine_id,
-                                               search_engine_command,
-                                               uri_param,
-                                               request.payload_.str(),
-                                               response);
+      vise::search_engine_manager::instance()->query(search_engine_id,
+                                                     search_engine_command,
+                                                     uri_param,
+                                                     request.payload_.str(),
+                                                     response);
+      return;
+    }
+
+    // in production envrionment, any resources inside "/vise/asset/" uri
+    // are static resources that can be served by a more efficient file server
+    if ( vise::util::starts_with(request.uri_, "/vise/asset/") ) {
+      if ( uri_components.size() != 7 ) {
+        response.set_status(400);
+        BOOST_LOG_TRIVIAL(debug) << "got " << request.uri_
+                                 << ", expected /vise/asset/_NAME_/_VERSION_/{image,thumnail,original}/{filename,file_id}";
+        return;
+      }
+
+      std::string search_engine_name      = uri_components[3];
+      std::string search_engine_version   = uri_components[4];
+      std::string asset_type              = uri_components[5];
+      std::string asset_name              = uri_components[6];
+
+      std::string search_engine_id = vise::search_engine::get_search_engine_id(search_engine_name, search_engine_version);
+      if ( ! vise::search_engine_manager::instance()->is_search_engine_loaded(search_engine_id) ) {
+        vise::search_engine_manager::instance()->load_search_engine(search_engine_id);
+
+        if ( ! vise::search_engine_manager::instance()->is_search_engine_loaded(search_engine_id) ) {
+          response.set_status(400);
+          BOOST_LOG_TRIVIAL(debug) << "failed to load search engine: " << search_engine_id;
+          return;
+        }
+      }
+
+      BOOST_LOG_TRIVIAL(debug) << "running ["
+                               << asset_type << "/" << asset_name
+                               << "] on [" << search_engine_id << "]";
+
+      vise::search_engine_manager::instance()->asset(search_engine_id,
+                                                     asset_type,
+                                                     asset_name,
+                                                     uri_param,
+                                                     request.payload_.str(),
+                                                     response);
+      return;
     }
 
     if ( vise::util::starts_with(request.uri_, "/vise") ) {
@@ -171,7 +170,7 @@ void vise_request_handler::handle_http_request(const http_request& request, http
   return;
 }
 
-void vise_request_handler::respond_with_static_file(http_response& response, boost::filesystem::path fn) {
+void vise::vise_request_handler::respond_with_static_file(http_response& response, boost::filesystem::path fn) {
   std::string file_content;
   bool ok = vise::util::load_file_content(fn, file_content);
   if ( ok ) {

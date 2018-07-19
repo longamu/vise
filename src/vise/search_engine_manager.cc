@@ -1,17 +1,20 @@
 #include "vise/search_engine_manager.h"
 
-search_engine_manager *search_engine_manager::search_engine_manager_ = NULL;
+vise::search_engine_manager *vise::search_engine_manager::search_engine_manager_ = NULL;
 
-search_engine_manager* search_engine_manager::instance() {
+vise::search_engine_manager* vise::search_engine_manager::instance() {
   if ( !search_engine_manager_ ) {
-    search_engine_manager_ = new search_engine_manager;
+    search_engine_manager_ = new vise::search_engine_manager;
   }
   return search_engine_manager_;
 }
 
-void search_engine_manager::init(const boost::filesystem::path data_dir) {
-  data_dir_ = data_dir;
-  BOOST_LOG_TRIVIAL(debug) << "search_engine_manager::init() : data_dir=" << data_dir_.string() << flush;
+void vise::search_engine_manager::init(const boost::filesystem::path data_dir,
+                                       const boost::filesystem::path asset_dir,
+                                       const boost::filesystem::path temp_dir) {
+  data_dir_  = data_dir;
+  asset_dir_ = asset_dir;
+  temp_dir_  = temp_dir;
 
   search_engine_index_thread_running_ = false;
   now_search_engine_index_state_.clear();
@@ -29,40 +32,39 @@ void search_engine_manager::init(const boost::filesystem::path data_dir) {
   search_engine_index_state_desc_list_.push_back("Computing embeddings");
   search_engine_index_state_desc_list_.push_back("Indexing");
 
-  // automatically load a search engine based on user query
-  auto_load_search_engine_ = true;
+  BOOST_LOG_TRIVIAL(debug) << "search_engine_manager::init() : data_dir=" << data_dir_.string() << flush;
+  BOOST_LOG_TRIVIAL(debug) << "search_engine_manager::init() : asset_dir=" << asset_dir_.string() << flush;
+  BOOST_LOG_TRIVIAL(debug) << "search_engine_manager::init() : temp_dir=" << temp_dir_.string() << flush;
 }
 
-void search_engine_manager::process_cmd(const std::string search_engine_name,
-                                        const std::string search_engine_version,
-                                        const std::string search_engine_command,
-                                        const std::map<std::string, std::string> uri_param,
-                                        const std::string request_body,
-                                        http_response& response) {
+void vise::search_engine_manager::process_cmd(const std::string search_engine_id,
+                                              const std::string search_engine_command,
+                                              const std::map<std::string, std::string> uri_param,
+                                              const std::string request_body,
+                                              http_response& response) {
   if ( search_engine_command != "index_status" ) {
     BOOST_LOG_TRIVIAL(debug) << "processing search engine command: "
-			     << search_engine_name << "," << search_engine_version
-			     << "," << search_engine_command << ": payload="
+                             << search_engine_command << " on "
+                             << search_engine_id << " : payload="
 			     << request_body.size() << " bytes";
   }
-
+  /*
   if ( search_engine_command == "init" ) {
-    if ( search_engine_exists(search_engine_name, search_engine_version) ) {
+    if ( search_engine_exists(search_engine_id) ) {
       response.set_status(400);
       response.set_field("Content-Type", "application/json");
       response.set_payload( "{\"error\":\"search engine already exists\"}" );
     } else {
       if ( request_body.length() ) {
-        create_search_engine(search_engine_name, search_engine_version, request_body);
+        create_search_engine(search_engine_id);
       } else {
-        create_search_engine(search_engine_name, search_engine_version, "");
+        create_search_engine(search_engine_id);
       }
       response.set_status(200);
       response.set_field("Content-Type", "application/json");
       std::ostringstream s;
       s << "{\"ok\":\"search engine created\", "
-        << "\"search_engine_name\":\"" << search_engine_name << "\","
-        << "\"search_engine_version\":\"" << search_engine_version << "\"}";
+        << "\"search_engine_id\":\"" << search_engine_id << "\"}";
 
       response.set_payload( s.str() );
     }
@@ -81,7 +83,7 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
     }
 
     try {
-      search_engine_index_thread_ = new boost::thread( boost::bind( &search_engine_manager::index_start, this, search_engine_name, search_engine_version ) );
+      search_engine_index_thread_ = new boost::thread( boost::bind( &search_engine_manager::index_start, this, search_engine_id ) );
       response.set_status(200);
       response.set_field("Content-Type", "application/json");
       response.set_payload("{\"ok\":\"indexing started\"}");
@@ -140,12 +142,13 @@ void search_engine_manager::process_cmd(const std::string search_engine_name,
     }
     return;
   }
+  */
 
   // unhandled cases
   response.set_status(400);
 }
 
-void search_engine_manager::clear_now_search_engine_index_state(void) {
+void vise::search_engine_manager::clear_now_search_engine_index_state(void) {
   now_search_engine_index_steps_done_.clear();
   now_search_engine_index_steps_count_.clear();
   now_search_engine_index_state_.clear();
@@ -155,8 +158,8 @@ void search_engine_manager::clear_now_search_engine_index_state(void) {
   }
 }
 
-bool search_engine_manager::index_start(const std::string search_engine_name,
-                                        const std::string search_engine_version) {
+bool vise::search_engine_manager::index_start(const std::string search_engine_name,
+                                              const std::string search_engine_version) {
   search_engine_index_thread_running_ = true;
   now_search_engine_name_ = search_engine_name;
   now_search_engine_version_ = search_engine_version;
@@ -184,24 +187,24 @@ bool search_engine_manager::index_start(const std::string search_engine_name,
   s.str("");
   s.clear();
   s << "mpirun -np 8 " << index_exec
-    << " trainDescs " << search_engine_name << " " << config_fn.string();
+  << " trainDescs " << search_engine_name << " " << config_fn.string();
   now_search_engine_index_state_[ "relja_retrival:trainDescs" ] = "started";
   ok = run_shell_command( "relja_retrival:trainDescs", s.str() );
   if ( ! ok ) {
-    search_engine_index_thread_running_ = false;
-    return false;
+  search_engine_index_thread_running_ = false;
+  return false;
   }
 
   // 3. cluster descriptors
   s.str("");
   s.clear();
   s << "mpirun -np 8 python " << cluster_exec
-    << " " << search_engine_name << " " << config_fn.string() << " 8";
+  << " " << search_engine_name << " " << config_fn.string() << " 8";
   now_search_engine_index_state_[ "relja_retrival:cluster" ] = "started";
   ok = run_shell_command( "relja_retrival:cluster", s.str() );
   if ( ! ok ) {
-    search_engine_index_thread_running_ = false;
-    return false;
+  search_engine_index_thread_running_ = false;
+  return false;
   }
 
   // 4. trainAssign
@@ -209,12 +212,12 @@ bool search_engine_manager::index_start(const std::string search_engine_name,
   s.clear();
   //s << "mpirun -np 8 " << index_exec // see docs/known_issues.txt
   s << index_exec
-    << " trainAssign " << search_engine_name << " " << config_fn.string();
+  << " trainAssign " << search_engine_name << " " << config_fn.string();
   now_search_engine_index_state_[ "relja_retrival:trainAssign" ] = "started";
   ok = run_shell_command( "relja_retrival:trainAssign", s.str() );
   if ( ! ok ) {
-    search_engine_index_thread_running_ = false;
-    return false;
+  search_engine_index_thread_running_ = false;
+  return false;
   }
 
   // 4. trainHamm
@@ -222,87 +225,83 @@ bool search_engine_manager::index_start(const std::string search_engine_name,
   s.clear();
   //s << "mpirun -np 8 " << index_exec
   s << index_exec
-    << " trainHamm " << search_engine_name << " " << config_fn.string();
+  << " trainHamm " << search_engine_name << " " << config_fn.string();
   now_search_engine_index_state_[ "relja_retrival:trainHamm" ] = "started";
   ok = run_shell_command( "relja_retrival:trainHamm", s.str() );
   if ( ! ok ) {
-    search_engine_index_thread_running_ = false;
-    return false;
+  search_engine_index_thread_running_ = false;
+  return false;
   }
 
   // 5. index
   s.str("");
   s.clear();
   s << "mpirun -np 8 " << index_exec
-    << " index " << search_engine_name << " " << config_fn.string();
+  << " index " << search_engine_name << " " << config_fn.string();
   ok = run_shell_command( "relja_retrival:index", s.str() );
   if ( ! ok ) {
-    search_engine_index_thread_running_ = false;
-    return false;
+  search_engine_index_thread_running_ = false;
+  return false;
   }
 
   search_engine_index_thread_running_ = false;
   return true;
-}
+  }
 
-bool search_engine_manager::run_shell_command(std::string cmd_name,
-                                              std::string cmd) {
+  bool search_engine_manager::run_shell_command(std::string cmd_name,
+  std::string cmd) {
   boost::process::ipstream pipe;
   BOOST_LOG_TRIVIAL(debug) << "running command: {" << cmd_name << "} [" << cmd << "]";
   boost::process::child p(cmd, boost::process::std_out > pipe);
   std::string line;
 
   while ( pipe && std::getline(pipe, line) && !line.empty() ) {
-    BOOST_LOG_TRIVIAL(debug) << "[" << cmd_name << "] " << line;
-    if ( vise::util::starts_with(line, "relja_retrival,") ) {
-      //trainDescs:relja_retrival,trainDescsManager(images),2018-Jun-25 11:47:52,1,40
-      // 0                       , 1                       , 2                  ,3,4
-      std::vector<std::string> d = vise::util::split(line, ',');
-      now_search_engine_index_steps_done_[ cmd_name ] = d[3];
-      now_search_engine_index_steps_count_[cmd_name ] = d[4];
-      now_search_engine_index_state_[ cmd_name ] = "progress";
-    }
+  BOOST_LOG_TRIVIAL(debug) << "[" << cmd_name << "] " << line;
+  if ( vise::util::starts_with(line, "relja_retrival,") ) {
+  //trainDescs:relja_retrival,trainDescsManager(images),2018-Jun-25 11:47:52,1,40
+  // 0                       , 1                       , 2                  ,3,4
+  std::vector<std::string> d = vise::util::split(line, ',');
+  now_search_engine_index_steps_done_[ cmd_name ] = d[3];
+  now_search_engine_index_steps_count_[cmd_name ] = d[4];
+  now_search_engine_index_state_[ cmd_name ] = "progress";
+  }
   }
   // @todo check if the process returned non-zero status code
   // @todo process error cases
 
   p.wait();
   if ( p.exit_code() ) {
-    now_search_engine_index_state_[ cmd_name ] = "error";
-    return false;
+  now_search_engine_index_state_[ cmd_name ] = "error";
+  return false;
   } else {
-    now_search_engine_index_state_[ cmd_name ] = "done";
-    return true;
+  now_search_engine_index_state_[ cmd_name ] = "done";
+  return true;
   }
   */
 }
 
-std::string search_engine_manager::get_unique_filename(std::string extension) {
+std::string vise::search_engine_manager::get_unique_filename(std::string extension) {
   return boost::filesystem::unique_path("%%%%%%%%%%").string() + extension;
 }
 
-bool search_engine_manager::search_engine_exists(const std::string search_engine_name,
-                                                 const std::string search_engine_version) {
-  boost::filesystem::path search_engine_dir = data_dir_ / search_engine_name;
-  search_engine_dir = search_engine_dir / search_engine_version;
+bool vise::search_engine_manager::search_engine_exists(const std::string search_engine_id) {
+  boost::filesystem::path search_engine_data_dir = data_dir_ / search_engine_id;
 
-  if ( boost::filesystem::exists(search_engine_dir) ) {
+  if ( boost::filesystem::exists(search_engine_data_dir) ) {
     return true;
   } else {
     return false;
   }
 }
 
-bool search_engine_manager::create_search_engine(const std::string search_engine_name,
-                                                 const std::string search_engine_version,
-                                                 const std::string search_engine_description) {
+bool vise::search_engine_manager::create_search_engine(const std::string search_engine_id) {
 }
 
 //
 // search engine image i/o
 //
-bool search_engine_manager::add_image_from_http_payload(const boost::filesystem::path filename,
-                                                        const std::string& request_body) {
+bool vise::search_engine_manager::add_image_from_http_payload(const boost::filesystem::path filename,
+                                                              const std::string& request_body) {
   try {
     Magick::Blob blob(request_body.c_str(), request_body.size());
 
@@ -326,7 +325,7 @@ bool search_engine_manager::add_image_from_http_payload(const boost::filesystem:
 //
 // search engine load/unload/maintenance
 //
-bool search_engine_manager::is_search_engine_loaded(std::string search_engine_id) {
+bool vise::search_engine_manager::is_search_engine_loaded(std::string search_engine_id) {
   if ( search_engine_list_.find(search_engine_id) == search_engine_list_.end() ) {
     return false;
   } else {
@@ -334,12 +333,17 @@ bool search_engine_manager::is_search_engine_loaded(std::string search_engine_id
   }
 }
 
-void search_engine_manager::load_search_engine(std::string search_engine_id) {
+void vise::search_engine_manager::load_search_engine(std::string search_engine_id) {
   load_search_engine_mutex_.lock();
 
   if ( ! is_search_engine_loaded(search_engine_id) ) {
-    boost::filesystem::path se_dir = data_dir_ / search_engine_id;
-    vise::search_engine *se = new vise::relja_retrival(search_engine_id, se_dir);
+    boost::filesystem::path se_data_dir  = data_dir_ / search_engine_id;
+    boost::filesystem::path se_asset_dir = asset_dir_ / search_engine_id;
+    boost::filesystem::path se_temp_dir  = temp_dir_ / search_engine_id;
+    vise::search_engine *se = new vise::relja_retrival(search_engine_id,
+                                                       se_data_dir,
+                                                       se_asset_dir,
+                                                       se_temp_dir);
     se->init();
     se->load();
     search_engine_list_.insert( std::pair<std::string, vise::search_engine*>(search_engine_id, se) );
@@ -348,7 +352,7 @@ void search_engine_manager::load_search_engine(std::string search_engine_id) {
   load_search_engine_mutex_.unlock();
 }
 
-bool search_engine_manager::unload_all_search_engine() {
+bool vise::search_engine_manager::unload_all_search_engine() {
   // unload all the search engines from search_engine_list_
   std::map<std::string, vise::search_engine* >::iterator it;
   for ( it =  search_engine_list_.begin(); it !=  search_engine_list_.end(); ++it ) {
@@ -362,11 +366,11 @@ bool search_engine_manager::unload_all_search_engine() {
 // search engine query
 //
 
-void search_engine_manager::query(const std::string search_engine_id,
-                                  const std::string search_engine_command,
-                                  const std::map<std::string, std::string> uri_param,
-                                  const std::string request_body,
-                                  http_response& response) {
+void vise::search_engine_manager::query(const std::string search_engine_id,
+                                        const std::string search_engine_command,
+                                        const std::map<std::string, std::string> uri_param,
+                                        const std::string request_body,
+                                        http_response& response) {
   if ( search_engine_command == "_filelist_subset" ) {
     unsigned int from, to;
     unsigned int default_to = 10;
@@ -394,6 +398,11 @@ void search_engine_manager::query(const std::string search_engine_id,
     std::vector<uint32_t> file_id_list;
     std::vector<std::string> filename_list;
     search_engine_list_[ search_engine_id ]->get_filelist(from, to, file_id_list, filename_list);
+
+    if ( file_id_list.size() == 0 || filename_list.size() == 0 ) {
+      response.set_status(400);
+      return;
+    }
 
     // prepare json
     std::ostringstream ss;
@@ -424,7 +433,7 @@ void search_engine_manager::query(const std::string search_engine_id,
       response.set_status(400);
     }
 
-    uint32_t file_id;
+    unsigned int file_id;
     std::stringstream ss;
     ss << uri_param.find("file_id")->second;
     ss >> file_id;
@@ -438,13 +447,13 @@ void search_engine_manager::query(const std::string search_engine_id,
 
     ss.clear();
     ss.str("");
-    uint32_t from;
+    unsigned int from;
     ss << uri_param.find("from")->second;
     ss >> from;
 
     ss.clear();
     ss.str("");
-    uint32_t to;
+    unsigned int to;
     ss << uri_param.find("to")->second;
     ss >> to;
 
@@ -459,6 +468,7 @@ void search_engine_manager::query(const std::string search_engine_id,
                                                                      x, y, w, h,
                                                                      from, to,
                                                                      score_threshold);
+    return;
   }
 }
 
@@ -466,9 +476,49 @@ void search_engine_manager::query(const std::string search_engine_id,
 //
 // search engine admin
 //
-void search_engine_manager::admin(const std::string command,
-                                  const std::map<std::string, std::string> uri_param,
-                                  const std::string request_body,
-                                  http_response& response) {
+void vise::search_engine_manager::admin(const std::string command,
+                                        const std::map<std::string, std::string> uri_param,
+                                        const std::string request_body,
+                                        http_response& response) {
   BOOST_LOG_TRIVIAL(debug) << "admin command: [" << command << "]";
+}
+
+//
+// asset i/o
+//
+
+void vise::search_engine_manager::asset(const std::string search_engine_id,
+                                        const std::string asset_type,
+                                        const std::string asset_name,
+                                        const std::map<std::string, std::string> uri_param,
+                                        const std::string request_body,
+                                        http_response& response) {
+  std::string file_abs_path;
+  if ( asset_name.find(".") == std::string::npos ) {
+    // asset_name contains file_id
+    unsigned int file_id;
+    std::stringstream ss(asset_name);
+    ss >> file_id;
+
+    file_abs_path = search_engine_list_[ search_engine_id ]->get_filename_absolute_path(file_id);
+
+    std::string header_filename = "inline; filename=\"";
+    header_filename += search_engine_list_[ search_engine_id ]->get_filename(file_id);
+    header_filename += "\"";
+    response.set_field("Content-Disposition", header_filename);
+  } else {
+    file_abs_path = search_engine_list_[ search_engine_id ]->get_filename_absolute_path(asset_name);
+  }
+
+  BOOST_LOG_TRIVIAL(debug) << "serving file_abs_path [" << file_abs_path << "]";
+  std::string file_content;
+  bool ok = vise::util::load_file_content(boost::filesystem::path(file_abs_path), file_content);
+  if ( ok ) {
+    response.set_payload( file_content );
+    response.set_content_type_from_filename( file_abs_path );
+    BOOST_LOG_TRIVIAL(debug) << "http response contains file [" << file_abs_path << "]";
+  } else {
+    response.set_status(400);
+    BOOST_LOG_TRIVIAL(debug) << "failed to send file in http response [" << file_abs_path << "]";
+  }
 }
