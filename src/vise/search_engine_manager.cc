@@ -407,13 +407,14 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
     // prepare json
     std::ostringstream ss;
     ss << "{\"filelist_size\":" << filelist_size << ","
+       << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
        << "\"from\":" << from << ","
        << "\"to\":" << to << "," << "\"filelist_subset\":[";
     uint32_t file_id;
     std::string filename_uri;
     for ( uint32_t i = 0; i < file_id_list.size(); ++i ) {
       file_id = file_id_list[i];
-      filename_uri = "/vise/file/" + search_engine_id + "/images/" + filename_list[i];
+      filename_uri = filename_list[i];
       if ( i != 0 ) {
         ss << ",";
       }
@@ -464,10 +465,60 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
     ss >> score_threshold;
 
     BOOST_LOG_TRIVIAL(debug) << "starting query ";
+    std::vector<unsigned int> result_file_id;
+    std::vector<float> result_score;
+    std::vector< std::array<double, 9> > result_H;
+    std::vector<std::string> result_filename;
+    std::vector<std::string> result_metadata;
+
     search_engine_list_[ search_engine_id ]->query_using_file_region(file_id,
                                                                      x, y, w, h,
-                                                                     from, to,
-                                                                     score_threshold);
+                                                                     from, to, score_threshold,
+                                                                     result_file_id, result_filename,
+                                                                     result_metadata, result_score, result_H);
+
+    if ( uri_param.count("format") == 0 ) {
+      // return html
+      std::ostringstream html;
+      html << "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>VISE: Search Result</title><link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"/vise/images/favicon.ico\"/><link rel=\"stylesheet\" type=\"text/css\" href=\"/vise/vise.css\" /></head><body>\n<div class=\"page\">";
+      for ( std::size_t i = 1; i < result_score.size(); ++i ) { // ignore self match
+        html << "\n<div class=\"ri\" id=\"ri" << result_file_id[i] << "\">"
+             << "\n  <span class=\"fn\">" << result_filename[i] << "</span>"
+             << "\n  <img src=\"" << get_image_uri_prefix(search_engine_id) << result_filename[i] << "\">"
+             << "\n  <span class=\"md\">Score = " << result_score[i] << "</span>"
+             << "\n</div>";
+      }
+      html << "\n</div>\n</body></html>";
+      response.set_field("Content-Type", "text/html");
+      response.set_payload(html.str());
+    } else {
+      if ( uri_param.find("format")->second == "json" ) {
+        std::ostringstream json;
+        json << "{\"query\":{\"file_id\":" << file_id << ","
+             << "\"x\":" << x << ",\"y\":" << y << ",\"w\":" << w << ",\"h\":" << h << ","
+             << "\"from\":" << from << ",\"to\":" << to << ","
+             << "\"score_threshold\":" << score_threshold << "},"
+             << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
+             << "\"query_result\":[";
+        for ( std::size_t i = 1; i < result_score.size(); ++i ) { // ignore self match
+          if ( i != 0 ) {
+            json << ",";
+          }
+          json << "{\"file_id\":" << result_file_id[i] << ","
+               << "\"filename\":\"" << result_filename[i] << "\","
+               << "\"metadata\":\"" << result_metadata[i] << "\","
+               << "\"score\":" << result_score[i] << ","
+               << "\"H\":[" << result_H[i][0] << "," << result_H[i][1] << "," << result_H[i][2] << ","
+               << result_H[i][3] << "," << result_H[i][4] << "," << result_H[i][5] << ","
+               << result_H[i][6] << "," << result_H[i][7] << "," << result_H[i][8] << "]}";
+        }
+        json << "]}";
+        response.set_field("Content-Type", "application/json");
+        response.set_payload(json.str());
+      } else {
+        response.set_status(400);
+      }
+    }
     return;
   }
 }
@@ -521,4 +572,12 @@ void vise::search_engine_manager::asset(const std::string search_engine_id,
     response.set_status(400);
     BOOST_LOG_TRIVIAL(debug) << "failed to send file in http response [" << file_abs_path << "]";
   }
+}
+
+//
+// util
+//
+std::string vise::search_engine_manager::get_image_uri_prefix(std::string search_engine_id) {
+  std::string prefix = "/vise/asset/";
+  return prefix + search_engine_id + "/image/";
 }

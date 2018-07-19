@@ -64,7 +64,13 @@ void http_server::handle_connection(const boost::system::error_code& e) {
 }
 
 void http_server::stop() {
-  std::cout << "\nStopping server ..." << std::flush;
+  std::cout << "\nDestructing vise_request_handler ..." << std::endl;
+  delete vise::vise_request_handler::instance(); // leads to memory leak if not invoked
+
+  std::cout << "\nDestructing search_engine_manager ..." << std::endl;
+  delete vise::search_engine_manager::instance(); // leads to memory leak if not invoked
+
+  std::cout << "\nStopping http server ..." << std::flush;
   io_service_.stop();
   std::cout << " [done]" << std::endl;
 }

@@ -141,6 +141,8 @@ class search_engine_manager {
   bool run_shell_command(std::string name,
                          std::string cmd);
 
+  // util
+  std::string get_image_uri_prefix(std::string search_engine_id);
 };
 }
 #endif

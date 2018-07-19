@@ -12,6 +12,7 @@
 #include "vise/search_engine.h"
 
 #include <string>
+#include <array>
 
 // for thread management
 #include <thread>
@@ -136,7 +137,12 @@ namespace vise {
     bool query_using_file_region(uint32_t file_id,
                                  unsigned int x, unsigned int y, unsigned int w, unsigned int h,
                                  uint32_t from, uint32_t to,
-                                 double score_threshold);
+                                 double score_threshold,
+                                 std::vector<unsigned int> &result_file_id,
+                                 std::vector<std::string> &result_filename,
+                                 std::vector<std::string> &result_metadata,
+                                 std::vector<float> &result_score,
+                                 std::vector< std::array<double, 9> > &result_H);
 
     bool index();
 

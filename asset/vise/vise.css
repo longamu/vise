@@ -52,3 +52,9 @@ a { text-decoration:none; }
 .text_button { color:#0000ff; padding: 0 0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
 .text_button:hover { cursor:pointer; }
 .text_button:active { color: #000000; }
+
+/* search result page */
+.page .ri { display:inline-block; border:none; text-align:center; margin:0.5em 0; padding:0.2rem; border:1px solid red;}
+.page .ri .fn { display:block; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.page .ri .md { display:none; }
+.page .ri img { height:14vh; border:1px solid #f2f2f2; }
