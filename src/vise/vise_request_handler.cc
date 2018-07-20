@@ -12,7 +12,6 @@ vise::vise_request_handler* vise::vise_request_handler::instance() {
 void vise::vise_request_handler::init(const boost::filesystem::path vise_asset_dir) {
   asset_dir_ = vise_asset_dir;
   BOOST_LOG_TRIVIAL(debug) << "ImageMagick Magick++ quantum depth = " << MAGICKCORE_QUANTUM_DEPTH << flush;
-  BOOST_LOG_TRIVIAL(debug) << "vise_request_handler::init() : initializing http request handler" << flush;
   BOOST_LOG_TRIVIAL(debug) << "vise_request_handler::init() : asset_dir=" << asset_dir_.string() << flush;
 }
 

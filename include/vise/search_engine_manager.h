@@ -82,6 +82,9 @@ class search_engine_manager {
   public:
   static search_engine_manager* instance();
 
+  static std::string RESPONSE_HTML_PAGE_PREFIX;
+  static std::string RESPONSE_HTML_PAGE_SUFFIX;
+
   ~search_engine_manager(void) {
     unload_all_search_engine();
   }

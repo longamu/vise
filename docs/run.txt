@@ -4,17 +4,14 @@ mpirun -np 8 compute_index_v2 trainAssign ox5k /home/tlm/dset/vise/ox5k_100/sear
 mpirun -np 8 compute_index_v2 trainHamm ox5k /home/tlm/dset/vise/ox5k_100/search_engine_config.txt
 mpirun -np 8 compute_index_v2 index ox5k /home/tlm/dset/vise/ox5k_100/search_engine_config.txt
 
-LD_LIBRARY_PATH="/home/tlm/deps/vise/lib/lib" ./api_v2 9999 ox5k /home/tlm/dset/vise/ox5k_100/search_engine_config.txt
+LD_LIBRARY_PATH="/home/tlm/deps/vise/lib/lib" ./api_v2 9999 ox5k/1 /home/tlm/mydata/vise/data/ox5k/1/config.txt
 
-python webserver.py 8080 ox5k1 9999 0 /home/tlm/dset/vise/ox5k_100/search_engine_config.txt
+python webserver.py 8080 ox5k/1 9999 0 /home/tlm/mydata/vise/data/ox5k/1/config.txt
 
 
 curl -X POST localhost:9973/vise/repo/ox5k/1/add_image?filename="all_souls_00001.jpg"
 
 http://localhost:9973/vise/query/ox5k/1/_search?file_id=2&region=156,228,316,502&from=0&to=30&score_threshold=0.0&format=json
 
-sciam
-  LD_LIBRARY_PATH="/home/tlm/deps/vise/lib/lib" ./api_v2 9999 sciam /home/tlm/dset/vise/sciam/vise_data/config.txtnew
-  python webserver.py 8080 sciam 9999 0 /home/tlm/dset/vise/sciam/vise_data/config.txt
-
+http://localhost:9973/vise/query/ox5k/1/_search?file_id=2&region=156,228,316,502&from=0&result_count=60&score_threshold=5
 

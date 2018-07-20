@@ -207,9 +207,10 @@ bool vise::relja_retrival::is_loaded() {
 }
 
 bool vise::relja_retrival::query_using_upload_region() { }
-bool vise::relja_retrival::query_using_file_region(uint32_t file_id,
+bool vise::relja_retrival::query_using_file_region(unsigned int file_id,
                                                    unsigned int x, unsigned int y, unsigned int w, unsigned int h,
-                                                   uint32_t from, uint32_t to, double score_threshold,
+                                                   unsigned int from, unsigned int result_count,
+                                                   double score_threshold,
                                                    std::vector<unsigned int> &result_file_id,
                                                    std::vector<std::string> &result_filename,
                                                    std::vector<std::string> &result_metadata,
@@ -218,30 +219,23 @@ bool vise::relja_retrival::query_using_file_region(uint32_t file_id,
   query qobj(file_id, true, "", x, x + w, y, y + h);
   std::vector<indScorePair> result;
   std::map<uint32_t, homography> H;
-  spatial_retriever_->spatialQuery(qobj, result, H);
+  spatial_retriever_->spatialQuery(qobj, result, H, from + result_count);
 
-  if ( to > result.size() ) {
-    to = result.size();
+  if ( from > result.size() ) {
+    BOOST_LOG_TRIVIAL(debug) << "query(): 0 <= from <= " << result.size();
   }
 
-  BOOST_LOG_TRIVIAL(debug) << "query(): total files = " << dataset_->getNumDoc();
-  BOOST_LOG_TRIVIAL(debug) << "query(): search result = " << result.size();
-  if ( from > result.size() || to > result.size() ) {
-    BOOST_LOG_TRIVIAL(debug) << "query(): 0 <= {from,to} <= " << result.size();
-  }
-
-  std::cout << "\nquery(): Showing results from " << from << " to " << to;
-
-  unsigned int n = to - from;
   result_file_id.clear();
-  result_file_id.reserve(n);
+  result_file_id.reserve(result_count);
   result_score.clear();
-  result_score.reserve(n);
+  result_score.reserve(result_count);
   result_H.clear();
-  result_H.reserve(n);
+  result_H.reserve(result_count);
 
-  for ( uint32_t i = from; i < to; ++i ) {
-    uint32_t file_id = result[i].first;
+  unsigned int to = from + result_count;
+  std::array<double, 9> hi;
+  for ( unsigned int i = from; (i < result.size()) && (i < to); ++i ) {
+    unsigned int file_id = result[i].first;
     double score = result[i].second;
     std::string filename = get_filename(file_id);
     std::string metadata = ""; // @todo: fill with file metadata
@@ -251,28 +245,17 @@ bool vise::relja_retrival::query_using_file_region(uint32_t file_id,
       result_score.push_back(score);
       result_filename.push_back(filename);
       result_metadata.push_back(metadata);
-      std::array<double, 9> hi;
-      hi[0] = H[i].H[0];
-      hi[1] = H[i].H[1];
-      hi[2] = H[i].H[2];
-      hi[3] = H[i].H[3];
-      hi[4] = H[i].H[4];
-      hi[5] = H[i].H[5];
-      hi[6] = H[i].H[6];
-      hi[7] = H[i].H[7];
-      hi[8] = H[i].H[8];
-      result_H.push_back(hi);
 
-      std::cout << "\n  [" << i << "], file_id=" << file_id
-                << ", score=" << result[i].second
-                << ", file=" << dataset_->getFn( file_id )
-                << ", H = " << H[i].H[0] << "," << H[i].H[1] << "," << H[i].H[2] << ","
-                << H[i].H[3] << "," << H[i].H[4] << "," << H[i].H[5] << ","
-                << H[i].H[6] << "," << H[i].H[7] << "," << H[i].H[8]
-                << std::flush;
+      if ( H.count(file_id) ) {
+        // @todo: this can be done in single line, find out how.
+        homography h = H.find(file_id)->second;
+        hi[0] = h.H[0]; hi[1] = h.H[1]; hi[2] = h.H[2];
+        hi[3] = h.H[3]; hi[4] = h.H[4]; hi[5] = h.H[5];
+        hi[6] = h.H[6]; hi[7] = h.H[7]; hi[8] = h.H[8];
+      }
+      result_H.push_back(hi);
     }
   }
-  std::cout << "\nquery(): results end";
 }
 
 void vise::relja_retrival::get_filelist(const unsigned int from, const unsigned int to,

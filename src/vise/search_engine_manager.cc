@@ -2,6 +2,11 @@
 
 vise::search_engine_manager *vise::search_engine_manager::search_engine_manager_ = NULL;
 
+// the HTML page header of every HTML response
+std::string vise::search_engine_manager::RESPONSE_HTML_PAGE_PREFIX = R"HTML(<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>VISE: Search Result</title><link rel="shortcut icon" type="image/x-icon" href="/vise/images/favicon.ico"/><link rel="stylesheet" type="text/css" href="/vise/vise.css" /></head>)HTML";
+
+std::string vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX = R"HTML(</head>)HTML";
+
 vise::search_engine_manager* vise::search_engine_manager::instance() {
   if ( !search_engine_manager_ ) {
     search_engine_manager_ = new vise::search_engine_manager;
@@ -448,23 +453,30 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
 
     ss.clear();
     ss.str("");
-    unsigned int from;
-    ss << uri_param.find("from")->second;
-    ss >> from;
+    unsigned int from = 0;
+    if ( uri_param.count("from") == 1 ) {
+      ss << uri_param.find("from")->second;
+      ss >> from;
+    }
 
     ss.clear();
     ss.str("");
-    unsigned int to;
-    ss << uri_param.find("to")->second;
-    ss >> to;
+    unsigned int result_count = 10;
+    if ( uri_param.count("result_count") == 1 ) {
+      ss << uri_param.find("result_count")->second;
+      ss >> result_count;
+    }
 
     ss.clear();
     ss.str("");
-    double score_threshold;
-    ss << uri_param.find("score_threshold")->second;
-    ss >> score_threshold;
+    double score_threshold = 0.0;
+    if ( uri_param.count("score_threshold") == 1 ) {
+      ss << uri_param.find("score_threshold")->second;
+      ss >> score_threshold;
+    }
 
     BOOST_LOG_TRIVIAL(debug) << "starting query ";
+    unsigned int result_size;
     std::vector<unsigned int> result_file_id;
     std::vector<float> result_score;
     std::vector< std::array<double, 9> > result_H;
@@ -473,46 +485,47 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
 
     search_engine_list_[ search_engine_id ]->query_using_file_region(file_id,
                                                                      x, y, w, h,
-                                                                     from, to, score_threshold,
+                                                                     from, result_count, score_threshold,
                                                                      result_file_id, result_filename,
                                                                      result_metadata, result_score, result_H);
+
+    std::ostringstream json;
+    std::string query_filename = search_engine_list_[ search_engine_id ]->get_filename(file_id);
+    json << "{\"search_engine_id\":\"" << search_engine_id << "\","
+         << "\"query\":{\"file_id\":" << file_id << ","
+         << "\"filename\":\"" << query_filename << "\","
+         << "\"x\":" << x << ",\"y\":" << y << ",\"w\":" << w << ",\"h\":" << h << ","
+         << "\"from\":" << from << ",\"result_count\":" << result_count << ","
+         << "\"score_threshold\":" << score_threshold << "},"
+         << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
+         << "\"query_result\":[";
+    for ( std::size_t i = 1; i < result_score.size(); ++i ) { // ignore self match
+      if ( i != 1 ) {
+        json << ",";
+      }
+      json << "{\"file_id\":" << result_file_id[i] << ","
+           << "\"filename\":\"" << result_filename[i] << "\","
+           << "\"metadata\":\"" << result_metadata[i] << "\","
+           << "\"score\":" << result_score[i] << ","
+           << "\"H\":[" << result_H[i][0] << "," << result_H[i][1] << "," << result_H[i][2] << ","
+           << result_H[i][3] << "," << result_H[i][4] << "," << result_H[i][5] << ","
+           << result_H[i][6] << "," << result_H[i][7] << "," << result_H[i][8] << "]}";
+    }
+    json << "]}";
 
     if ( uri_param.count("format") == 0 ) {
       // return html
       std::ostringstream html;
-      html << "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>VISE: Search Result</title><link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"/vise/images/favicon.ico\"/><link rel=\"stylesheet\" type=\"text/css\" href=\"/vise/vise.css\" /></head><body>\n<div class=\"page\">";
-      for ( std::size_t i = 1; i < result_score.size(); ++i ) { // ignore self match
-        html << "\n<div class=\"ri\" id=\"ri" << result_file_id[i] << "\">"
-             << "\n  <span class=\"fn\">" << result_filename[i] << "</span>"
-             << "\n  <img src=\"" << get_image_uri_prefix(search_engine_id) << result_filename[i] << "\">"
-             << "\n  <span class=\"md\">Score = " << result_score[i] << "</span>"
-             << "\n</div>";
-      }
-      html << "\n</div>\n</body></html>";
+      html << vise::search_engine_manager::RESPONSE_HTML_PAGE_PREFIX
+           << "\n<body onload=\"_vise_search()\">"
+           << "\n  <script>var _vise_search_data = '" << json.str() << "';</script>"
+           << "\n  <script src=\"/vise/_vise_search.js\"></script>"
+           << "\n</body>\n"
+           << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
       response.set_field("Content-Type", "text/html");
       response.set_payload(html.str());
     } else {
       if ( uri_param.find("format")->second == "json" ) {
-        std::ostringstream json;
-        json << "{\"query\":{\"file_id\":" << file_id << ","
-             << "\"x\":" << x << ",\"y\":" << y << ",\"w\":" << w << ",\"h\":" << h << ","
-             << "\"from\":" << from << ",\"to\":" << to << ","
-             << "\"score_threshold\":" << score_threshold << "},"
-             << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
-             << "\"query_result\":[";
-        for ( std::size_t i = 1; i < result_score.size(); ++i ) { // ignore self match
-          if ( i != 0 ) {
-            json << ",";
-          }
-          json << "{\"file_id\":" << result_file_id[i] << ","
-               << "\"filename\":\"" << result_filename[i] << "\","
-               << "\"metadata\":\"" << result_metadata[i] << "\","
-               << "\"score\":" << result_score[i] << ","
-               << "\"H\":[" << result_H[i][0] << "," << result_H[i][1] << "," << result_H[i][2] << ","
-               << result_H[i][3] << "," << result_H[i][4] << "," << result_H[i][5] << ","
-               << result_H[i][6] << "," << result_H[i][7] << "," << result_H[i][8] << "]}";
-        }
-        json << "]}";
         response.set_field("Content-Type", "application/json");
         response.set_payload(json.str());
       } else {
