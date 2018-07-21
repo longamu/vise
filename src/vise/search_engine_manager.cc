@@ -376,9 +376,9 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
                                         const std::map<std::string, std::string> uri_param,
                                         const std::string request_body,
                                         http_response& response) {
-  if ( search_engine_command == "_filelist_subset" ) {
+  if ( search_engine_command == "_filelist" ) {
     unsigned int from, to;
-    unsigned int default_to = 10;
+    unsigned int default_to = 20;
     unsigned int filelist_size = search_engine_list_[ search_engine_id ]->get_filelist_size();
 
     if ( uri_param.count("from") != 1 ||
@@ -427,6 +427,31 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
          << "\"filename\":\"" << filename_uri << "\"}";
     }
     ss << "]}";
+
+    /*
+    std::ostringstream json;
+    json << "{\"search_engine_id\":\"" << search_engine_id << "\","
+         << "\"query\":{\"file_id\":" << file_id << ","
+         << "\"filename\":\"" << query_filename << "\","
+         << "\"x\":" << x << ",\"y\":" << y << ",\"w\":" << w << ",\"h\":" << h << ","
+         << "\"from\":" << from << ",\"result_count\":" << result_count << ","
+         << "\"score_threshold\":" << score_threshold << "},"
+         << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
+         << "\"query_result\":[";
+    for ( std::size_t i = 1; i < result_score.size(); ++i ) { // ignore self match
+      if ( i != 1 ) {
+        json << ",";
+      }
+      json << "{\"file_id\":" << result_file_id[i] << ","
+           << "\"filename\":\"" << result_filename[i] << "\","
+           << "\"metadata\":\"" << result_metadata[i] << "\","
+           << "\"score\":" << result_score[i] << ","
+           << "\"H\":[" << result_H[i][0] << "," << result_H[i][1] << "," << result_H[i][2] << ","
+           << result_H[i][3] << "," << result_H[i][4] << "," << result_H[i][5] << ","
+           << result_H[i][6] << "," << result_H[i][7] << "," << result_H[i][8] << "]}";
+    }
+    json << "]}";
+    */
     response.set_field("Content-Type", "application/json");
     response.set_payload(ss.str());
     return;
@@ -497,7 +522,9 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
          << "\"x\":" << x << ",\"y\":" << y << ",\"w\":" << w << ",\"h\":" << h << ","
          << "\"from\":" << from << ",\"result_count\":" << result_count << ","
          << "\"score_threshold\":" << score_threshold << "},"
+         << "\"home_uri\":\"" << "/vise/home.html\","
          << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
+         << "\"image_uri_namespace\":\"image/\","
          << "\"query_result\":[";
     for ( std::size_t i = 1; i < result_score.size(); ++i ) { // ignore self match
       if ( i != 1 ) {
@@ -592,5 +619,5 @@ void vise::search_engine_manager::asset(const std::string search_engine_id,
 //
 std::string vise::search_engine_manager::get_image_uri_prefix(std::string search_engine_id) {
   std::string prefix = "/vise/asset/";
-  return prefix + search_engine_id + "/image/";
+  return prefix + search_engine_id + "/";
 }

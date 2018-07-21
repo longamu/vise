@@ -9,8 +9,11 @@ body { padding:0; margin:0; font-family:sans-serif; }
 * { box-sizing: border-box; }
 a { text-decoration:none; }
 
-.page { width:100%; padding:0.5rem; }
-.page .top { display:block; width:100%; }
+.page { width:100%; padding:0 0.5rem; }
+
+.page .nav { display:block; width:100%; padding:0.3rem 0; margin-bottom:0.5rem; font-size:small; border-bottom:1px solid #e6e6e6;}
+.page .nav .left_space { margin-left:2rem; }
+.page .top { display:block; width:100%; margin:0.5rem 0; }
 
 /* panel containing VISE logo and some links */
 .page .top .top_left_box { display:inline-block; border:1px solid #808080; vertical-align:top; margin-right:2rem; }
@@ -58,7 +61,12 @@ a { text-decoration:none; }
 .img_with_region svg { position:absolute; top:0; left:0; fill:none; stroke-width:0.7rem; stroke:yellow; }
 
 /* search result page */
-.page .query { display:block; border:1px solid #212121; text-align:center; }
+.page .query_container { display:block; text-align:center; }
+.page .query { display:inline-block; background-color:#f6f6f6; padding:1rem 2rem; border-radius:0.5rem; vertical-align:top; }
+.page .query .metadata { display:table; float:left; text-align:left; margin-right:4rem; }
+.page .query .metadata .row { display:table-row; }
+.page .query .metadata .col { display:table-cell; padding:0.3rem 0.5rem; }
+.page .query .query_image { display:inline-block; float:right; }
 
 .page .result {display:block; border:none; margin:2rem 0;}
 

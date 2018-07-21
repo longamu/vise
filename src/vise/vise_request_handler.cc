@@ -155,7 +155,7 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
       if ( request.uri_ == "/vise" ||
            request.uri_ == "/vise/"  ||
            request.uri_ == "/vise/index.html") {
-        fn = asset_dir_ / "/vise/vise.html";
+        fn = asset_dir_ / "/vise/home.html";
       }
 
       respond_with_static_file( response, fn );

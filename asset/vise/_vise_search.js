@@ -43,19 +43,33 @@ function _vise_search() {
   console.log(d);
 
   var page = document.createElement('div');
+  var nav = document.createElement('div');
+  var query_container = document.createElement('div');
   var query = document.createElement('div');
   var result = document.createElement('div');
   page.setAttribute('id', 'search_result_page');
-  page.classList.add('page')
+  page.classList.add('page');
+  nav.classList.add('nav');
+  query_container.classList.add('query_container');
   query.classList.add('query')
   result.classList.add('result')
-  page.appendChild(query);
+  page.appendChild(nav);
+  query_container.appendChild(query);
+  page.appendChild(query_container);
   page.appendChild(result);
 
+  _vise_search_init_nav(d, nav);
   _vise_search_show_query(d, query);
   _vise_search_show_all_result(d, result);
 
   document.body.appendChild(page);
+}
+
+function _vise_search_init_nav(d, nav) {
+  nav.innerHTML  = '<a href="' + d.home_uri + '">Home</a>';
+  nav.innerHTML += '<span class="left_space">' + d.search_engine_id + ' : </span>';
+  nav.innerHTML += '<a href="" title="Search using image the search engine dataset">Search</a> | ';
+  nav.innerHTML += '<a href="" title="Upload a new image and search using this image">Upload & Search</a> | ';
 }
 
 function _vise_search_show_all_result(d, content_panel) {
@@ -75,7 +89,7 @@ function _vise_search_show_result_i(d, i, content_panel) {
   img_with_region.classList.add('img_with_region');
 
   var img = document.createElement('img');
-  img.setAttribute('src', d.image_uri_prefix + d.query_result[i].filename);
+  img.setAttribute('src', d.image_uri_prefix + d.image_uri_namespace + d.query_result[i].filename);
   img.addEventListener('load', function(e) {
     // automatically set viewBox attribute of SVG element so that
     // region defined in original image space is correctly scaled
@@ -126,7 +140,7 @@ function _vise_search_show_query(d, content_panel) {
   img_with_region.classList.add('img_with_region');
 
   var img = document.createElement('img');
-  img.setAttribute('src', d.image_uri_prefix + d.query.filename);
+  img.setAttribute('src', d.image_uri_prefix + d.image_uri_namespace + d.query.filename);
   img.addEventListener('load', function(e) {
     // automatically set viewBox attribute of SVG element so that
     // the correct region is visible
@@ -138,7 +152,22 @@ function _vise_search_show_query(d, content_panel) {
   img_with_region.appendChild(img);
   img_with_region.appendChild( _vise_search_svg_region('rect', dimg) );
 
-  content_panel.appendChild(img_with_region);
+  var query_image = document.createElement('div');
+  query_image.classList.add('query_image');
+  query_image.appendChild(img_with_region);
+
+  content_panel.appendChild( _vise_search_show_query_metadata(d) );
+  content_panel.appendChild( query_image );
+}
+
+function _vise_search_show_query_metadata(d) {
+  var metadata = document.createElement('div');
+  metadata.classList.add('metadata');
+  metadata.innerHTML  = '<p>Search Query</p>';
+  metadata.innerHTML += '<div class="row"><span class="col">Filename</span><span class="col"><a href="">' + d.query.filename + '</a></span></div>';
+  var dimg = [ d.query.x, d.query.y, d.query.w, d.query.h ];
+  metadata.innerHTML += '<div class="row"><span class="col">Region</span><span class="col">[' + dimg.join(', ') + ']</span></div>';
+  return metadata;
 }
 
 function _vise_search_svg_region(shape, dimg) {
