@@ -28,12 +28,19 @@ http_server::http_server(const std::string& address,
 
   acceptor_.open( endpoint.protocol() );
   acceptor_.set_option( boost::asio::ip::tcp::acceptor::reuse_address(true) );
+  acceptor_.set_option( boost::asio::socket_base::keep_alive(false) );
+  //acceptor_.set_option( boost::asio::socket_base::debug(true) );
+
   acceptor_.bind( endpoint );
   acceptor_.listen();
 
-  accept_new_connection();
   std::clog << "\nhttp server waiting for connections at " << address
             << ":" << port << " (" << thread_pool_size << " threads)" << std::endl << std::flush;
+
+  // debug
+  vise::search_engine_manager::instance()->load_search_engine("ox5k/1");
+
+  accept_new_connection();
 }
 
 void http_server::start() {
@@ -57,8 +64,17 @@ void http_server::accept_new_connection() {
 }
 
 void http_server::handle_connection(const boost::system::error_code& e) {
+  // check if server was stopped by a signal before handle_connection()
+  // had a chance to run
+  if ( ! acceptor_.is_open() ) {
+    std::cerr << "\nhandle_connection: acceptor_ closed prematurely" << std::flush;
+    return;
+  }
+
   if ( !e ) {
     new_connection_->process_connection();
+  } else {
+    std::cerr << "\nhandle_connection: was passed error: " << e.message() << std::flush;
   }
   accept_new_connection();
 }
@@ -71,6 +87,8 @@ void http_server::stop() {
   delete vise::search_engine_manager::instance(); // leads to memory leak if not invoked
 
   std::cout << "\nStopping http server ..." << std::flush;
+  //acceptor_.cancel();
+  //acceptor_.close();
   io_service_.stop();
   std::cout << " [done]" << std::endl;
 }

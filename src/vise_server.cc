@@ -4,6 +4,8 @@
  *  @author Abhishek Dutta (adutta@robots.ox.ac.uk)
  *  @date   18 June 2018
  */
+#define BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
+
 #define RR_MPI
 #include "mpi_queue.h" // required by MPI_INIT_ENV
 

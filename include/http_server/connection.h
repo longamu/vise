@@ -31,7 +31,6 @@ class connection : public boost::enable_shared_from_this<connection>, private bo
 {
  public:
   connection(boost::asio::io_service& io_service);
-  ~connection();
 
   boost::asio::ip::tcp::socket& socket();
   void process_connection();
@@ -48,7 +47,8 @@ class connection : public boost::enable_shared_from_this<connection>, private bo
   void on_request_data(const boost::system::error_code& e, std::size_t bytes_read);
   void on_response_write(const boost::system::error_code& e);
   void on_http_100_response_write(const boost::system::error_code& e);
-  void close_connection(const boost::system::error_code& e);
+  void close_connection();
+  void connection_timeout_handler();
 
   // responders
   void send_response();
