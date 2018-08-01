@@ -377,83 +377,85 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
                                         const std::string request_body,
                                         http_response& response) {
   if ( search_engine_command == "_filelist" ) {
-    unsigned int from, to;
-    unsigned int default_to = 20;
-    unsigned int filelist_size = search_engine_list_[ search_engine_id ]->get_filelist_size();
-
-    if ( uri_param.count("from") != 1 ||
-         uri_param.count("to") != 1 ) {
-      // use defaults when from and to are not provided
-      from = 0;
-      if ( filelist_size > default_to ) {
-        to = default_to;
-      } else {
-        to = filelist_size;
-      }
-    } else {
-      std::stringstream ss;
-      ss << uri_param.find("from")->second;
-      ss >> from;
-      ss.clear();
-      ss.str("");
-      ss << uri_param.find("to")->second;
-      ss >> to;
-    }
+    std::string filename_regex;
+    unsigned int filelist_count;
 
     std::vector<uint32_t> file_id_list;
     std::vector<std::string> filename_list;
-    search_engine_list_[ search_engine_id ]->get_filelist(from, to, file_id_list, filename_list);
 
-    if ( file_id_list.size() == 0 || filename_list.size() == 0 ) {
-      response.set_status(400);
-      return;
+    std::stringstream ss;
+    unsigned int from = 0;
+    if ( uri_param.count("from") == 1 ) {
+      ss << uri_param.find("from")->second;
+      ss >> from;
+    }
+
+    unsigned int result_count;
+    unsigned int default_result_count = 20;
+    if ( uri_param.count("result_count") == 1 ) {
+      ss.clear();
+      ss.str("");
+      ss << uri_param.find("result_count")->second;
+      ss >> result_count;
+    } else {
+      result_count = default_result_count;
+    }
+
+    if ( uri_param.count("filename_regex") == 1 ) {
+      filename_regex = uri_param.find("filename_regex")->second;
+      search_engine_list_[ search_engine_id ]->get_filelist(filename_regex, from, result_count, file_id_list, filename_list);
+      filelist_count = file_id_list.size();
+    } else {
+      search_engine_list_[ search_engine_id ]->get_filelist(from, result_count, file_id_list, filename_list);
+      filelist_count = search_engine_list_[ search_engine_id ]->get_filelist_size();
+      filename_regex = "";
     }
 
     // prepare json
-    std::ostringstream ss;
-    ss << "{\"filelist_size\":" << filelist_size << ","
-       << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
-       << "\"from\":" << from << ","
-       << "\"to\":" << to << "," << "\"filelist_subset\":[";
-    uint32_t file_id;
-    std::string filename_uri;
-    for ( uint32_t i = 0; i < file_id_list.size(); ++i ) {
-      file_id = file_id_list[i];
-      filename_uri = filename_list[i];
-      if ( i != 0 ) {
-        ss << ",";
-      }
-      ss << "{\"id\":" << file_id << ","
-         << "\"filename\":\"" << filename_uri << "\"}";
-    }
-    ss << "]}";
-
-    /*
     std::ostringstream json;
     json << "{\"search_engine_id\":\"" << search_engine_id << "\","
-         << "\"query\":{\"file_id\":" << file_id << ","
-         << "\"filename\":\"" << query_filename << "\","
-         << "\"x\":" << x << ",\"y\":" << y << ",\"w\":" << w << ",\"h\":" << h << ","
-         << "\"from\":" << from << ",\"result_count\":" << result_count << ","
-         << "\"score_threshold\":" << score_threshold << "},"
+         << "\"filelist_count\":" << filelist_count << ","
          << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
-         << "\"query_result\":[";
-    for ( std::size_t i = 1; i < result_score.size(); ++i ) { // ignore self match
-      if ( i != 1 ) {
+         << "\"home_uri\":\"" << "/vise/home.html\","
+         << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
+         << "\"image_uri_namespace\":\"image/\","
+         << "\"query_uri_prefix\":\"" << get_query_uri_prefix(search_engine_id) << "\","
+         << "\"from\":" << from << ","
+         << "\"filename_regex\":\"" << filename_regex << "\","
+         << "\"result_count\":" << result_count << ","
+         << "\"filelist_subset\":[";
+    uint32_t file_id;
+    std::string filename_uri;
+    for ( uint32_t i = 0; i < result_count; ++i ) {
+      if ( i != 0 ) {
         json << ",";
       }
-      json << "{\"file_id\":" << result_file_id[i] << ","
-           << "\"filename\":\"" << result_filename[i] << "\","
-           << "\"metadata\":\"" << result_metadata[i] << "\","
-           << "\"score\":" << result_score[i] << ","
-           << "\"H\":[" << result_H[i][0] << "," << result_H[i][1] << "," << result_H[i][2] << ","
-           << result_H[i][3] << "," << result_H[i][4] << "," << result_H[i][5] << ","
-           << result_H[i][6] << "," << result_H[i][7] << "," << result_H[i][8] << "]}";
+      json << "{\"file_id\":" << file_id_list[i] << ","
+           << "\"filename\":\"" << filename_list[i] << "\"}";
     }
     json << "]}";
-    */
-    response.set_field("Content-Type", "application/json");
-    response.set_payload(ss.str());
+
+    if ( uri_param.count("format") == 0 ) {
+      // return html
+      std::ostringstream html;
+      html << vise::search_engine_manager::RESPONSE_HTML_PAGE_PREFIX
+           << "\n<body onload=\"_vise_filelist()\">"
+           << "\n  <script>var _vise_filelist_str = '" << json.str() << "';\nvar _vise_filelist = {};</script>"
+           << "\n  <script src=\"/vise/_vise_filelist.js\"></script>"
+           << "\n</body>\n"
+           << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
+      response.set_field("Content-Type", "text/html");
+      response.set_payload(html.str());
+      BOOST_LOG_TRIVIAL(debug) << "responsed with html containing " << file_id_list.size() << " entries";
+    } else {
+      if ( uri_param.find("format")->second == "json" ) {
+        response.set_field("Content-Type", "application/json");
+        response.set_payload(json.str());
+        BOOST_LOG_TRIVIAL(debug) << "responsed with json containing " << file_id_list.size() << " entries";
+      } else {
+        response.set_status(400);
+      }
+    }
     return;
   }
 
@@ -511,7 +513,6 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
                                                                      x, y, w, h,
                                                                      result_file_id, result_filename,
                                                                      result_metadata, result_score, result_H);
-
     std::ostringstream json;
     std::string query_filename = search_engine_list_[ search_engine_id ]->get_filename(file_id);
     json << "{\"search_engine_id\":\"" << search_engine_id << "\","

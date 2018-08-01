@@ -434,17 +434,17 @@ function _vise_search_now_get_search_uri(d) {
 }
 
 function _vise_search_now_get_next_uri(d) {
-  var uri = _vise_search_now_get_search_uri(d);
+  var uri = [];
   uri.push('from=' + (parseInt(d.query.from) + parseInt(d.query.result_count)) );
   uri.push('result_count=' + d.query.result_count );
-  return uri.join('&');
+  return _vise_search_now_get_search_uri(d) + uri.join('&');
 }
 
 function _vise_search_now_get_prev_uri(d) {
-  var uri = _vise_search_now_get_search_uri(d);
+  var uri = [];
   uri.push('from=' + (parseInt(d.query.from) - parseInt(d.query.result_count)) );
   uri.push('result_count=' + d.query.result_count );
-  return uri.join('&');
+  return _vise_search_now_get_search_uri(d) + uri.join('&');
 }
 
 //

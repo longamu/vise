@@ -246,39 +246,47 @@ bool vise::relja_retrival::query_using_file_region(unsigned int file_id,
   }
 }
 
-void vise::relja_retrival::get_filelist(const unsigned int from, const unsigned int to,
+void vise::relja_retrival::get_filelist(const unsigned int from, const unsigned int result_count,
                                         std::vector<uint32_t> &file_id_list,
                                         std::vector<std::string> &filename_list) {
-  // validation of from and to
-  if ( from < 0 || from > dataset_->getNumDoc() ) {
-    BOOST_LOG_TRIVIAL(debug) << "get_filelist(): from=" << from
-                             << " : 0 <= from < " << dataset_->getNumDoc();
-    return;
-  }
 
-  if ( to < 0 || to > dataset_->getNumDoc() ) {
-    BOOST_LOG_TRIVIAL(debug) << "get_filelist(): to=" << to
-                             << " : 0 <= to < " << dataset_->getNumDoc();
-    return;
-  }
+  BOOST_LOG_TRIVIAL(debug) << "get_filelist(): from=" << from << ", result_count=" << result_count;
 
-  if ( to < from ) {
-    BOOST_LOG_TRIVIAL(debug) << "get_filelist(): to=" << to
-                             << " > from=" << from;
-    return;
-  }
-
-  BOOST_LOG_TRIVIAL(debug) << "get_filelist(): from=" << from << ", to=" << to;
-
-  unsigned int n = to - from;
   file_id_list.clear();
-  file_id_list.reserve(n);
+  file_id_list.reserve(result_count);
   filename_list.clear();
-  filename_list.reserve(n);
+  filename_list.reserve(result_count);
 
-  for ( unsigned int i = from; i < to; ++i ) {
+  for ( uint32_t i = from; (i < dataset_->getNumDoc()) && (i < (from + result_count)); ++i ) {
     file_id_list.push_back(i);
     filename_list.push_back( dataset_->getInternalFn(i) );
+  }
+}
+
+
+void vise::relja_retrival::get_filelist(const std::string filename_regex,
+                                        const unsigned int from, const unsigned int result_count,
+                                        std::vector<uint32_t> &file_id_list,
+                                        std::vector<std::string> &filename_list) {
+
+  BOOST_LOG_TRIVIAL(debug) << "get_filelist(): filename_regex=" << filename_regex;
+
+  file_id_list.clear();
+  filename_list.clear();
+
+  unsigned int total_matches = 0;
+  for ( uint32_t i = 0; i < dataset_->getNumDoc(); ++i ) {
+    if ( dataset_->getInternalFn(i).find(filename_regex) != std::string::npos ) {
+      if ( total_matches >= from ) {
+        file_id_list.push_back(i);
+        filename_list.push_back( dataset_->getInternalFn(i) );
+      }
+
+      total_matches += 1;
+      if ( file_id_list.size() >= result_count ) {
+        return;
+      }
+    }
   }
 }
 
