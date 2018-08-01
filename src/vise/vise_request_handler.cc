@@ -16,7 +16,7 @@ void vise::vise_request_handler::init(const boost::filesystem::path vise_asset_d
 }
 
 void vise::vise_request_handler::handle_http_request(const http_request& request, http_response& response) {
-  BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
+  //BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
   std::vector<std::string> uri_components;
   std::map<std::string, std::string> uri_param;
   vise::util::decompose_uri(request.uri_, uri_components, uri_param);
@@ -102,7 +102,7 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
         }
       }
 
-      BOOST_LOG_TRIVIAL(debug) << "running [" << search_engine_command << "] on [" << search_engine_id << "]";
+      //BOOST_LOG_TRIVIAL(debug) << "running [" << search_engine_command << "] on [" << search_engine_id << "]";
       vise::search_engine_manager::instance()->query(search_engine_id,
                                                      search_engine_command,
                                                      uri_param,
@@ -116,8 +116,7 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
     if ( vise::util::starts_with(request.uri_, "/vise/asset/") ) {
       if ( uri_components.size() != 7 ) {
         response.set_status(400);
-        BOOST_LOG_TRIVIAL(debug) << "got " << request.uri_
-                                 << ", expected /vise/asset/_NAME_/_VERSION_/{image,thumnail,original}/{filename,file_id}";
+        BOOST_LOG_TRIVIAL(debug) << "got " << request.uri_ << ", expected /vise/asset/_NAME_/_VERSION_/{image,thumnail,original}/{filename,file_id}";
         return;
       }
 
@@ -137,9 +136,7 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
         }
       }
 
-      BOOST_LOG_TRIVIAL(debug) << "running ["
-                               << asset_type << "/" << asset_name
-                               << "] on [" << search_engine_id << "]";
+      //BOOST_LOG_TRIVIAL(debug) << "running [" << asset_type << "/" << asset_name << "] on [" << search_engine_id << "]";
 
       vise::search_engine_manager::instance()->asset(search_engine_id,
                                                      asset_type,
@@ -175,7 +172,7 @@ void vise::vise_request_handler::respond_with_static_file(http_response& respons
   if ( ok ) {
     response.set_payload( file_content );
     response.set_content_type_from_filename( fn.string() );
-    BOOST_LOG_TRIVIAL(debug) << "http response contains file [" << fn.string() << "]";
+    //BOOST_LOG_TRIVIAL(debug) << "http response contains file [" << fn.string() << "]";
   } else {
     response.set_status(400);
     BOOST_LOG_TRIVIAL(debug) << "failed to send file in http response [" << fn.string() << "]";

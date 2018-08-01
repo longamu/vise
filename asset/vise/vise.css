@@ -49,16 +49,19 @@ a { text-decoration:none; }
 .page .middle_panel .search_engine a:hover span { color:blue; }
 
 /* misc */
-#message_panel         { display:block; width:100%; position:fixed; bottom:0px; z-index:9999; text-align:center; }
+#message_panel          { display:block; width:100%; position:fixed; bottom:0px; z-index:9999; text-align:center; }
 #message_panel .content { display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
 
 .text_button { color:#0000ff; padding: 0 0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
 .text_button:hover { cursor:pointer; }
 .text_button:active { color: #000000; }
 
-.img_with_region { position:relative; display:inline-block; height:200px; margin:0.4rem 0.2rem; }
+.img_grid {display:block; border:none; margin:0; font-size:0 !important;} /* font-size:0 is needed to get rid of vertical space between image rows */
+.img_with_region { position:relative; display:inline-block; height:200px; margin:0.1rem 0.13rem; }
 .img_with_region img { display:block; max-height:100%; width:auto; }
-.img_with_region svg { position:absolute; top:0; left:0; fill:none; stroke-width:0.7rem; stroke:yellow; }
+.img_with_region svg { display:none; position:absolute; top:0; left:0; fill:none; stroke-width:0.7rem; stroke:yellow; }
+.cursor_pointer { cursor:pointer; }
+.cursor_default { cursor:default; }
 
 /* search result page */
 .page .query_container { display:block; text-align:center; }
@@ -68,9 +71,27 @@ a { text-decoration:none; }
 .page .query .metadata .col { display:table-cell; padding:0.3rem 0.5rem; }
 .page .query .query_image { display:inline-block; float:right; }
 
-.page .result {display:block; border:none; margin:2rem 0;}
+.page .result {display:block; border:none; margin:1rem 0; }
+.page .result .navbar {display:block; font-size:0.8rem; padding:1rem 0.2rem;}
+.page .result .navbar .navtool { margin: 0 2rem; }
 
 .page .ri { display:inline-block; border:none; text-align:center; margin:0.5em 0; padding:0.2rem; border:1px solid red;}
 .page .ri .fn { display:block; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .page .ri .md { display:none; }
 .page .ri img { height:14vh; border:1px solid #f2f2f2; }
+
+/* page overlay */
+#page_overlay { display:none; position:fixed; width:100%; height:100%; top:0; left:0; right:0; bottom:0; background-color: rgba(0,0,0,0.6); }
+.noscroll { overflow:hidden; }
+#page_overlay .content { position:fixed; overflow-y:auto; background-color:white; top:50%; left:50%; width:90%; height:80%; transform:translate(-50%,-50%);  padding:1rem; }
+#page_overlay .content .toolbar { display:block; text-align:right; padding:0 0 1rem 0; }
+
+#page_overlay .content .compare_panel { display:table; width:100%; text-align:center; margin:0.5rem 0;}
+#page_overlay .content .compare_panel .row { display:table-row; width:100%; }
+#page_overlay .content .compare_panel .col { display:table-cell; border:1px solid #f2f2f2; padding:1rem 0; font-size:0.8rem; }
+#page_overlay .content .compare_panel .query { display:table-cell; width:10%; border:1px solid #f2f2f2; }
+#page_overlay .content .compare_panel .match { display:table-cell; width:10%; border:1px solid #f2f2f2; }
+#page_overlay .content .compare_panel .compare { display:table-cell; width:10%; border:1px solid #f2f2f2; }
+#page_overlay .content .compare_panel canvas { } /* height or width sould be 100% based on fit */
+#page_overlay .content .compare_panel img { height:auto; padding:1rem; }
+

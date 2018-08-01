@@ -146,6 +146,8 @@ class search_engine_manager {
 
   // util
   std::string get_image_uri_prefix(std::string search_engine_id);
+  std::string get_query_uri_prefix(std::string search_engine_id);
+  bool is_homography_valid(std::array<double, 9> H);
 };
 }
 #endif

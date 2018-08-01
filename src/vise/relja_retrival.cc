@@ -209,51 +209,39 @@ bool vise::relja_retrival::is_loaded() {
 bool vise::relja_retrival::query_using_upload_region() { }
 bool vise::relja_retrival::query_using_file_region(unsigned int file_id,
                                                    unsigned int x, unsigned int y, unsigned int w, unsigned int h,
-                                                   unsigned int from, unsigned int result_count,
-                                                   double score_threshold,
                                                    std::vector<unsigned int> &result_file_id,
                                                    std::vector<std::string> &result_filename,
                                                    std::vector<std::string> &result_metadata,
                                                    std::vector<float> &result_score,
                                                    std::vector< std::array<double, 9> > &result_H) {
   query qobj(file_id, true, "", x, x + w, y, y + h);
-  std::vector<indScorePair> result;
+  std::vector<indScorePair> all_result;
   std::map<uint32_t, homography> H;
-  spatial_retriever_->spatialQuery(qobj, result, H, from + result_count);
-
-  if ( from > result.size() ) {
-    BOOST_LOG_TRIVIAL(debug) << "query(): 0 <= from <= " << result.size();
-  }
+  spatial_retriever_->spatialQuery(qobj, all_result, H);
+  // note: all result contains everything in the dataset
+  // even, invalid matches. So we need to discard them
 
   result_file_id.clear();
-  result_file_id.reserve(result_count);
   result_score.clear();
-  result_score.reserve(result_count);
+  result_filename.clear();
+  result_metadata.clear();
   result_H.clear();
-  result_H.reserve(result_count);
 
-  unsigned int to = from + result_count;
-  std::array<double, 9> hi;
-  for ( unsigned int i = from; (i < result.size()) && (i < to); ++i ) {
-    unsigned int file_id = result[i].first;
-    double score = result[i].second;
-    std::string filename = get_filename(file_id);
-    std::string metadata = ""; // @todo: fill with file metadata
+  double HOMOGRAPHY_TOLERANCE = 1e-20;
+  for ( unsigned int i = 0; i < all_result.size(); ++i ) {
+    unsigned int file_id = all_result[i].first;
 
-    if ( score > score_threshold ) {
+    // check if valid homography is available
+    std::map<uint32_t, homography>::iterator it = H.find(file_id);
+    if ( it != H.end() ) {
+      //std::cout << "\n" << file_id << ": " << all_result[i].second << std::flush;
       result_file_id.push_back(file_id);
-      result_score.push_back(score);
-      result_filename.push_back(filename);
-      result_metadata.push_back(metadata);
+      result_score.push_back( (float) all_result[i].second );
+      result_filename.push_back( get_filename(file_id) );
+      result_metadata.push_back("");
 
-      if ( H.count(file_id) ) {
-        // @todo: this can be done in single line, find out how.
-        homography h = H.find(file_id)->second;
-        hi[0] = h.H[0]; hi[1] = h.H[1]; hi[2] = h.H[2];
-        hi[3] = h.H[3]; hi[4] = h.H[4]; hi[5] = h.H[5];
-        hi[6] = h.H[6]; hi[7] = h.H[7]; hi[8] = h.H[8];
-      }
-      result_H.push_back(hi);
+      // extract homography
+      result_H.push_back( {{it->second.H[0], it->second.H[1], it->second.H[2], it->second.H[3], it->second.H[4], it->second.H[5], it->second.H[6], it->second.H[7], it->second.H[8]}} );
     }
   }
 }

@@ -10,6 +10,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <thread>
 
 #define BOOST_LOG_DYN_LINK 1
 #include <boost/log/trivial.hpp>
@@ -53,6 +54,29 @@ bool test_search_engine_manager_load_search_engine() {
   //search_engine_manager::instance()->unload_all_search_engine();
 }
 
+bool test_search_engine_manager_query_search_engine() {
+  string search_engine_id = "ox5k/1";
+  string search_engine_command = "query";
+
+  std::map<std::string, std::string> uri_param;
+  uri_param[ "file_id" ] = "2";
+  uri_param[ "region" ] = "156,228,316,502";
+  uri_param[ "from" ] = "0";
+  uri_param[ "result_count" ] = "5000";
+  uri_param[ "score_threshold" ] = "0.0";
+  std::string body;
+  http_response response;
+
+  std::cout << "\nRunning query ... " << std::flush;
+  vise::search_engine_manager::instance()->query(search_engine_id,
+                                                 search_engine_command,
+                                                 uri_param,
+                                                 body,
+                                                 response);
+  //search_engine_manager::instance()->unload_all_search_engine();
+}
+
+
 int main(int argc, char** argv) {
   MPI_INIT_ENV
   // boost::filesystem::path data_dir( boost::filesystem::temp_directory_path() / "vise" );
@@ -69,5 +93,13 @@ int main(int argc, char** argv) {
                                                 search_engine_temp_dir);
   test_search_engine_manager_load_search_engine();
 
+  std::thread a( test_search_engine_manager_query_search_engine);
+  std::thread b( test_search_engine_manager_query_search_engine);
+
+  std::thread d( test_search_engine_manager_query_search_engine);
+  std::thread e( test_search_engine_manager_query_search_engine);
+
+  a.join();
+  b.join();
   delete vise::search_engine_manager::instance(); // leads to memory leak if not invoked
 }

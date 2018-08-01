@@ -48,7 +48,6 @@ class connection : public boost::enable_shared_from_this<connection>, private bo
   void on_response_write(const boost::system::error_code& e);
   void on_http_100_response_write(const boost::system::error_code& e);
   void close_connection();
-  void connection_timeout_handler();
 
   // responders
   void send_response();

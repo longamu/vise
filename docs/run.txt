@@ -14,4 +14,7 @@ curl -X POST localhost:9973/vise/repo/ox5k/1/add_image?filename="all_souls_00001
 http://localhost:9973/vise/query/ox5k/1/_search?file_id=2&region=156,228,316,502&from=0&to=30&score_threshold=0.0&format=json
 
 http://localhost:9973/vise/query/ox5k/1/_search?file_id=2&region=156,228,316,502&from=0&result_count=60&score_threshold=5
+http://localhost:9973/vise/query/ox5k/1/_search?file_id=2&region=156,228,316,502&from=0&result_count=5000
+
+http://localhost:9973/vise/file/ox5k/1/32
 
