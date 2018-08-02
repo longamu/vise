@@ -23,7 +23,6 @@
 
 #include <fastann.hpp>
 
-#include "ViseMessageQueue.h"
 #include "clst_centres.h"
 #include "dataset_v2.h"
 #include "feat_getter.h"

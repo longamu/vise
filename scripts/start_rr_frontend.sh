@@ -1,4 +1,4 @@
-#!/bin/sh
-source /ssd/adutta/build_deps/python_virtualenv/vise/bin/activate
-python /data/adutta/vggdemo/vise/src/ui/web/webserver2.py 9981 BL_bindings 65001 /ssd/adutta/data/vggdemo/BL_bindings/vise_search_engine_data/training_data/vise_config.cfg true /BL_bindings
+#!/bin/bash
+source /home/tlm/mybin/virtualenv/vise/bin/activate
+python2.7 /home/tlm/dev/vise_15cbt/vise/src/ui/web/webserver2.py 9981 15cILLUSTRATION 65001 /home/tlm/mydata/15cbt/training_data/vise_config.cfg true /15cILLUSTRATION
 

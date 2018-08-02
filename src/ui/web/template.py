@@ -66,7 +66,7 @@ class template:
     """ % ( self.titlePrefix, title, headExtra );
         
         res+= '<div id="page"><div id="header">';
-        res+= """<div style="display:block;margin-bottom:1em;"><a href="page0" title="Show home page"><img src="static/images/headers/15cbt_logo.png" alt="15cBOOKTRADE Logo"></a></div>
+        res+= """<div style="display:block;margin-bottom:1em;"><a href="page0" title="Show home page"><img src="static/images/headers/15cILLUSTRATION_logo.png" alt="15cILLUSTRATION Logo"></a></div>
         <table width="100%%" cellpadding="0" cellspacing="0" border="0">""";
         
         if self.haveLogout:

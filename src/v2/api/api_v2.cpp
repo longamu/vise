@@ -288,11 +288,6 @@ void api_v2(std::vector< std::string > argv) {
     // start
     boost::asio::io_service io_service;
 
-    std::ostringstream s;
-    //s << "Descriptor log \nDone " << processed_img_count_ << " / " << total_img_count_;
-    s << "LoadSearchEngine message Search engine loaded. Please wait ... ";
-    ViseMessageQueue::Instance()->Push( s.str() );
-
     API_obj.server(io_service, APIport, dsetname, configFn, vise_src_code_dir);
 
     // make sure this is deleted before everything which uses it

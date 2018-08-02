@@ -7,7 +7,7 @@
 
 class template_15cbt:
     def __init__( self ):
-        self.html_title_prefix = "15cbt";
+        self.html_title_prefix = "15cILLUSTRATION";
 
     def __str__(self):
         return self.get();
@@ -20,7 +20,7 @@ class template_15cbt:
   <meta charset="UTF-8">
   <title>%s : %s</title>
   <meta name="author" content="Abhishek Dutta">
-  <meta name="description" content="User interface of VGG Image Search Engine (VISE)">
+  <meta name="description" content="15cILLUSTRATION : searchable database of 15th century printed illustrations.">
   <link rel="shortcut icon" type="image/x-icon" href="./static/favicon.ico"/>
   <link rel="stylesheet" type="text/css" href="./static/vise2.css" />
   <script src="./static/vise.js"></script>
@@ -28,7 +28,7 @@ class template_15cbt:
 </head>
 <body>
 <div class="page">
-  <div style="display:block;margin-bottom:1em;background-color:#002147;"><a href="page0" title="Show home page"><img src="static/images/headers/15cbt_logo.png" alt="15cBOOKTRADE Logo"></a></div>
+  <div style="display:block;margin-bottom:1em;background-color:#002147;"><a href="page0" title="Show home page"><img src="static/images/headers/15cILLUSTRATION_logo.png" alt="15cILLUSTRATION Logo"></a></div>
   <div class="pagerow pageheader">
     <div class="header_control_panel">
       <div class="nav_panel">
