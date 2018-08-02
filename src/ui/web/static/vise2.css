@@ -109,10 +109,21 @@ li {
   box-shadow: 10px 10px 16px -4px #e6e6e6;
   margin: 2rem 0;
   padding: 1rem;
-  background: #ffaaee;
+  background: #ffd5e5;
+  text-align: center;
 }
 .text_search_panel .title {
   text-align: center;
+}
+
+.text_search_panel .search_input {
+  display:inline-block;
+  padding:1rem;
+  line-height:200%;
+  text-align:right;
+}
+.text_search_panel .buttons {
+  display:block;
 }
 
 /* The panel showing ISTC metadata for a page showing list of images associated with a ISTC id */
@@ -130,6 +141,30 @@ li {
   border: none;
 }
 
+
+/* The panel showing text search result count and search result page navigation */
+.text_search_result_nav_panel {
+  border: none;
+  overflow:auto;
+  margin: 1rem 0;
+}
+.text_search_result_nav_panel div {
+  display: inline-block;
+}
+.text_search_result_nav_panel div:last-child {
+  float: right;
+}
+.text_search_result_nav_panel div ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.text_search_result_nav_panel div li {
+  display: inline;
+  padding-left: 1rem;
+}
+
+.text_search_result_panel img { margin:1rem; }
 
 /* The panel showing search result count and search result page navigation */
 .search_result_panel {

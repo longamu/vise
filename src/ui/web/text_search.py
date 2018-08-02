@@ -151,80 +151,196 @@ class text_search:
     # end of for index, row in match_region_attributes.iterrows():
     return region_attributes_matches_html;
 
-  @cherrypy.expose
-  def index(self, keyword=None, target="all", numberToReturn=20, startFrom=0, tile=None, noText=None):
-    if keyword is None:
-      body = '''
+  def get_search_input_page(self, search_keyword1=None, search_target1=None, search_operator='AND', search_keyword2=None, search_target2=None, search_year_from=None, search_year_to=None,):
+      return '''
 <div class="text_search_panel pagerow">
-  <span class="title">Enter search keyword to perform text search.</span>
-  <ul>
-    <li>You can also enter <a href="https://developers.google.com/edu/python/regular-expressions">regular expression</a> for more complex search queries.</li>
-    <li>For example: @todo</li>
-  </ul>
-</div>''';
-      return self.pT.get(title = "Search", headExtra = "", body = body);
+  <span class="title">Search Image Metadata</span>
+  <form action="text_search" method="GET" id="text_search">
+  <div class="search_input">
+    <div class="pagerow">
+      <input type="text" id="search_keyword1" name="search_keyword1" placeholder="search keyword e.g. angel" value="%s">
+      <span>&nbsp;in&nbsp;</span>
+      <select id="search_target1" name="search_target1">
+        <option value="region_metadata" %s>Region Metadata</option>
+        <option value="istc_metadata" %s>ISTC Metadata</option>
+      </select>
+    </div>
 
-    keyword = urllib.unquote(keyword).decode('utf8');
-    target = urllib.unquote(target).decode('utf8');
+    <div class="pagerow">
+      <select id="search_operator" name="search_operator">
+        <option value="AND" %s>AND</option>
+        <option value="OR" %s>OR</option>
+      </select>
+    </div>
 
-    print 'search keyword = %s, target = %s' %(keyword, target);
+    <div class="pagerow">
+      <input type="text" id="search_keyword2" name="search_keyword2" placeholder="second keyword e.g. Venice" value="%s">
+      <span>&nbsp;in&nbsp;</span>
+      <select id="search_target2" name="search_target2">
+        <option value="region_metadata" %s>Region Metadata</option>
+        <option value="istc_metadata" %s>ISTC Metadata</option>
+      </select>
+    </div>
 
-    if target == 'Image Filename':
-      return self.file_attributes.index( filename=keyword );
 
-    body = '';
-    result_count = int(numberToReturn);
-    result_start = int(startFrom);
-    result_end = result_start + result_count;
+    <div class="pagerow">
+      <span>between year</span>
+      <input type="text" id="search_year_from" name="search_year_from" placeholder="e.g. 1491" size="6" value="%s">
+      <span>&nbsp;and&nbsp;</span>
+      <input type="text" id="search_year_to" name="search_year_to" placeholder="e.g. 1495" size="6" value="%s">
+    </div>
+  </div>
+  <div class="buttons">
+    <button type="submit" value="Search">Search</button>
+  </div>
+  </form>
+</div>''' % (search_keyword1 if search_keyword1 is not None else '', 
+            'selected="true"' if search_target1  == 'region_metadata' else '',
+            'selected="true"' if search_target1  == 'istc_metadata' else '',
+            'selected="true"' if search_operator == 'AND' else '',
+            'selected="true"' if search_operator == 'OR' else '',
+            search_keyword2 if search_keyword2 is not None else '',
+            'selected="true"' if search_target2  == 'region_metadata' else '',
+            'selected="true"' if search_target2  == 'istc_metadata' else '',
+            search_year_from if search_year_from is not None else '',
+            search_year_to if search_year_to is not None else '',  
+            );
 
-    if tile is None:
-      tile = False;
+
+  # return a list of matching filename
+  def search_region_metadata(self, keyword):
+    # filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
+    match = self.file_attributes.region_attributes['region_attributes'].str.contains(keyword, case=False, na=False, regex=True);
+    return set(self.file_attributes.region_attributes[match]['filename'].unique());
+
+
+  def search_istc_metadata(self, keyword, year_from=None, year_to=None):
+    # id,author,title,imprint,format
+    ## iterate through each column
+    N = self.file_attributes.istc_db.shape[0];
+
+    # create subset so that further search only happens in entries between year [from, to)
+    istc_subset = None;
+    if year_from is not None or year_to is not None:
+      if year_from is not None:
+        istc_subset = self.file_attributes.istc_db[ self.file_attributes.istc_db['imprint_year'] >= int(year_from) ]
+        if year_to is not None:
+          istc_subset = istc_subset[ istc_subset['imprint_year'] < int(year_to) ]
     else:
-      tile = True;
-    if noText is None:
-      noText = False;
+      istc_subset = self.file_attributes.istc_db;
+
+    matched_istc_id = set()
+    #for col in self.file_attributes.istc_db.columns:
+    for col in {"id","author","title","imprint","format"}:
+      istc_matches = istc_subset[ istc_subset[col].str.contains(keyword, case=False, na=False, regex=True) ];
+      if istc_matches.shape[0] != 0:
+        for index, row in istc_matches.iterrows():
+          matched_istc_id.add(row['id']);
+
+    # convert istc-id to unique filenames
+    return set(self.file_attributes.file_attributes_index.loc[ self.file_attributes.file_attributes_index['istc_id'].isin( matched_istc_id )]['filename'].unique())
+
+
+  def get_search_result_navigation_html(self, start_from, count, total_result, text_search_uri):
+    nav_buttons = '';
+    if start_from != 0:
+      nav_buttons += '<li><a href="%s&start_from=%d&count=%d">Prev</a></li>' % (text_search_uri, (start_from - count), count);
     else:
-      noText = True;
+      nav_buttons += '<li>Prev</li>';
 
-    # switch between tiled and list views
-    search_result_page_tools = '';
-    listview_url = 'text_search?keyword=%s&target=%s' % (keyword, target);
-    tileview_url = listview_url + '&tile=true';
-    tileview_notext_url = tileview_url + '&noText';
-
-    if tile:
-        if noText:
-            search_result_page_tools = '<li><a href="%s">List View</a></li><li><a href="%s">Tile View</a></li><li>Tile View (images only)</li>' % (listview_url, tileview_url);
-        else:
-            search_result_page_tools = '<li><a href="%s">List View</a></li><li>Tile View</li><li><a href="%s">Tile View (images only)</a></li>' % (listview_url, tileview_notext_url);
+    if total_result > (start_from + count):
+      nav_buttons += '<li><a href="%s&start_from=%d&count=%d">Next</a></li>' % (text_search_uri, (start_from + count), count);
     else:
-        search_result_page_tools = '<li>List View</li><li><a href="%s">Tile View</a></li><li><a href="%s">Tile View (images only)</a></li>' % (tileview_url, tileview_notext_url);
+      nav_buttons += '<li>Next</li>';
 
-    body += '''
-<div class="text_search_panel pagerow">
-  <span class="title">Search keyword: "%s" in %s</span>
-</div>
+    end_index = start_from + count;
+    if end_index > total_result:
+      end_index = total_result
 
-<div id="search_result_panel" class="search_result_panel pagerow">
-  <div id="search_result_count">Showing all search results</div>
-
-  <div id="search_result_page_tools">
+    return '''
+<div class="text_search_result_nav_panel pagerow">
+  <div>Total %d matches, showing from %d to %d</div>
+  <div id="search_result_page_nav">
     <ul>%s</ul>
   </div>
-<!--
-  <div id="search_result_page_nav">
-    <ul><li>Prev</li><li>Next</li></ul>
-  </div>
--->
-</div>''' % (keyword, target, search_result_page_tools);
+</div>''' % ( total_result, start_from, end_index, nav_buttons )
 
-    body += '<div class="pageresult">';
+  def get_search_result_html(self, matching_filenames, start_from, count, tile=None, showText=None):
+    search_result = self.file_attributes.file_attributes_index.loc[ self.file_attributes.file_attributes_index['filename'].isin( matching_filenames )]
 
-    if target == 'Region Attributes':
-      body += self.get_region_attributes_matches(keyword, numberToReturn, startFrom, tile, noText);
-    if target == 'ISTC Metadata':
-      body += self.get_istc_metadata_matches(keyword, numberToReturn, startFrom, tile, noText);
-      #body += '<p color="red">Not implemented yet!</p>';
+    html = '<div class="text_search_result_panel">';
+    MAX_RESULT=20;
+    
+    for index, row in search_result.iterrows():
+      if index > start_from:
+        html += '<a href="file_attributes?docID=%s"><img title="%s" src="getImage?docID=%s&height=300"></a>' % (row['doc_id'], row['filename'], row['doc_id']);
 
-    body += '\n</div>';
+      if index > (start_from + count):
+        break;
+
+    html += '</div>'
+    return html
+
+  @cherrypy.expose
+  def index(self, search_keyword1=None, search_target1='region_metadata', search_operator='AND', search_keyword2=None, search_target2='istc_metadata', search_year_from=None, search_year_to=None, start_from=0, count=25, ):
+    # display main search page (without any results) if no search keyword is provided
+    text_search_uri = 'text_search?'
+    if search_year_to == '':
+      search_year_to = None;
+    if search_year_from == '':
+      search_year_from = None;
+    if search_keyword2 == '':
+      search_keyword2 = None;
+    if search_keyword1 == '':
+      search_keyword1 = None;
+
+    body = self.get_search_input_page(search_keyword1, search_target1, search_operator, search_keyword2, search_target2, search_year_from, search_year_to)
+    if search_keyword1 is None:
+      return self.pT.get(title = "Metadata Search", headExtra = "", body = body);
+
+    search_keyword1 = urllib.unquote(search_keyword1).decode('utf8');
+    match = None
+    match1 = None;
+    if search_target1 == 'region_metadata':
+      match1 = self.search_region_metadata(search_keyword1);
+    elif search_target1 == 'istc_metadata':
+      match1 = self.search_istc_metadata(search_keyword1, search_year_from, search_year_to);
+    text_search_uri += 'search_keyword1=' + search_keyword1 + '&search_target1=' + search_target1;
+
+    # we have search_keyword1, check if we have another keyword as well
+    if search_keyword2 is not None:
+      # search using two keywords: search_keyword1, search_keyword2
+      search_keyword2 = urllib.unquote(search_keyword2).decode('utf8');
+
+      match2 = None;
+      if search_target2 == 'region_metadata':
+        match2 = self.search_region_metadata(search_keyword2);
+      elif search_target2 == 'istc_metadata':
+        match2 = self.search_istc_metadata(search_keyword2, search_year_from, search_year_to);
+      text_search_uri += '&search_keyword2=' + search_keyword2 + '&search_target2=' + search_target2;
+    else:
+      # search using a single keyword i.e. search_keyword1    
+      match2 = None;
+
+    match = None;
+    if match2 is not None:
+      if search_operator == 'AND':
+        match = match1.intersection(match2)
+      else:
+        match = match1.union(match2)
+    else:
+      match = match1
+
+    text_search_uri += '&search_operator=' + search_operator;
+    if search_year_from is not None:
+      text_search_uri += '&search_year_from=' + search_year_from;
+    if search_year_to is not None:
+      text_search_uri += '&search_year_to=' + search_year_to;
+
+    start_from = int(start_from)
+    count = int(count)
+    body += self.get_search_result_navigation_html(start_from, count, len(match), text_search_uri)
+    body += self.get_search_result_html(match, start_from, count);
+    if len(match):
+      body += self.get_search_result_navigation_html(start_from, count, len(match), text_search_uri)
     return self.pT.get(title= "Search Result", headExtra = "", body = body);

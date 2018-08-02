@@ -80,18 +80,20 @@ class doSearch:
             for metadata_i in metadata_tokens :
                 keyval = metadata_i.split("__KEYVAL_SEP__");
                 if len(keyval) == 2:
-                    if metadata_index < 4:
+                    #if metadata_index < 4:
+                    if keyval[0] in {'artistic_style', 'keywords', 'iconclass'}:
                         region_metadata_html += '<tr><td>%s</td><td>%s</td></tr>' % (keyval[0], keyval[1]);
-                    else:
-                        region_metadata_html += '<tr class="show_more_target"><td>%s</td><td>%s</td></tr>' % (keyval[0], keyval[1]);
+                    #else:
+                        #region_metadata_html += '<tr class="show_more_target"><td>%s</td><td>%s</td></tr>' % (keyval[0], keyval[1]);
                 else:
-                    if len(keyval) == 1 and keyval[0] != '':
+                    if len(keyval) == 1 and keyval[0] != '' and keyval[0] in {'artistic_style', 'keywords', 'iconclass'}:
                         region_metadata_html += "<tr><td>%s</td><td></td></tr>" % (keyval[0]);
 
                 metadata_index = metadata_index + 1;
 
             # end of for metadata_i
-            region_metadata_html += '</tbody></table><label for="result_%d_region_metadata" class="show_more_trigger"></label>' % (rank);
+            #region_metadata_html += '</tbody></table><label for="result_%d_region_metadata" class="show_more_trigger"></label>' % (rank);
+            region_metadata_html += '</tbody></table>';
         return region_metadata_html;
 
     @cherrypy.expose

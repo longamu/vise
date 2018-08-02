@@ -44,7 +44,7 @@ class file_attributes_15cbt:
 
   def load_istc_db(self, istc_db_fn, istc_id_colname):
     if istc_db_fn != None:
-      self.istc_db = pd.read_csv(istc_db_fn, encoding='utf-8');
+      self.istc_db = pd.read_csv(istc_db_fn, encoding='utf-8', keep_default_na=False, na_values='', dtype={"id":str,"author":str,"title":str,"imprint":str,"format":str,"imprint_year":int});
       self.istc_db.drop([col for col in self.istc_db.columns if "Unnamed" in col], axis=1, inplace=True) # remove unnamed columns
       if istc_id_colname != 'id':
         self.istc_db.rename( columns={istc_id_colname: 'id'}, inplace=True );
