@@ -158,7 +158,7 @@ class text_search:
   <form action="text_search" method="GET" id="text_search">
   <div class="search_input">
     <div class="pagerow">
-      <input type="text" id="search_keyword1" name="search_keyword1" placeholder="search keyword e.g. angel" value="%s">
+      <input type="text" id="search_keyword1" name="search_keyword1" placeholder="search keyword e.g. angel" size="30" value="%s">
       <span>&nbsp;in&nbsp;</span>
       <select id="search_target1" name="search_target1">
         <option value="region_metadata" %s>Region Metadata</option>
@@ -174,7 +174,7 @@ class text_search:
     </div>
 
     <div class="pagerow">
-      <input type="text" id="search_keyword2" name="search_keyword2" placeholder="second keyword e.g. Venice" value="%s">
+      <input type="text" id="search_keyword2" name="search_keyword2" placeholder="second keyword e.g. Venice" size="30" value="%s">
       <span>&nbsp;in&nbsp;</span>
       <select id="search_target2" name="search_target2">
         <option value="region_metadata" %s>Region Metadata</option>
@@ -269,14 +269,16 @@ class text_search:
     search_result = self.file_attributes.file_attributes_index.loc[ self.file_attributes.file_attributes_index['filename'].isin( matching_filenames )]
 
     html = '<div class="text_search_result_panel">';
-    MAX_RESULT=20;
     
+    i = 0;
     for index, row in search_result.iterrows():
-      if index > start_from:
+      if i >= start_from:
+        #print 'adding index %d (start_from=%d, count=%d))' % ( index, start_from, count )
         html += '<a href="file_attributes?docID=%s"><img title="%s" src="getImage?docID=%s&height=300"></a>' % (row['doc_id'], row['filename'], row['doc_id']);
 
-      if index > (start_from + count):
+      if i > (start_from + count):
         break;
+      i = i + 1;
 
     html += '</div>'
     return html

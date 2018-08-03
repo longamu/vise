@@ -1,3 +1,9 @@
+/*
+  Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
+  24 Jan. 2018
+*/
+
+
 body {
   font-family: Arial, Helvetica, sans-serif; 
   font-size: 0.9rem;
@@ -8,7 +14,7 @@ body {
   color: #000000;
   opacity: 1.0;
   /*  min-width: 1280px; min-height: 720px; */
-  min-width: 900px; min-height: 600px; /* small screen */
+  /*min-width: 900px;/* small screen */
 }
 
 * {
@@ -25,13 +31,16 @@ li {
   margin: 0.5rem 0;
 }
 
+.top_header { display:block;margin-bottom:1em;background-color:#002147; }
 .page {
   display: block;
   margin: auto;
   padding: 0 0.5rem;
-  display: block;
+  max-width: 98%;
+/*
   min-width: 920px;
-  max-width: 60%;
+  max-width: 80%;
+*/
 }
 .pageresult {
   display: block;
@@ -53,11 +62,12 @@ li {
 }
 
 .pageheader {
-  margin: 2rem 0;
+  margin: 1rem 0;
 }
 .pageheader .header_control_panel {
   border: none;
 }
+
 .pageheader .header_control_panel div {
   display: inline-block;
 }
@@ -332,5 +342,29 @@ ul.hlist {
 }
 .hlist li {
   display: inline;
-  padding-left: 1rem;
+  padding-right: 1rem;
 }
+
+.acknowledgement { text-align:center; margin:4rem 0; }
+.acknowledgement img {padding:0 1rem;}
+
+/* image comparison page */
+.compare_panel { display:table; width:100%; text-align:center; margin:0.5rem 0;}
+.compare_panel .row { display:table-row; width:100%; }
+.compare_panel .col { display:table-cell; border:1px solid #f2f2f2; padding:1rem 0; font-size:0.8rem; }
+.compare_panel .query { display:table-cell; width:10%; border:1px solid #f2f2f2; }
+.compare_panel .match { display:table-cell; width:10%; border:1px solid #f2f2f2; }
+.compare_panel .compare { display:table-cell; width:10%; border:1px solid #f2f2f2; }
+.compare_panel img { width:100%; padding:1rem;}
+
+/* home page */
+.home_page {}
+.home_page .top_description { max-width:740px; }
+.home_page .task { padding:2rem 0; vertical-align:middle;}
+.home_page .task .task_i { float:left; display:inline-block; padding:1rem; width:320px; height:140px; margin:0 1rem 1rem 0; border-radius:0.7rem;}
+.home_page .task .task_i .task_title { display:block; text-align:center; font-size:1.2rem;}
+.home_page .task .task_i .task_description { display:block; text-align:left; font-size:0.8rem; margin-top:1rem; }
+
+.task1_bg_color { background-color: #fff6d5; }
+.task2_bg_color { background-color: #ffd5e5; }
+.task3_bg_color { background-color: #f2f2f2; }

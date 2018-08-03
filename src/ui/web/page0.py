@@ -53,11 +53,11 @@ class page0:
             sampleImages= range(startFrom,endBefore);
             lastPage= (total_num+numPerPage-1)/numPerPage-1;
             
-            navigation  = '<div id="navbar" style="display:table; width:100%; background-color:#e6e6e6; border:1px solid #ccc; padding:1rem; line-height:2rem">'
+            navigation  = '<div id="navbar" style="display:table; width:100%; background-color:#fff6d5; border:1px solid #ccc; padding:1rem; line-height:2rem">'
             navigation += '<div style="display: table-cell;text-align: left;">Showing %d to %d of total %d files</div>' % (startFrom+1, endBefore, total_num);
             navigation += '<div style="display: table-cell;">'
             navigation += '<form action="file_attributes" method="POST" id="filename_search">'
-            navigation += '<input type="text" name="filename" value="enter partial filename" title="search filenames using keyword or regular expression" size="12" onclick="this.value=\'\';">'
+            navigation += '<input type="text" name="filename" value="enter partial filename" title="search filenames using keyword or regular expression" size="20" onclick="this.value=\'\';">'
             navigation += '&nbsp;<button type="submit" form="filename_search" value="Submit">Search</button>'
             navigation += '</form></div>'
 

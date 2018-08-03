@@ -1,5 +1,5 @@
 ##
-## VISE User Interface template
+## User Interface template for 15cILLUSTRATION
 ##
 ## Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
 ## 24 Jan. 2018
@@ -28,37 +28,40 @@ class template_15cbt:
 </head>
 <body>
 <div class="page">
-  <div style="display:block;margin-bottom:1em;background-color:#002147;"><a href="page0" title="Show home page"><img src="static/images/headers/15cILLUSTRATION_logo.png" alt="15cILLUSTRATION Logo"></a></div>
+  <div class="top_header">
+    <a href="home" title="Show home page"><img src="static/images/headers/15cILLUSTRATION_logo.png" alt="15cILLUSTRATION Logo"></a>
+    <img style="float:right;" src="static/images/headers/oxford_logo.png" alt="University of Oxford Logo">
+  </div>
   <div class="pagerow pageheader">
     <div class="header_control_panel">
-      <div class="nav_panel">
+      <div class="nav_panel" style="padding-top:0.2rem;">
         <ul class="hlist">
-          <li><a href="./page0">Home</a></li>
-          <li><a href="./file_index">File Index</a></li>
-          <li><a href="./istc">ISTC Index</a></li>
+          <li><a href="home">Home</a></li>
+          <li><a href="page0">Search Using Database Images</a></li>
+          <li><a href="text_search">Search Metadata</a></li>
+          <li><a href="file_index">Index of Illustrations</a></li>
+          <li><a href="istc">Illustrations Grouped by ISTC Id</a></li>
         </ul>
       </div>
-
-      <div class="search_panel">
-        <form action="text_search" method="GET" id="text_search">
-          <input id="text_search_keyword" type="text" name="keyword" placeholder="Search keyword" size="10">
-          <select id="text_search_target" name="target">
-            <!--<option value="All" selected="true">All</option>-->
-            <option value="Region Attributes" selected="true">Region Attributes</option>
-            <option value="ISTC Metadata">ISTC Metadata</option>
-            <option value="Image Filename">Image Filename</option>
-          </select>
-          <button type="submit" value="Search">Search</button>
+      <div>
+        <form action="upload" method="POST" name="upload" id="upload" enctype="multipart/form-data">
+          <input style="width:14rem;" name="uploadFile" type="file" onchange="document.getElementById('button_upload_and_search').removeAttribute('disabled')">
+<!--          <input name="uploadURL" id="uploadURL" type="text" value="or, enter url" onclick="this.value=\'\';">-->
+          <input id="button_upload_and_search" disabled value="Upload and Search" type="submit">
         </form>
       </div>
-
     </div>
     <div style="clear: both">&nbsp;</div>
   </div>
 
   %s
 
-  <div class="page_footer">This image search tool is based on <a href="http://www.robots.ox.ac.uk/~vgg/software/vise/">VGG Image Search Engine (VISE)</a> and has been developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group (VGG)</a>.</div>
+
+  <div class="acknowledgement pagerow">
+    <a href="http://15cbooktrade.ox.ac.uk/"><img height="50" src="static/images/headers/15cBOOKTRADE_logo.png" alt="15cBOOKTRADE project" title="15cBOOKTRADE project"></a>
+    <a href="http://www.robots.ox.ac.uk/~vgg/software/vise/"><img height="50" src="static/images/headers/vgg_logo.png" alt="Visual Geometry Group (VGG)" title="Visual Geometry Group (VGG)"></a>
+    <p style="font-size:0.8rem">Development and maintenance of 15cILLUSTRATION is supported by <a href="http://15cbooktrade.ox.ac.uk/">15cBOOKTRADE</a> and EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1)</p>
+  </div>
 </div>
 </body>
 </html>''' % ( self.html_title_prefix, title, headExtra, body );

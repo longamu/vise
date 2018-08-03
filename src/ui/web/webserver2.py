@@ -12,11 +12,9 @@ import ConfigParser;
 import cherrypy;
 import socket;
 
-from auth import Authenticator;
-
 import api;
 
-import template, page0, dynamic_image, search_page, do_search, details;
+import template, page0, dynamic_image, search_page, do_search, details, home;
 import template_15cbt;
 import file_index;
 import file_attributes_15cbt;
@@ -110,33 +108,20 @@ class webserver2:
 
         def_dsetname= docMap.keys()[0];
 
-        self.pT= template.template( \
-            titlePrefix= guiOpts['titlePrefix'][def_dsetname],
-            homeText= guiOpts['homeText'][def_dsetname],
-            headerImage= guiOpts['headerImage'][def_dsetname],
-            topLink= guiOpts['topLink'][def_dsetname],
-            bottomText= guiOpts['bottomText'][def_dsetname],
-            haveLogout= False,
-            enableUpload= enableUpload[def_dsetname],
-            ballads= def_dsetname.startswith('ballads') );
-
         if pathManager==None:
             self.pathManager_obj= pathManager_open(docMap);
         else:
             self.pathManager_obj= pathManager;
 
-        self.auth_obj= Authenticator( self.pT, userpass= None, allNeedLogin= False );
-        self.login= self.auth_obj.login;
-        self.logout= self.auth_obj.logout;
-
         self.API_obj= API_obj;
-        self.upload_obj= upload.upload(self.pT, API_obj);
         self.docMap= docMap;
 
         # page template for all pages
         self.template_15cbt = template_15cbt.template_15cbt();
+        self.home_obj= home.home( self.template_15cbt, docMap);
 
-        self.page0_obj= page0.page0( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
+        self.upload_obj= upload.upload(self.template_15cbt, API_obj);
+        self.page0_obj= page0.page0( self.template_15cbt, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
         self.dynamicImage_obj= dynamic_image.dynamicImage( docMap );
         self.searchPage_obj= search_page.searchPage( self.template_15cbt, docMap, self.pathManager_obj );
 
@@ -167,14 +152,13 @@ class webserver2:
                                   file_attributes = self.file_attributes_obj);
         self.istc = self.istc_obj.index;
 
-        self.details_obj= details.details( self.pT, API_obj, docMap, self.pathManager_obj, doRegistration= guiOpts['registration'][def_dsetname] );
-        if True:
-            self.registerImages_obj= register_images.registerImages( self.pT, API_obj );
-        if False:
-            self.sendComments_obj= send_comments.sendComments( self.pT );
+        self.details_obj= details.details( self.template_15cbt, API_obj, docMap, self.pathManager_obj, doRegistration= guiOpts['registration'][def_dsetname] );
+        self.registerImages_obj= register_images.registerImages( self.template_15cbt, API_obj );
 
-        self.index= self.page0_obj.index;
-        self.page0= self.index;
+        # definition of link between url and corresponding python script that handle those request
+        self.index= self.home_obj.index;
+        self.home= self.index;
+        self.page0= self.page0_obj.index;
         self.getImage= self.dynamicImage_obj.index;
         self.search= self.searchPage_obj.index;
         self.dosearch= self.doSearch_obj.index;
@@ -231,17 +215,12 @@ def get(
             serverroot+= '/';
 
     conf = {
-            '/': {
-                'tools.sessions.on': True,
-                'tools.auth.on': True,
-            },
+            '/': {},
             '/static' : {
-                'tools.auth.on': False,
                 'tools.staticdir.on': True,
                 'tools.staticdir.dir': os.path.join(scriptroot,'static'),
                 },
             '/robots.txt' : {
-                'tools.auth.on': False,
                 'tools.staticfile.on': True,
                 'tools.staticfile.filename': os.path.join(scriptroot,'static/robots.txt'),
                 },

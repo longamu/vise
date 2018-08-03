@@ -262,7 +262,8 @@ class file_attributes_15cbt:
             filename_list_html = '<div class="header"><span>Showing %d matches</span><span></span></div><ul>' % (doc_id_list.size);
             for doc_id in doc_id_list:
               match = self.file_attributes_index[ self.file_attributes_index['doc_id'] == doc_id ]
-              filename_list_html += '<li><a title="Search using this image" href="../search?docID=%d">%.5d</a> : <a title="View image attributes" href="file_attributes?docID=%d">%s</a></li>' % (doc_id, doc_id, doc_id, match.iloc[0]['filename']);
+              #filename_list_html += '<li><a title="Search using this image" href="../search?docID=%d">%.5d</a> : <a title="View image attributes" href="file_attributes?docID=%d">%s</a></li>' % (doc_id, doc_id, doc_id, match.iloc[0]['filename']);
+              filename_list_html += '<li><a title="View image attributes" href="file_attributes?docID=%d">%s</a></li>' % (doc_id, match.iloc[0]['filename']);
             filename_list_html += '</ul>';
           body += '<div class="search_result_i pagerow">%s</div>' % (filename_list_html);
 

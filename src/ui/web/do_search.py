@@ -185,6 +185,7 @@ class doSearch:
       <ul>
         <li>Filename: %s (uploaded file)</li>
       </ul>
+      <p style="margin-left:2.5rem;">Note: You can click on the uploaded image (shown on the right hand side) to search using a region in this uploaded file.</p>
     </div>
     <a href="search?%s"><img src="%s"></a>
   </div>''' % (query_filename,query_spec0, query_img_src);
@@ -299,7 +300,7 @@ class doSearch:
   <ul class="hlist">
     <li><a href="%s">Details of Match</a></li>
     <li><a href="%s">Compare Matching Regions</a></li>
-    <li><a href="#">Use this image for further search</a></li>
+    <li><a href="search?docID=%d">Use this image for further search</a></li>
   </ul>
   </div>
 
@@ -314,7 +315,8 @@ class doSearch:
              istc_metadata_html,
              overlap_metadata_html,
              match_details_url,
-             match_compare_url);
+             match_compare_url,
+             docIDres);
 
             else:
                 if showText:

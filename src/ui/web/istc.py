@@ -144,9 +144,9 @@ class istc:
           body += '''
 <div id="fg%s" class="search_result_i pagerow">
   <div class="header">
-    <span class="search_result_filename">Folio Group: %s</span>
+    <span class="search_result_filename">Gathering: %s</span>
     <span></span>
-    <span>Jump to folio group: %s</span>
+    <span>Jump to gathering: %s</span>
   </div>
   %s
 </div><!-- end of search_result_i -->''' % (folio_group, folio_group, folio_group_nav_html, grouped_html[folio_group]);
