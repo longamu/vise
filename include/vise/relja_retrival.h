@@ -149,9 +149,7 @@ namespace vise {
                       std::vector<uint32_t> &file_id_list,
                       std::vector<std::string> &filename_list);
     void get_filelist(const std::string filename_regex,
-                      const unsigned int from, const unsigned int result_count,
-                      std::vector<uint32_t> &file_id_list,
-                      std::vector<std::string> &filename_list);
+                      std::vector<uint32_t> &file_id_list);
     uint32_t get_filelist_size();
 
     std::string get_filename(unsigned int file_id);

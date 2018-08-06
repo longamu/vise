@@ -72,10 +72,11 @@ a { text-decoration:none; }
 .page .query .query_image { display:inline-block; float:right; }
 
 .page .result { display:block; border:none; margin:0; }
-.page .result .navbar {display:table; width:100%; font-size:0.8rem; padding:1rem 0.5rem;}
-.page .result .navbar .navinfo { display:table-cell; width:20%; text-align:left;  vertical-align:middle;}
-.page .result .navbar .navtool { display:table-cell; width:60%; text-align:center;  vertical-align:middle;}
-.page .result .navbar .navbuttons { display:table-cell; width:20%; text-align:right;  vertical-align:middle;}
+.page .result .navbar {display:table; width:100%; font-size:0.8rem; padding:2rem 0.2rem;}
+
+.page .result .navbar .navinfo { display:table-cell; width:33%; text-align:left;  vertical-align:middle;}
+.page .result .navbar .navtool { display:table-cell; width:33%; text-align:center;  vertical-align:middle;}
+.page .result .navbar .navbuttons { display:table-cell; width:34%; text-align:right;  vertical-align:middle;}
 
 .page .ri { display:inline-block; border:none; text-align:center; margin:0.5em 0; padding:0.2rem; border:1px solid red;}
 .page .ri .fn { display:block; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

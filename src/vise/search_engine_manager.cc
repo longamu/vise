@@ -378,7 +378,7 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
                                         http_response& response) {
   if ( search_engine_command == "_filelist" ) {
     std::string filename_regex;
-    unsigned int filelist_count;
+    unsigned int filelist_size;
 
     std::vector<uint32_t> file_id_list;
     std::vector<std::string> filename_list;
@@ -390,48 +390,65 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
       ss >> from;
     }
 
-    unsigned int result_count;
-    unsigned int default_result_count = 20;
-    if ( uri_param.count("result_count") == 1 ) {
+    unsigned int count;
+    unsigned int default_count = 20;
+    if ( uri_param.count("count") == 1 ) {
       ss.clear();
       ss.str("");
-      ss << uri_param.find("result_count")->second;
-      ss >> result_count;
+      ss << uri_param.find("count")->second;
+      ss >> count;
     } else {
-      result_count = default_result_count;
+      count = default_count;
     }
 
     if ( uri_param.count("filename_regex") == 1 ) {
+      unsigned int MAX_RESULT_SIZE = 1000;
       filename_regex = uri_param.find("filename_regex")->second;
-      search_engine_list_[ search_engine_id ]->get_filelist(filename_regex, from, result_count, file_id_list, filename_list);
-      filelist_count = file_id_list.size();
+      search_engine_list_[ search_engine_id ]->get_filelist(filename_regex, file_id_list);
+      filelist_size = file_id_list.size();
     } else {
-      search_engine_list_[ search_engine_id ]->get_filelist(from, result_count, file_id_list, filename_list);
-      filelist_count = search_engine_list_[ search_engine_id ]->get_filelist_size();
+      search_engine_list_[ search_engine_id ]->get_filelist(from, count, file_id_list, filename_list);
+      filelist_size = search_engine_list_[ search_engine_id ]->get_filelist_size();
       filename_regex = "";
+    }
+
+    std::string show_from = "0";
+    std::string show_count = "25";
+    if ( uri_param.count("show_from") == 1 ) {
+      show_from = uri_param.find("show_from")->second;
+    }
+    if ( uri_param.count("show_count") == 1 ) {
+      show_count = uri_param.find("show_count")->second;
     }
 
     // prepare json
     std::ostringstream json;
     json << "{\"search_engine_id\":\"" << search_engine_id << "\","
-         << "\"filelist_count\":" << filelist_count << ","
          << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
          << "\"home_uri\":\"" << "/vise/home.html\","
          << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
          << "\"image_uri_namespace\":\"image/\","
          << "\"query_uri_prefix\":\"" << get_query_uri_prefix(search_engine_id) << "\","
+         << "\"FILELIST_SIZE\":" << filelist_size << ","
          << "\"from\":" << from << ","
+         << "\"count\":" << count << ","
+         << "\"show_from\":" << show_from << ","
+         << "\"show_count\":" << show_count << ","
          << "\"filename_regex\":\"" << filename_regex << "\","
-         << "\"result_count\":" << result_count << ","
-         << "\"filelist_subset\":[";
+         << "\"file_id_list_subset\":[";
     uint32_t file_id;
     std::string filename_uri;
-    for ( uint32_t i = 0; i < result_count; ++i ) {
-      if ( i != 0 ) {
+    std::cout << "\nfile_id_list = [" << file_id_list.size() << "] ";
+    for ( uint32_t i = from; i < (from + count) && (i < filelist_size); ++i ) {
+      if ( i != from ) {
         json << ",";
       }
+      json << file_id_list[i];
+      std::cout << "[" << i << ":" << file_id_list[i] << "]," << std::flush;
+      /*
       json << "{\"file_id\":" << file_id_list[i] << ","
            << "\"filename\":\"" << filename_list[i] << "\"}";
+      */
     }
     json << "]}";
 

@@ -265,29 +265,16 @@ void vise::relja_retrival::get_filelist(const unsigned int from, const unsigned 
 
 
 void vise::relja_retrival::get_filelist(const std::string filename_regex,
-                                        const unsigned int from, const unsigned int result_count,
-                                        std::vector<uint32_t> &file_id_list,
-                                        std::vector<std::string> &filename_list) {
-
-  BOOST_LOG_TRIVIAL(debug) << "get_filelist(): filename_regex=" << filename_regex;
+                                        std::vector<uint32_t> &file_id_list) {
 
   file_id_list.clear();
-  filename_list.clear();
-
-  unsigned int total_matches = 0;
   for ( uint32_t i = 0; i < dataset_->getNumDoc(); ++i ) {
     if ( dataset_->getInternalFn(i).find(filename_regex) != std::string::npos ) {
-      if ( total_matches >= from ) {
-        file_id_list.push_back(i);
-        filename_list.push_back( dataset_->getInternalFn(i) );
-      }
-
-      total_matches += 1;
-      if ( file_id_list.size() >= result_count ) {
-        return;
-      }
+      file_id_list.push_back(i);
     }
   }
+  BOOST_LOG_TRIVIAL(debug) << "get_filelist(): filename_regex=" << filename_regex
+                           << " => " << file_id_list.size();
 }
 
 uint32_t vise::relja_retrival::get_filelist_size() {

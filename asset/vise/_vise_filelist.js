@@ -9,31 +9,29 @@
 precondition: variable '_vise_filelist_str' contains the JSON string
 representation of VISE search engine filelist in a format given below:
 
-GET http://localhost:9973/vise/query/ox5k/1/_filelist?from=0&result_count=3&format=json
+GET http://localhost:9973/vise/query/ox5k/1/_filelist?from=0&count=10&filename_regex=radcliff&format=json
 
 {
-  "search_engine_id":"ox5k/1",
-  "filelist_count": 5063,
+  "search_engine_id": "ox5k/1",
   "image_uri_prefix": "/vise/asset/ox5k/1/",
   "home_uri": "/vise/home.html",
   "image_uri_namespace": "image/",
   "query_uri_prefix": "/vise/query/ox5k/1/",
+  "FILELIST_SIZE": 282,
   "from": 0,
-  "filename_regex": "",
-  "result_count": 3,
-  "filelist_subset": [
-    {
-      "file_id": 0,
-      "filename": "all_souls_000000.jpg"
-    },
-    {
-      "file_id": 1,
-      "filename": "all_souls_000001.jpg"
-    },
-    {
-      "file_id": 2,
-      "filename": "all_souls_000002.jpg"
-    }
+  "count": 10,
+  "filename_regex": "radcliff",
+  "file_id_list_subset": [
+    4494,
+    4495,
+    4496,
+    4497,
+    4498,
+    4499,
+    4500,
+    4501,
+    4502,
+    4503
   ]
 }
 */
@@ -52,6 +50,7 @@ function _vise_filelist() {
   var page = document.createElement('div');
   var nav = document.createElement('div');
   var filelist = document.createElement('div');
+  filelist.setAttribute('id', 'filelist');
   page.setAttribute('id', 'filelist_page');
   page.classList.add('page');
   nav.classList.add('nav');
@@ -72,39 +71,120 @@ function _vise_filelist_init_nav(d, nav) {
   nav.innerHTML += '<a href="" title="Upload a new image and search using this image">Upload & Search</a> | ';
 }
 
-function _vise_filelist_show_all_files(d, content_panel) {
-  var navbar = document.createElement('div');
-  navbar.classList.add('navbar');
-  content_panel.appendChild(navbar);
-
+function _vise_filelist_update_page_nav(d, navbar) {
   // info. about filelist
   var navinfo = document.createElement('div');
   navinfo.classList.add('navinfo');
   navbar.appendChild(navinfo);
-  navinfo.innerHTML = "Total " + d.filelist_count + " images. Showing " + d.from + " to " + (d.from + d.filelist_subset.length);
+
+  var navinfohtml = [];
+  navinfohtml.push( 'Total ' + d.FILELIST_SIZE + ' images. Showing images from&nbsp;' );
+  navinfohtml.push( d.from + d.show_from );
+  navinfohtml.push( '&nbsp;to&nbsp;' );
+  navinfohtml.push( d.from + d.show_to );
+/*
+  navinfohtml.push( '&nbsp;<label for="show_from">from</label>&nbsp;' );
+  navinfohtml.push( '<input type="text" size="3" id="show_from" value="' + (d.from + d.show_from) + '">' );
+  navinfohtml.push( '&nbsp;<label for="show_to">to</label>&nbsp;' );
+  navinfohtml.push( '<input type="text" size="3" id="show_to" value="' + (d.from + d.show_to) + '">' );
+*/
+
+  navinfo.innerHTML = navinfohtml.join('');
 
   // filelist filter input
   var navtool = document.createElement('div');
   navtool.classList.add('navtool');
   navbar.appendChild(navtool);
-  navtool.innerHTML = '<input type="text" title="type partial filename in order to show all files matching that keyword" id="filename_regex" placeholder="type partial filename to filter files">';
+  console.log(d.filename_regex)
 
-  // filelist prev,next buttons
+  var navtoolhtml = [];
+  navtoolhtml.push( '<form method="GET" action="' + d.query_uri_prefix + '_filelist">' );
+  navtoolhtml.push( '<input name="filename_regex" type="text" title="type partial filename in order to show all files matching that keyword" id="filename_regex" placeholder="type partial filename to filter files" size="20" value="' + d.filename_regex + '">' );
+  navtoolhtml.push( '<input type="hidden" name="from" value="0">' );
+  navtoolhtml.push( '<input type="hidden" name="count" value="137">' );
+  navtoolhtml.push( '<input type="hidden" name="show_from" value="0">' );
+  navtoolhtml.push( '<input type="hidden" name="show_count" value="45">' );
+  navtoolhtml.push( '<button type="submit">Filter</button>' );
+  navtoolhtml.push( '</form>' );
+
+  navtool.innerHTML = navtoolhtml.join('');
+
   var navbuttons = document.createElement('div');
   navbuttons.classList.add('navbuttons');
   navbar.appendChild(navbuttons);
   var links = [];
-  if ( d.from !== 0 ) {
-    links.push( '<a href="' + _vise_filelist_now_get_prev_uri(d) + '" title="Prev">Prev</a>' );
+
+  console.log('_vise_filelist_update_page_nav(): from=' + d.from + ', count=' + d.count + ', show_from=' + d.show_from + ', show_count=' + d.show_count);
+  // check if this page is the first page
+  if ( (d.from + d.show_from) !== 0) {
+    // check if Prev page contents can be served from cache
+    var prev_page_from = d.show_from - d.show_count;
+    if ( prev_page_from >= 0 ) {
+      // show next page contents from cache
+      links.push( '<span class="text_button" title="Previous Page" onclick="_vise_filelist_prev_page_from_cache()">Prev</span>' );
+    } else {
+      // fetch new contents to show next page
+      links.push( '<a href="' + _vise_filelist_now_get_prev_uri(d) + '" title="Previous Page">Prev</a>' );
+    }
   } else {
+    // first page, hence deactivate Prev button
     links.push( '<span>Prev</span>' );
   }
-  if ( d.filelist_subset.length === d.result_count ) {
-    links.push( '<a href="' + _vise_filelist_now_get_next_uri(d) + '" title="Next">Next</a>' );
+
+  if ( ( d.from + d.show_to ) < (d.FILELIST_SIZE - 1 ) ) {
+    // check if Next page contents can be served from cache
+    var next_page_from = d.from + d.show_to;
+    var next_page_count = d.show_count;
+    if ( ( next_page_from + next_page_count) < (d.from + d.count) ) {
+      // show next page contents from cache
+      links.push( '<span class="text_button" title="Next Page" onclick="_vise_filelist_next_page_from_cache()">Next</span>' );
+    } else {
+      // fetch new contents to show next page
+      links.push( '<a href="' + _vise_filelist_now_get_next_uri(d) + '" title="Next Page">Next</a>' );
+    }
   } else {
+    // end of list, hence deactivate Next button
     links.push( '<span>Next</span>' );
   }
+
   navbuttons.innerHTML = links.join('&nbsp;|&nbsp;');
+}
+
+function _vise_filelist_get_show_count() {
+  var p = document.getElementById('show_count');
+  return parseInt(p.options[p.selectedIndex].value);
+}
+
+function _vise_filelist_next_page_from_cache() {
+  _vise_filelist.show_from = _vise_filelist.show_from + _vise_filelist.show_count;
+  _vise_filelist.show_count = _vise_filelist.show_count;
+
+  var filelist = document.getElementById('filelist');
+  filelist.innerHTML = '';
+  _vise_filelist_show_all_files(_vise_filelist, filelist);
+}
+
+function _vise_filelist_prev_page_from_cache() {
+  _vise_filelist.show_from = _vise_filelist.show_from - _vise_filelist.show_count;
+  _vise_filelist.show_count = _vise_filelist.show_count;
+
+  var filelist = document.getElementById('filelist');
+  filelist.innerHTML = '';
+  _vise_filelist_show_all_files(_vise_filelist, filelist);
+}
+
+function _vise_filelist_show_all_files(d, content_panel) {
+  var navbar = document.createElement('div');
+  navbar.classList.add('navbar');
+  content_panel.appendChild(navbar);
+
+  d.show_to = d.show_from + d.show_count;
+  if ( d.show_to > d.file_id_list_subset.length ) {
+    d.show_to = d.file_id_list_subset.length - 1;
+  }
+
+  // filelist navigation bar : prev,next, ... buttons
+  _vise_filelist_update_page_nav(d, navbar);
 
   // clear floats
   var float_clear = document.createElement('div');
@@ -114,9 +194,9 @@ function _vise_filelist_show_all_files(d, content_panel) {
   var img_grid = document.createElement('div');
   img_grid.classList.add('img_grid');
 
-  var i, n, ri;
-  n = d.filelist_subset.length;
-  for ( i = 0; i < n; ++i ) {
+  var i;
+  //console.log('_vise_filelist_show_all_files(): from=' + d.form + ', count=' + d.count + ', show_from=' + d.show_from + '+' + d.show_count);
+  for ( i = d.show_from; i < d.show_to; ++i ) {
     _vise_filelist_show_file_i(d, i, img_grid);
   }
   content_panel.appendChild(img_grid)
@@ -129,8 +209,29 @@ function _vise_filelist_show_file_i(d, i, content_panel) {
   img_with_region.setAttribute('onclick', '@todo');
 
   var img = document.createElement('img');
-  img.setAttribute('src', d.image_uri_prefix + d.image_uri_namespace + d.filelist_subset[i].filename);
+  img.setAttribute('src', d.image_uri_prefix + d.image_uri_namespace + d.file_id_list_subset[i]);
+  img.addEventListener('load', function(e) {
+    // automatically set viewBox attribute of SVG element so that
+    // the correct region is visible
+    this.nextElementSibling.setAttributeNS(null, 'viewBox', '0 0 ' + this.naturalWidth + ' ' + this.naturalHeight);
+    this.nextElementSibling.style.display = 'block'; // by default, the region is invisible. Now, make the region visible
+  });
+
   img_with_region.appendChild(img);
+
+  // debug
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(SVG_NS, 'text');
+  svg.setAttributeNS(null, 'x', 50);
+  svg.setAttributeNS(null, 'y', 200);
+  svg.setAttributeNS(null, 'fill', 'white');
+  svg.setAttributeNS(null, 'stroke', 'red');
+  svg.setAttributeNS(null, 'style', 'font-size:164px;stroke-width:1rem;');
+  svg.innerHTML = d.file_id_list_subset[i];
+  var svg_container = document.createElementNS(SVG_NS, 'svg');
+  svg_container.appendChild(svg);
+  img_with_region.appendChild(svg_container);
+
   content_panel.appendChild(img_with_region);
 }
 
@@ -140,22 +241,37 @@ function _vise_filelist_show_file_i(d, i, content_panel) {
 function _vise_filelist_now_get_filelist_uri(d) {
   var uri = d.query_uri_prefix + '_filelist?';
   if ( typeof(d.filename_regex) !== 'undefined' && d.filename_regex !== '' ) {
-    uri += 'filename_regex=' + d.filename_regex;
+    uri += 'filename_regex=' + d.filename_regex + '&';
   }
   return uri;
 }
 
 function _vise_filelist_now_get_next_uri(d) {
   var uri = [];
-  uri.push('from=' + (parseInt(d.from) + parseInt(d.result_count)) );
-  uri.push('result_count=' + d.result_count );
+  var new_from = d.from + d.show_to;
+  uri.push('from=' + new_from );
+
+  uri.push('count=' + d.count );
+  uri.push('show_from=0' );
+  uri.push('show_count=' + d.show_count );
   return _vise_filelist_now_get_filelist_uri(d) + uri.join('&');
 }
 
 function _vise_filelist_now_get_prev_uri(d) {
   var uri = [];
-  uri.push('from=' + (parseInt(d.from) - parseInt(d.result_count)) );
-  uri.push('result_count=' + d.result_count );
+  var new_from = d.from - d.count;
+  if ( new_from < 0 ) {
+    new_from = 0;
+  }
+  uri.push('from=' + new_from );
+
+  uri.push('count=' + d.count );
+  var show_from = d.from - d.show_to - new_from;
+  if ( show_from < 0 ) {
+    show_from = 0;
+  }
+  uri.push('show_from=' + show_from);
+  uri.push('show_count=' + d.show_count );
+
   return _vise_filelist_now_get_filelist_uri(d) + uri.join('&');
 }
-
