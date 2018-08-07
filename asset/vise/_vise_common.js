@@ -9,7 +9,8 @@ function _vise_init_top_nav(d, nav) {
   var html = [];
 //  nav.innerHTML  = '<a href="' + d.home_uri + '" title="VISE home page which shows a list of available search engines">VISE Home</a>';
   var search_engine_id = '<span>' + d.search_engine_id + ' : </span>';
-  html.push( '<a href="" title="Search using image the search engine dataset">Image List</a>' );
+  var search_engine_home_url = d.query_uri_prefix + '_filelist?from=0&count=1024&show_from=0&show_count=45';
+  html.push( '<a href="' + search_engine_home_url + '" title="Search using image the search engine dataset">Image List</a>' );
 
   nav.innerHTML = search_engine_id + html.join('&nbsp;|&nbsp;');
 }
