@@ -507,13 +507,11 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
          << "\"file_id_list_subset\":[";
     uint32_t file_id;
     std::string filename_uri;
-    std::cout << "\nfile_id_list = [" << file_id_list.size() << "] ";
     for ( uint32_t i = from; i < (from + count) && (i < filelist_size); ++i ) {
       if ( i != from ) {
         json << ",";
       }
       json << file_id_list[i];
-      std::cout << "[" << i << ":" << file_id_list[i] << "]," << std::flush;
       /*
       json << "{\"file_id\":" << file_id_list[i] << ","
            << "\"filename\":\"" << filename_list[i] << "\"}";
