@@ -37,9 +37,6 @@ http_server::http_server(const std::string& address,
   std::clog << "\nhttp server waiting for connections at " << address
             << ":" << port << " (" << thread_pool_size << " threads)" << std::endl << std::flush;
 
-  // debug
-  vise::search_engine_manager::instance()->load_search_engine("ox5k/1");
-
   accept_new_connection();
 }
 

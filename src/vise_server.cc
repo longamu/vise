@@ -42,12 +42,13 @@ int main(int argc, char** argv) {
 //            << "\nRelease: " << VISE_SERVER_CURRENT_RELEASE_DATE
             << std::endl;
 
-  if ( argc != 6 && argc != 8 && argc != 1) {
+  if ( argc != 6 && argc != 8 && argc != 9 && argc != 1) {
     std::cout << "\nUsage: " << argv[0]
-              << " hostname port thread_count vise_asset_dir [vise_data_dir | search_engine_{data,asset,temp}_dir]]\n"
+              << " hostname port thread_count vise_asset_dir [vise_data_dir | search_engine_{data,asset,temp}_dir]] [PRELOAD_SEARCH_ENGINE]\n"
               << "\ne.g.: ./" << argv[0] << " 0.0.0.0 9973 4 /home/tlm/dev/vise/asset"
               << "\n      ./" << argv[0] << " 0.0.0.0 9973 4 /home/tlm/dev/vise/asset /ssd/data/vise"
               << "\n      ./" << argv[0] << " 0.0.0.0 9973 4 /home/tlm/dev/vise/asset /ssd/vise/data /data/vise/asset /tmp/vise"
+              << "\n      ./" << argv[0] << " 0.0.0.0 9973 4 /home/tlm/dev/vise/asset /ssd/vise/data /data/vise/asset /tmp/vise ox5k/1"
               << std::endl;
     return 0;
   }
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
   boost::filesystem::path se_data_dir  = vise_data_dir / "data";
   boost::filesystem::path se_asset_dir = vise_data_dir / "asset";
   boost::filesystem::path se_temp_dir  = vise_data_dir / "temp";
-
+  std::string preload_search_engine    = "";
   if ( argc >= 5 ) {
     // vise_data_dir not provided, use /temp
     address = argv[1];
@@ -82,11 +83,14 @@ int main(int argc, char** argv) {
     if ( argc == 6 ) {
       vise_data_dir = boost::filesystem::path( argv[5] );
     }
-    if ( argc == 8 ) {
+    if ( argc == 8 || argc == 9) {
       se_data_dir  = boost::filesystem::path( argv[5] );
       se_asset_dir = boost::filesystem::path( argv[6] );
       se_temp_dir  = boost::filesystem::path( argv[7] );
       vise_data_dir = boost::filesystem::path( argv[5] );
+      if ( argc == 9 ) {
+        preload_search_engine = std::string(argv[8]);
+      }
     }
   } else {
     cout << "\nUsing default settings ...";
@@ -115,6 +119,10 @@ int main(int argc, char** argv) {
   vise::vise_request_handler::instance()->init(vise_asset_dir);
   // initialize search engine manager
   vise::search_engine_manager::instance()->init(se_data_dir, se_asset_dir, se_temp_dir);
+
+  if ( preload_search_engine != "" ) {
+    vise::search_engine_manager::instance()->load_search_engine( preload_search_engine );
+  }
 
   http_server server(address, port, thread_pool_size);
   std::cout << "\n\nNotes:";

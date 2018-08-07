@@ -341,17 +341,22 @@ bool vise::search_engine_manager::is_search_engine_loaded(std::string search_eng
 void vise::search_engine_manager::load_search_engine(std::string search_engine_id) {
   load_search_engine_mutex_.lock();
 
-  if ( ! is_search_engine_loaded(search_engine_id) ) {
-    boost::filesystem::path se_data_dir  = data_dir_ / search_engine_id;
-    boost::filesystem::path se_asset_dir = asset_dir_ / search_engine_id;
-    boost::filesystem::path se_temp_dir  = temp_dir_ / search_engine_id;
-    vise::search_engine *se = new vise::relja_retrival(search_engine_id,
-                                                       se_data_dir,
-                                                       se_asset_dir,
-                                                       se_temp_dir);
-    se->init();
-    se->load();
-    search_engine_list_.insert( std::pair<std::string, vise::search_engine*>(search_engine_id, se) );
+  try {
+    if ( ! is_search_engine_loaded(search_engine_id) ) {
+      boost::filesystem::path se_data_dir  = data_dir_ / search_engine_id;
+      boost::filesystem::path se_asset_dir = asset_dir_ / search_engine_id;
+      boost::filesystem::path se_temp_dir  = temp_dir_ / search_engine_id;
+      vise::search_engine *se = new vise::relja_retrival(search_engine_id,
+                                                         se_data_dir,
+                                                         se_asset_dir,
+                                                         se_temp_dir);
+      se->init();
+      se->load();
+      search_engine_list_.insert( std::pair<std::string, vise::search_engine*>(search_engine_id, se) );
+    }
+  } catch (std::exception &e) {
+    BOOST_LOG_TRIVIAL(debug) << "failed to load search engine [" << search_engine_id << "] : "
+                             << e.what();
   }
 
   load_search_engine_mutex_.unlock();
@@ -427,12 +432,12 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
            << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
       response.set_field("Content-Type", "text/html");
       response.set_payload(html.str());
-      BOOST_LOG_TRIVIAL(debug) << "responded with html";
+      //BOOST_LOG_TRIVIAL(debug) << "responded with html";
     } else {
       if ( uri_param.find("format")->second == "json" ) {
         response.set_field("Content-Type", "application/json");
         response.set_payload(json.str());
-        BOOST_LOG_TRIVIAL(debug) << "responded with json";
+        //BOOST_LOG_TRIVIAL(debug) << "responded with json";
       } else {
         response.set_status(400);
       }
@@ -528,12 +533,12 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
            << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
       response.set_field("Content-Type", "text/html");
       response.set_payload(html.str());
-      BOOST_LOG_TRIVIAL(debug) << "responded with html containing " << file_id_list.size() << " entries";
+      //BOOST_LOG_TRIVIAL(debug) << "responded with html containing " << file_id_list.size() << " entries";
     } else {
       if ( uri_param.find("format")->second == "json" ) {
         response.set_field("Content-Type", "application/json");
         response.set_payload(json.str());
-        BOOST_LOG_TRIVIAL(debug) << "responded with json containing " << file_id_list.size() << " entries";
+        //BOOST_LOG_TRIVIAL(debug) << "responded with json containing " << file_id_list.size() << " entries";
       } else {
         response.set_status(400);
       }
@@ -627,6 +632,13 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
          << "\"query_uri_prefix\":\"" << get_query_uri_prefix(search_engine_id) << "\","
          << "\"QUERY_RESULT_SIZE\":" << result_file_id.size() << ","
          << "\"query_result_subset\":[";
+
+    if ( count == 0 ) {
+      // indicates to return all results
+      from = 0;
+      count = result_score.size();
+    }
+
     for ( std::size_t i = from; (i < result_score.size()) && (i < (from + count)); ++i ) {
       if ( i != from ) {
         json << ",";
@@ -653,12 +665,12 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
            << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
       response.set_field("Content-Type", "text/html");
       response.set_payload(html.str());
-      BOOST_LOG_TRIVIAL(debug) << "responded with html containing " << result_score.size() << " entries";
+      //BOOST_LOG_TRIVIAL(debug) << "responded with html containing " << result_score.size() << " entries";
     } else {
       if ( uri_param.find("format")->second == "json" ) {
         response.set_field("Content-Type", "application/json");
         response.set_payload(json.str());
-        BOOST_LOG_TRIVIAL(debug) << "responded with json containing " << result_score.size() << " entries";
+        //BOOST_LOG_TRIVIAL(debug) << "responded with json containing " << result_score.size() << " entries";
       } else {
         response.set_status(400);
       }

@@ -24,6 +24,12 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
   //vise::util::print_map("uri_param", uri_param);
 
   if ( request.method_ == "POST" ) {
+    response.set_status(400);
+    return;
+  }
+
+  /*
+  if ( request.method_ == "POST" ) {
     if ( vise::util::starts_with(request.uri_, "/vise/admin/") ) {
       if ( uri_components.size() < 3 ) {
         response.set_status(400);
@@ -64,6 +70,7 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
       return;
     }
   }
+  */
 
   // For the sake of completeness, vise includes a minimal (and possibly inefficient) file content server.
   // In production environments, the GET requests should be handled by ngnix server.

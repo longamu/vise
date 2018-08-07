@@ -14,3 +14,19 @@ function _vise_init_top_nav(d, nav) {
   nav.innerHTML = search_engine_id + html.join('&nbsp;|&nbsp;');
 }
 
+function _vise_save_data_as_local_file(data, filename) {
+  var a      = document.createElement('a');
+  a.href     = URL.createObjectURL(data);
+  a.target   = '_blank';
+  a.download = filename;
+
+  // simulate a mouse click event
+  var event = new MouseEvent('click', {
+    view: window,
+    bubbles: true,
+    cancelable: true
+  });
+
+  a.dispatchEvent(event);
+}
+

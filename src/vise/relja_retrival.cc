@@ -172,6 +172,10 @@ bool vise::relja_retrival::load() {
 bool vise::relja_retrival::unload() {
   BOOST_LOG_TRIVIAL(debug) << "vise::relja_retrival::unload()";
 
+  if ( ! is_search_engine_loaded_ ) {
+    return false;
+  }
+
   delete cons_queue_;
 
   if ( hamming_emb_ != NULL ) {
@@ -245,7 +249,7 @@ bool vise::relja_retrival::query_using_file_region(unsigned int file_id,
     }
   }
 
-  BOOST_LOG_TRIVIAL(debug) << "query_using_file_region(): file_id" << file_id << ", "
+  BOOST_LOG_TRIVIAL(debug) << "query_using_file_region(): file_id=" << file_id << ", "
                            << "region=[" << x << "," << y << "," << w << "," << h << "], "
                            << "search result = " << result_file_id.size();
 }
@@ -268,8 +272,8 @@ void vise::relja_retrival::get_filelist(const std::string filename_regex,
       file_id_list.push_back(i);
     }
   }
-  BOOST_LOG_TRIVIAL(debug) << "get_filelist(): filename_regex=" << filename_regex
-                           << " => " << file_id_list.size();
+  BOOST_LOG_TRIVIAL(debug) << "get_filelist(): filename_regex=[" << filename_regex << "]"
+                           << ", file_id_list=" << file_id_list.size();
 }
 
 uint32_t vise::relja_retrival::get_filelist_size() {

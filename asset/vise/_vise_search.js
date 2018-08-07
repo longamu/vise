@@ -97,12 +97,21 @@ function _vise_search_update_page_nav(d, navbar) {
   navinfohtml.push( d.query.from + d.query.show_to );
   navinfo.innerHTML = navinfohtml.join('');
 
-  // filelist filter input
+  // export search result
   var navtool = document.createElement('div');
   navtool.classList.add('navtool');
-  navtool.innerHTML = '&nbsp;'; // empty
   navbar.appendChild(navtool);
+  var navtoolhtml = [];
+  navtoolhtml.push( '<span>Export search results as</span>&nbsp;' );
+  navtoolhtml.push( '<select id="search_result_export_format">' );
+  navtoolhtml.push( '<option value="plain_csv" selected>csv</option>' );
+  navtoolhtml.push( '<option value="plain_json">json</option>' );
+  navtoolhtml.push( '<option value="via_csv">VIA csv</option>' );
+  navtoolhtml.push( '</select>' );
+  navtoolhtml.push( '&nbsp;<button type="submit" onclick="_vise_search_export_search_result()">Export</button>' );
+  navtool.innerHTML = navtoolhtml.join('');
 
+  // next,prev page buttons
   var navbuttons = document.createElement('div');
   navbuttons.classList.add('navbuttons');
   navbar.appendChild(navbuttons);
@@ -584,4 +593,136 @@ function _vise_search_now_get_prev_uri(d) {
   uri.push('show_count=' + d.query.show_count );
 
   return _vise_search_now_get_search_uri(d) + uri.join('&');
+}
+
+//
+// search result export
+//
+function _vise_search_export_search_result() {
+  var p = document.getElementById('search_result_export_format');
+  var format = p.options[ p.selectedIndex ].value;
+  var ext = format.split('_')[1];    
+
+  var search_result_data = _vise_search_result;
+  if ( _vise_search_result.QUERY_RESULT_SIZE > _vise_search_result.query.count ) {
+    // get full search results from server
+    // search_result_data = ...
+    var uri = [];
+    uri.push('from=0' );
+
+    uri.push('count=0' );
+    uri.push('show_from=0' );
+    uri.push('show_count=0' );
+    uri.push('format=json' );
+
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener('load', function() {
+      var response_str = xhr.responseText;
+      var search_result_data = JSON.parse(response_str);
+
+      var d = _vise_search_prepare_search_result_export(search_result_data, format);
+      // Javascript strings (DOMString) is automatically converted to utf-8
+      // see: https://developer.mozilla.org/en-US/docs/Web/API/Blob/Blob
+      var blob_mime = {type: 'text/' + ext + ';charset=utf-8'};
+      var export_blob = new Blob( [ d ], blob_mime);
+      _vise_save_data_as_local_file(export_blob, 'vise_search_result.' + ext);
+    });
+    xhr.open('GET', _vise_search_now_get_search_uri(_vise_search_result) + uri.join('&'));
+    xhr.send();
+  } else {
+    var d = _vise_search_prepare_search_result_export(search_result_data, format);
+    // Javascript strings (DOMString) is automatically converted to utf-8
+    // see: https://developer.mozilla.org/en-US/docs/Web/API/Blob/Blob
+    var blob_mime = {type: 'text/' + ext + ';charset=utf-8'};
+    var export_blob = new Blob( [ d ], blob_mime);
+    _vise_save_data_as_local_file(export_blob, 'vise_search_result.' + ext);
+  }
+}
+
+
+function _vise_search_prepare_search_result_export(data, format) {
+  var export_data = '';
+  switch(format) {
+    case 'plain_csv':
+      var d = [];
+      d.push('file_id,type,filename,score,x,y,width,height,homography00,homography01,homography02,homography10,homography11,homography12');
+      var row = [];
+      row.push(data.query.file_id);
+      row.push('query');
+      row.push(data.query.filename);
+      row.push('-1');
+      row.push(data.query.x);
+      row.push(data.query.y);
+      row.push(data.query.width);
+      row.push(data.query.height);
+      row.push('1,0,0,0,1,0,0,0,1');
+      d.push( row.join(',') );
+      var i;
+      for ( i = 0; i < data.query_result_subset.length; ++i ) {
+        row = [];
+        row.push(data.query_result_subset[i].file_id);
+        row.push('match');
+        row.push(data.query_result_subset[i].filename);
+        row.push(data.query_result_subset[i].score);
+        row.push(data.query.x);
+        row.push(data.query.y);
+        row.push(data.query.width);
+        row.push(data.query.height);
+        row.push(data.query_result_subset[i].H[0]);
+        row.push(data.query_result_subset[i].H[1]);
+        row.push(data.query_result_subset[i].H[2]);
+        row.push(data.query_result_subset[i].H[3]);
+        row.push(data.query_result_subset[i].H[4]);
+        row.push(data.query_result_subset[i].H[5]);      
+        d.push( row.join(',') );
+      }
+      export_data = d.join('\n');
+      break;
+    case 'plain_json':
+      export_data = JSON.stringify(data);
+      break;
+    case 'via_csv':
+      var d = [];
+      d.push('filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes');
+      var row = [];
+      row.push(data.query.filename);
+      row.push('-1');
+      row.push('"{""file_id"":' + data.query.file_id + '}"');
+      row.push('1,0');
+      row.push('"{""name"":""rect"",""x"":' + data.query.x + ',""y"":' + data.query.y + ',""width"":' + data.query.width + ',""height"":' + data.query.height + '}"');
+      row.push('"{""type"":""query""}"');
+      d.push( row.join(',') );
+      var i;
+      var query_region = [ data.query.x, data.query.y, data.query.width, data.query.height ];
+
+      for ( i = 0; i < data.query_result_subset.length; ++i ) {
+        row = [];
+        row.push(data.query_result_subset[i].filename);
+        row.push('-1');
+        row.push('"{""file_id"":' + data.query_result_subset[i].file_id + '}"');
+        row.push('1,0');
+        var dimg = _vise_search_tx_rect_using_homography(query_region, data.query_result_subset[i].H);
+        var all_points_x = [];
+        all_points_x.push(dimg[0]);
+        all_points_x.push(dimg[2]);
+        all_points_x.push(dimg[4]);
+        all_points_x.push(dimg[6]);
+        var all_points_y = [];
+        all_points_y.push(dimg[1]);
+        all_points_y.push(dimg[3]);
+        all_points_y.push(dimg[5]);
+        all_points_y.push(dimg[7]);
+        row.push('"{""name"":""polygon"",""all_points_x"":[' + all_points_x + '],""all_points_y"":[' + all_points_y + ']}"');
+        row.push('"{""type"":""match"",""score"":' + data.query_result_subset[i].score + '}"');
+        d.push( row.join(',') );
+      }
+      export_data = d.join('\n');
+      break;
+    case 'via_json':
+      break;
+    default:
+      console.log('unknown export format: ' + format);
+      break;
+  }
+  return export_data;
 }
