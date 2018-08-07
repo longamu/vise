@@ -329,18 +329,14 @@ void vise::relja_retrival::load_config() {
     config_.clear();
     boost::property_tree::ini_parser::read_ini(config_fn_.string(), config_);
 
-    dset_fn_   = config_.get<std::string>( search_engine_id_ + ".dsetFn" );
-    clst_fn_   = config_.get<std::string>( search_engine_id_ + ".clstFn" );
-    iidx_fn_   = config_.get<std::string>( search_engine_id_ + ".iidxFn" );
-    fidx_fn_   = config_.get<std::string>( search_engine_id_ + ".fidxFn" );
-    wght_fn_   = config_.get<std::string>( search_engine_id_ + ".wghtFn" );
-    hamm_fn_   = config_.get<std::string>( search_engine_id_ + ".hammFn" );
-    assign_fn_   = config_.get<std::string>( search_engine_id_ + ".assignFn" );
-    imlist_fn_   = config_.get<std::string>( search_engine_id_ + ".imagelistFn" );
-
-    data_dir_  = config_.get<std::string>( search_engine_id_ + ".data_dir" );
-    asset_dir_ = config_.get<std::string>( search_engine_id_ + ".asset_dir" );
-    temp_dir_  = config_.get<std::string>( search_engine_id_ + ".temp_dir" );
+    dset_fn_   = data_dir_ / config_.get<std::string>( search_engine_id_ + ".dsetFn" );
+    clst_fn_   = data_dir_ / config_.get<std::string>( search_engine_id_ + ".clstFn" );
+    iidx_fn_   = data_dir_ / config_.get<std::string>( search_engine_id_ + ".iidxFn" );
+    fidx_fn_   = data_dir_ / config_.get<std::string>( search_engine_id_ + ".fidxFn" );
+    wght_fn_   = data_dir_ / config_.get<std::string>( search_engine_id_ + ".wghtFn" );
+    hamm_fn_   = data_dir_ / config_.get<std::string>( search_engine_id_ + ".hammFn" );
+    assign_fn_   = data_dir_ / config_.get<std::string>( search_engine_id_ + ".assignFn" );
+    imlist_fn_   = data_dir_ / config_.get<std::string>( search_engine_id_ + ".imagelistFn" );
 
     image_dir_     = asset_dir_ / "image";
     thumbnail_dir_ = asset_dir_ / "thumbnail";
