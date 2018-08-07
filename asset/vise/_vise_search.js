@@ -64,52 +64,111 @@ function _vise_search() {
   var nav = document.createElement('div');
   var query_container = document.createElement('div');
   var query = document.createElement('div');
-  var result = document.createElement('div');
+  var search_result = document.createElement('div');
   page.setAttribute('id', 'search_result_page');
+  search_result.setAttribute('id', 'search_result');
   page.classList.add('page');
   nav.classList.add('nav');
   query_container.classList.add('query_container');
   query.classList.add('query')
-  result.classList.add('result')
+  search_result.classList.add('result')
   page.appendChild(nav);
   query_container.appendChild(query);
   page.appendChild(query_container);
-  page.appendChild(result);
+  page.appendChild(search_result);
 
   _vise_init_top_nav(_vise_search_result, nav);
   _vise_search_show_query(_vise_search_result, query);
-
-  _vise_search_show_all_result(_vise_search_result, result);
+  _vise_search_show_all_result(_vise_search_result, search_result);
 
   document.body.appendChild(page);
-  //_vise_search_show_match_detail(0);
+}
+
+function _vise_search_update_page_nav(d, navbar) {
+  // info. about filelist
+  var navinfo = document.createElement('div');
+  navinfo.classList.add('navinfo');
+  navbar.appendChild(navinfo);
+
+  var navinfohtml = [];
+  navinfohtml.push( 'Total ' + d.QUERY_RESULT_SIZE + ' images match the query region. Showing images from&nbsp;' );
+  navinfohtml.push( d.query.from + d.query.show_from );
+  navinfohtml.push( '&nbsp;to&nbsp;' );
+  navinfohtml.push( d.query.from + d.query.show_to );
+  navinfo.innerHTML = navinfohtml.join('');
+
+  // filelist filter input
+  var navtool = document.createElement('div');
+  navtool.classList.add('navtool');
+  navtool.innerHTML = '&nbsp;'; // empty
+  navbar.appendChild(navtool);
+
+  var navbuttons = document.createElement('div');
+  navbuttons.classList.add('navbuttons');
+  navbar.appendChild(navbuttons);
+  var links = [];
+
+  console.log('_vise_search_update_page_nav(): from=' + d.query.from + ', count=' + d.query.count + ', show_from=' + d.query.show_from + ', show_count=' + d.query.show_count + ', show_to=' + d.query.show_to);
+  // check if this page is the first page
+  if ( (d.query.from + d.query.show_from) !== 0) {
+    links.push( '<a href="' + _vise_search_now_get_first_uri(d) + '" title="Jump to first page">First</a>' );
+    // check if Prev page contents can be served from cache
+    var prev_page_from = d.query.show_from - d.query.show_count;
+    if ( prev_page_from >= 0 ) {
+      // show next page contents from cache
+      links.push( '<span class="text_button" title="Previous Page" onclick="_vise_search_prev_page_from_cache()">Prev</span>' );
+    } else {
+      // fetch new contents to show next page
+      links.push( '<a href="' + _vise_search_now_get_prev_uri(d) + '" title="Previous Page">Prev</a>' );
+    }
+  } else {
+    // first page, hence deactivate Prev button
+    links.push( '<span>First</span>' );
+    links.push( '<span>Prev</span>' );
+  }
+
+  if ( ( d.query.from + d.query.show_to ) < (d.QUERY_RESULT_SIZE - 1 ) ) {
+    // check if Next page contents can be served from cache
+    var next_page_from = d.query.from + d.query.show_to;
+    var next_page_count = d.query.show_count;
+    if ( ( next_page_from + next_page_count) < (d.query.from + d.query.count) ) {
+      // show next page contents from cache
+      links.push( '<span class="text_button" title="Next Page" onclick="_vise_search_next_page_from_cache()">Next</span>' );
+    } else {
+      // fetch new contents to show next page
+      links.push( '<a href="' + _vise_search_now_get_next_uri(d) + '" title="Next Page">Next</a>' );
+    }
+  } else {
+    // end of list, hence deactivate Next button
+    links.push( '<span>Next</span>' );
+  }
+
+  navbuttons.innerHTML = links.join('&nbsp;|&nbsp;');
 }
 
 function _vise_search_show_all_result(d, content_panel) {
   var navbar = document.createElement('div');
   navbar.classList.add('navbar');
-  navbar.innerHTML = "Total " + d.QUERY_RESULT_SIZE + " images match the query region. Showing " + d.query.from + " to " + (d.query.from + d.query_result_subset.length);
-
-  var navtool = document.createElement('span');
-  navtool.classList.add('navtool');
-  var links = [];
-  if ( d.query.from !== 0 ) {
-    links.push( '<a href="' + _vise_search_now_get_prev_uri(d) + '" title="Prev">Prev</a>' );
-  }
-  if ( d.query_result_subset.length === d.query.result_count ) {
-    links.push( '<a href="' + _vise_search_now_get_next_uri(d) + '" title="Next">Next</a>' );
-  }
-  navtool.innerHTML = links.join('&nbsp;|&nbsp;');
-
-  navbar.appendChild(navtool);
   content_panel.appendChild(navbar);
+
+  d.query.show_to = d.query.show_from + d.query.show_count;
+  if ( d.query.show_to > d.query_result_subset.length ) {
+    d.query.show_to = d.query_result_subset.length - 1;
+  }
+
+  // filelist navigation bar : prev,next, ... buttons
+  _vise_search_update_page_nav(d, navbar);
+
+  // clear floats
+  var float_clear = document.createElement('div');
+  float_clear.setAttribute('style', 'clear:both;');
+  navbar.appendChild(float_clear);
 
   var img_grid = document.createElement('div');
   img_grid.classList.add('img_grid');
 
-  var i, n, ri;
-  n = d.query_result_subset.length;
-  for ( i = 0; i < n; ++i ) {
+  var i;
+  for ( i = d.query.show_from; i < d.query.show_to; ++i ) {
     _vise_search_show_result_i(d, i, img_grid);
   }
   content_panel.appendChild(img_grid)
@@ -143,6 +202,26 @@ function _vise_search_show_result_i(d, i, content_panel) {
 */
   content_panel.appendChild(img_with_region);
 }
+
+
+function _vise_search_next_page_from_cache() {
+  _vise_search_result.query.show_from = _vise_search_result.query.show_from + _vise_search_result.query.show_count;
+  _vise_search_result.query.show_count = _vise_search_result.query.show_count;
+
+  var search_result = document.getElementById('search_result');
+  search_result.innerHTML = '';
+  _vise_search_show_all_result(_vise_search_result, search_result);
+}
+
+function _vise_search_prev_page_from_cache() {
+  _vise_search_result.query.show_from = _vise_search_result.query.show_from - _vise_search_result.query.show_count;
+  _vise_search_result.query.show_count = _vise_search_result.query.show_count;
+
+  var search_result = document.getElementById('search_result');
+  search_result.innerHTML = '';
+  _vise_search_show_all_result(_vise_search_result, search_result);
+}
+
 
 function _vise_search_tx_rect_using_homography(drect, H) {
   var points = [];
@@ -328,7 +407,8 @@ function _vise_search_show_match_pair_comparison(match_index, content) {
   var r3c1 = document.createElement('span');
   r3.appendChild(r3c1);
   r3c1.classList.add('col');
-  r3c1.innerHTML = '[' + _vise_search_result.query.file_id + '] ' + _vise_search_result.query.filename;
+  var query_img_url = _vise_search_result.query_uri_prefix + '_file?file_id=' + _vise_search_result.query.file_id;
+  r3c1.innerHTML = '<a href="' + query_img_url + '">' + _vise_search_result.query.filename + '</a>';
   var r3c2 = document.createElement('span');
   r3.appendChild(r3c2);
   r3c2.classList.add('col');
@@ -336,8 +416,9 @@ function _vise_search_show_match_pair_comparison(match_index, content) {
   var r3c3 = document.createElement('span');
   r3.appendChild(r3c3);
   r3c3.classList.add('col');
-  r3c3.innerHTML  = '[' + _vise_search_result.query_result_subset[match_index].file_id + '] ' + _vise_search_result.query_result_subset[match_index].filename;
-  r3c3.innerHTML += '<br/>( score = ' + _vise_search_result.query_result_subset[match_index].score + ' )';
+  var match_img_url = _vise_search_result.query_uri_prefix + '_file?file_id=' + _vise_search_result.query_result_subset[match_index].file_id;
+  r3c3.innerHTML  = '<a href="' + match_img_url + '">' + _vise_search_result.query_result_subset[match_index].filename + '</a>';
+  r3c3.innerHTML += '<br/>( match score = ' + _vise_search_result.query_result_subset[match_index].score + ' )';
 }
 
 function _vise_search_get_img_element(src, id, classname, alt, title) {
@@ -429,30 +510,6 @@ function _vise_search_set_transform_and_cropped_img(element, img_src, x, y, widt
 }
 
 //
-// page navigation utils
-//
-function _vise_search_now_get_search_uri(d) {
-  var uri = [];
-  uri.push(d.query_uri_prefix + '_search?' + 'file_id=' + d.query.file_id);
-  uri.push('region=' + d.query.x + ',' + d.query.y + ',' + d.query.width + ',' + d.query.height);
-  return uri;
-}
-
-function _vise_search_now_get_next_uri(d) {
-  var uri = [];
-  uri.push('from=' + (parseInt(d.query.from) + parseInt(d.query.result_count)) );
-  uri.push('result_count=' + d.query.result_count );
-  return _vise_search_now_get_search_uri(d) + uri.join('&');
-}
-
-function _vise_search_now_get_prev_uri(d) {
-  var uri = [];
-  uri.push('from=' + (parseInt(d.query.from) - parseInt(d.query.result_count)) );
-  uri.push('result_count=' + d.query.result_count );
-  return _vise_search_now_get_search_uri(d) + uri.join('&');
-}
-
-//
 // affine homography utils
 //
 function _vise_homography_inverse(H) {
@@ -477,4 +534,54 @@ function _vise_homography_normalize(H) {
   h[3]/= h[8]; h[4]/= h[8]; h[5]/= h[8];
   h[6]/= h[8]; h[7]/= h[8]; h[8]= 1.0;
   return h;
+}
+
+
+//
+// page navigation utils
+//
+function _vise_search_now_get_search_uri(d) {
+  var uri = d.query_uri_prefix + '_search?file_id=' + d.query.file_id + '&' + 'x=' + d.query.x + '&y=' + d.query.y + '&width=' + d.query.width + '&height=' + d.query.height + '&';
+  return uri;
+}
+
+
+function _vise_search_now_get_first_uri(d) {
+  var uri = [];
+  uri.push('from=0' );
+
+  uri.push('count=1024' );
+  uri.push('show_from=0' );
+  uri.push('show_count=45' );
+  return _vise_search_now_get_search_uri(d) + uri.join('&');
+}
+
+function _vise_search_now_get_next_uri(d) {
+  var uri = [];
+  var new_from = d.query.from + d.query.show_to;
+  uri.push('from=' + new_from );
+
+  uri.push('count=' + d.query.count );
+  uri.push('show_from=0' );
+  uri.push('show_count=' + d.query.show_count );
+  return _vise_search_now_get_search_uri(d) + uri.join('&');
+}
+
+function _vise_search_now_get_prev_uri(d) {
+  var uri = [];
+  var new_from = d.query.from - d.query.count;
+  if ( new_from < 0 ) {
+    new_from = 0;
+  }
+  uri.push('from=' + new_from );
+
+  uri.push('count=' + d.query.count );
+  var show_from = d.query.from - d.query.show_to - new_from;
+  if ( show_from < 0 ) {
+    show_from = 0;
+  }
+  uri.push('show_from=' + show_from);
+  uri.push('show_count=' + d.query.show_count );
+
+  return _vise_search_now_get_search_uri(d) + uri.join('&');
 }

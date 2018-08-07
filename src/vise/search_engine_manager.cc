@@ -545,12 +545,14 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
     // validation
     if ( uri_param.count("file_id") != 1 ) {
       response.set_status(400);
+      return;
     }
     if ( uri_param.count("x")      != 1 ||
          uri_param.count("y")      != 1 ||
          uri_param.count("width")  != 1 ||
          uri_param.count("height") != 1 ) {
       response.set_status(400);
+      return;
     }
 
     unsigned int file_id;
