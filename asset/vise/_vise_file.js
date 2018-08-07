@@ -70,7 +70,7 @@ function _vise_file_init_via_panel(d, panel) {
   _vise_file_via = new _via();
   _vise_file_via.init(panel);
 
-  var img_url = d.image_uri_prefix + d.image_uri_namespace + d.filename;
+  var img_url = d.image_uri_prefix + d.image_uri_namespace + d.file_id;
   console.log(img_url)
   var promise = _vise_file_via.m.add_file_from_url(img_url, 'image');
   promise.then( function(ok) {
