@@ -190,7 +190,7 @@ function _vise_search_show_result_i(d, i, content_panel) {
   img_with_region.setAttribute('onclick', '_vise_search_show_match_detail(' + i + ')');
 
   var img = document.createElement('img');
-  img.setAttribute('src', d.image_uri_prefix + d.image_uri_namespace + d.query_result_subset[i].filename);
+  img.setAttribute('src', d.image_uri_prefix + d.image_uri_namespace + d.query_result_subset[i].file_id);
   img.addEventListener('load', function(e) {
     // automatically set viewBox attribute of SVG element so that
     // region defined in original image space is correctly scaled
@@ -262,7 +262,7 @@ function _vise_search_show_query(d, content_panel) {
   img_with_region.classList.add('img_with_region');
 
   var img = document.createElement('img');
-  img.setAttribute('src', d.image_uri_prefix + d.image_uri_namespace + d.query.filename);
+  img.setAttribute('src', d.image_uri_prefix + d.image_uri_namespace + d.query.file_id);
   img.addEventListener('load', function(e) {
     // automatically set viewBox attribute of SVG element so that
     // the correct region is visible
@@ -393,7 +393,7 @@ function _vise_search_show_match_pair_comparison(match_index, content) {
   var r2c1 = document.createElement('span');
   r2.appendChild(r2c1);
   r2c1.classList.add('query');
-  var qsrc = _vise_search_result.image_uri_prefix + _vise_search_result.image_uri_namespace + _vise_search_result.query.filename;
+  var qsrc = _vise_search_result.image_uri_prefix + _vise_search_result.image_uri_namespace + _vise_search_result.query.file_id;
   _vise_search_set_cropped_img(r2c1, qsrc, _vise_search_result.query.x, _vise_search_result.query.y, _vise_search_result.query.width, _vise_search_result.query.height)
 
   // center: compare element
@@ -406,7 +406,7 @@ function _vise_search_show_match_pair_comparison(match_index, content) {
   var r2c3 = document.createElement('span');
   r2.appendChild(r2c3);
   r2c3.classList.add('match');
-  var msrc = _vise_search_result.image_uri_prefix + _vise_search_result.image_uri_namespace + _vise_search_result.query_result_subset[match_index].filename;
+  var msrc = _vise_search_result.image_uri_prefix + _vise_search_result.image_uri_namespace + _vise_search_result.query_result_subset[match_index].file_id;
   _vise_search_set_transform_and_cropped_img(r2c3, msrc, _vise_search_result.query.x, _vise_search_result.query.y, _vise_search_result.query.width, _vise_search_result.query.height, _vise_search_result.query_result_subset[match_index].H);
 
   // filename row
