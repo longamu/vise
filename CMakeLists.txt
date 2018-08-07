@@ -45,6 +45,14 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 	set(CMAKE_CXX_FLAGS "-fpermissive")
 endif()
 
+## MPI
+find_package(MPI REQUIRED)
+if (MPI_FOUND)
+    include_directories(SYSTEM ${MPI_INCLUDE_PATH})
+else (MPI_FOUND)
+    message(SEND_ERROR "This application cannot compile without MPI")
+endif (MPI_FOUND)
+
 ## Boost
 find_package(Boost 1.64.0 COMPONENTS mpi filesystem system thread atomic log serialization REQUIRED)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
