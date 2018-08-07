@@ -58,18 +58,12 @@ function _vise_filelist() {
   page.appendChild(nav);
   page.appendChild(filelist);
 
-  _vise_filelist_init_nav(_vise_filelist, nav);
+  _vise_init_top_nav(_vise_filelist, nav);
   _vise_filelist_show_all_files(_vise_filelist, filelist);
 
   document.body.appendChild(page);
 }
 
-function _vise_filelist_init_nav(d, nav) {
-  nav.innerHTML  = '<a href="' + d.home_uri + '" title="VISE home page which shows a list of available search engines">Home</a>';
-  nav.innerHTML += '<span class="left_space">' + d.search_engine_id + ' : </span>';
-  nav.innerHTML += '<a href="" title="Search using image the search engine dataset">Search</a> | ';
-  nav.innerHTML += '<a href="" title="Upload a new image and search using this image">Upload & Search</a> | ';
-}
 
 function _vise_filelist_update_page_nav(d, navbar) {
   // info. about filelist
@@ -99,12 +93,12 @@ function _vise_filelist_update_page_nav(d, navbar) {
 
   var navtoolhtml = [];
   navtoolhtml.push( '<form method="GET" action="' + d.query_uri_prefix + '_filelist">' );
-  navtoolhtml.push( '<input name="filename_regex" type="text" title="type partial filename in order to show all files matching that keyword" id="filename_regex" placeholder="type partial filename to filter files" size="20" value="' + d.filename_regex + '">' );
+  navtoolhtml.push( '<input name="filename_regex" type="text" title="For example, filtering using keyword abc shows all images whose filename contains the keyword abc" id="filename_regex" placeholder="type partial filename to filter this list" size="34" value="' + d.filename_regex + '">' );
   navtoolhtml.push( '<input type="hidden" name="from" value="0">' );
   navtoolhtml.push( '<input type="hidden" name="count" value="137">' );
   navtoolhtml.push( '<input type="hidden" name="show_from" value="0">' );
   navtoolhtml.push( '<input type="hidden" name="show_count" value="45">' );
-  navtoolhtml.push( '<button type="submit">Filter</button>' );
+  navtoolhtml.push( '&nbsp;<button type="submit">Filter</button>' );
   navtoolhtml.push( '</form>' );
 
   navtool.innerHTML = navtoolhtml.join('');
@@ -117,6 +111,7 @@ function _vise_filelist_update_page_nav(d, navbar) {
   console.log('_vise_filelist_update_page_nav(): from=' + d.from + ', count=' + d.count + ', show_from=' + d.show_from + ', show_count=' + d.show_count);
   // check if this page is the first page
   if ( (d.from + d.show_from) !== 0) {
+    links.push( '<a href="' + _vise_filelist_now_get_first_uri(d) + '" title="Jump to first page">First</a>' );
     // check if Prev page contents can be served from cache
     var prev_page_from = d.show_from - d.show_count;
     if ( prev_page_from >= 0 ) {
@@ -128,6 +123,7 @@ function _vise_filelist_update_page_nav(d, navbar) {
     }
   } else {
     // first page, hence deactivate Prev button
+    links.push( '<span>First</span>' );
     links.push( '<span>Prev</span>' );
   }
 
@@ -206,7 +202,10 @@ function _vise_filelist_show_file_i(d, i, content_panel) {
   var img_with_region = document.createElement('div');
   img_with_region.classList.add('img_with_region');
   img_with_region.classList.add('cursor_pointer');
-  img_with_region.setAttribute('onclick', '@todo');
+
+  var link = document.createElement('a');
+  link.setAttribute('href', d.query_uri_prefix + '_file?file_id=' + d.file_id_list_subset[i]);
+  link.setAttribute('title', 'click to view and search using this image');
 
   var img = document.createElement('img');
   img.setAttribute('src', d.image_uri_prefix + d.image_uri_namespace + d.file_id_list_subset[i]);
@@ -217,7 +216,8 @@ function _vise_filelist_show_file_i(d, i, content_panel) {
     this.nextElementSibling.style.display = 'block'; // by default, the region is invisible. Now, make the region visible
   });
 
-  img_with_region.appendChild(img);
+  link.appendChild(img);
+  img_with_region.appendChild(link);
 
   // debug
   var SVG_NS = 'http://www.w3.org/2000/svg';
@@ -244,6 +244,18 @@ function _vise_filelist_now_get_filelist_uri(d) {
     uri += 'filename_regex=' + d.filename_regex + '&';
   }
   return uri;
+}
+
+
+function _vise_filelist_now_get_first_uri(d) {
+  var uri = [];
+  var new_from = d.from + d.show_to;
+  uri.push('from=0' );
+
+  uri.push('count=1024' );
+  uri.push('show_from=0' );
+  uri.push('show_count=45' );
+  return _vise_filelist_now_get_filelist_uri(d) + uri.join('&');
 }
 
 function _vise_filelist_now_get_next_uri(d) {

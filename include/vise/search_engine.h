@@ -38,11 +38,9 @@ namespace vise {
 
     virtual bool index()            = 0;
 
-    virtual void get_filelist(const uint32_t from, const uint32_t result_count,
-                              std::vector<uint32_t> &file_id_list,
-                              std::vector<std::string> &filename_list) = 0;
+    virtual void get_filelist(std::vector<unsigned int> &file_id_list) = 0;
     virtual void get_filelist(const std::string filename_regex,
-                              std::vector<uint32_t> &file_id_list) = 0;
+                              std::vector<unsigned int> &file_id_list) = 0;
 
     virtual uint32_t get_filelist_size() = 0;
 
@@ -51,6 +49,7 @@ namespace vise {
     virtual std::string get_filename_absolute_path(std::string filename) = 0;
     virtual std::string get_filename_absolute_path(unsigned int file_id) = 0;
     virtual std::string get_filename(unsigned int file_id)               = 0;
+    virtual unsigned int get_file_id(std::string filename)               = 0;
 
     static std::string get_search_engine_id(std::string name, std::string version) {
       return name + "/" + version;

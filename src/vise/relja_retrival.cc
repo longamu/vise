@@ -244,29 +244,24 @@ bool vise::relja_retrival::query_using_file_region(unsigned int file_id,
       result_H.push_back( {{it->second.H[0], it->second.H[1], it->second.H[2], it->second.H[3], it->second.H[4], it->second.H[5], it->second.H[6], it->second.H[7], it->second.H[8]}} );
     }
   }
+
+  BOOST_LOG_TRIVIAL(debug) << "query_using_file_region(): file_id" << file_id << ", "
+                           << "region=[" << x << "," << y << "," << w << "," << h << "], "
+                           << "search result = " << result_file_id.size();
 }
 
-void vise::relja_retrival::get_filelist(const unsigned int from, const unsigned int result_count,
-                                        std::vector<uint32_t> &file_id_list,
-                                        std::vector<std::string> &filename_list) {
-
-  BOOST_LOG_TRIVIAL(debug) << "get_filelist(): from=" << from << ", result_count=" << result_count;
+void vise::relja_retrival::get_filelist(std::vector<unsigned int> &file_id_list) {
 
   file_id_list.clear();
-  file_id_list.reserve(result_count);
-  filename_list.clear();
-  filename_list.reserve(result_count);
-
-  for ( uint32_t i = from; (i < dataset_->getNumDoc()) && (i < (from + result_count)); ++i ) {
+  for ( uint32_t i = 0; i < dataset_->getNumDoc(); ++i ) {
     file_id_list.push_back(i);
-    filename_list.push_back( dataset_->getInternalFn(i) );
   }
+  BOOST_LOG_TRIVIAL(debug) << "get_filelist(): file_id_list=" << file_id_list.size();
 }
 
 
 void vise::relja_retrival::get_filelist(const std::string filename_regex,
-                                        std::vector<uint32_t> &file_id_list) {
-
+                                        std::vector<unsigned int> &file_id_list) {
   file_id_list.clear();
   for ( uint32_t i = 0; i < dataset_->getNumDoc(); ++i ) {
     if ( dataset_->getInternalFn(i).find(filename_regex) != std::string::npos ) {
@@ -283,6 +278,10 @@ uint32_t vise::relja_retrival::get_filelist_size() {
 
 std::string vise::relja_retrival::get_filename(unsigned int file_id) {
   return dataset_->getInternalFn(file_id);
+}
+
+unsigned int vise::relja_retrival::get_file_id(std::string filename) {
+  return dataset_->getDocID(filename);
 }
 
 bool vise::relja_retrival::file_exists(std::string filename) {

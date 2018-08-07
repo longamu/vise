@@ -8,33 +8,45 @@
 /*
 precondition: variable '_vise_search_result_str' contains the JSON string
 representation of VISE search result in a format given below:
-  {
-    "search_engine_id": "ox5k/1",
-    "query": {
-      "file_id": 2,
-      "x": 156,
-      "y": 228,
-      "width": 316,
-      "height": 502,
-      "from": 0,
-      "result_count": 4
-    },
-    "image_uri_prefix": "/vise/asset/ox5k/1/image/",
-    "home_uri":"/vise/home.html",
-    "image_uri_prefix:"/vise/asset/ox5k/1/",
-    "image_uri_namespace":"image/",
-    "query_uri_prefix":""/vise/query/ox5k/1/",
-    "query_result_count":50,
-    "query_result_subset": [
-      {
-        "file_id": 30,
-        "filename": "all_souls_000040.jpg",
-        "metadata": "",
-        "score": 354,
-        "H": [1,0,0,0,1,0,0,0,1]
-      }, ...
-    ]
-  }
+{
+  "search_engine_id": "ox5k/1",
+  "query": {
+    "file_id": 55,
+    "filename": "all_souls_000075.jpg",
+    "x": 316,
+    "y": 176,
+    "width": 200,
+    "height": 283,
+    "from": 0,
+    "count": 3,
+    "show_from": 0,
+    "show_count": 45
+  },
+  "home_uri": "/vise/home.html",
+  "image_uri_prefix": "/vise/asset/ox5k/1/",
+  "image_uri_namespace": "image/",
+  "query_uri_prefix": "/vise/query/ox5k/1/",
+  "QUERY_RESULT_SIZE": 44,
+  "query_result_subset": [
+    {
+      "file_id": 55,
+      "filename": "all_souls_000075.jpg",
+      "metadata": "",
+      "score": 650.002,
+      "H": [
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1
+      ]
+    }, ...
+  ]
+}
 */
 
 function _vise_search() {
@@ -64,7 +76,7 @@ function _vise_search() {
   page.appendChild(query_container);
   page.appendChild(result);
 
-  _vise_search_init_nav(_vise_search_result, nav);
+  _vise_init_top_nav(_vise_search_result, nav);
   _vise_search_show_query(_vise_search_result, query);
 
   _vise_search_show_all_result(_vise_search_result, result);
@@ -73,17 +85,10 @@ function _vise_search() {
   //_vise_search_show_match_detail(0);
 }
 
-function _vise_search_init_nav(d, nav) {
-  nav.innerHTML  = '<a href="' + d.home_uri + '">Home</a>';
-  nav.innerHTML += '<span class="left_space">' + d.search_engine_id + ' : </span>';
-  nav.innerHTML += '<a href="" title="Search using image the search engine dataset">Search</a> | ';
-  nav.innerHTML += '<a href="" title="Upload a new image and search using this image">Upload & Search</a> | ';
-}
-
 function _vise_search_show_all_result(d, content_panel) {
   var navbar = document.createElement('div');
   navbar.classList.add('navbar');
-  navbar.innerHTML = "Total " + d.query_result_count + " images match the query region. Showing " + d.query.from + " to " + (d.query.from + d.query_result_subset.length);
+  navbar.innerHTML = "Total " + d.QUERY_RESULT_SIZE + " images match the query region. Showing " + d.query.from + " to " + (d.query.from + d.query_result_subset.length);
 
   var navtool = document.createElement('span');
   navtool.classList.add('navtool');

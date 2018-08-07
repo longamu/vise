@@ -376,11 +376,76 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
                                         const std::map<std::string, std::string> uri_param,
                                         const std::string request_body,
                                         http_response& response) {
+  if ( search_engine_command == "_file" ) {
+    unsigned int file_id;
+    std::string filename = "";
+    if ( uri_param.count("file_id") == 1 ) {
+      std::stringstream ss;
+      ss << uri_param.find("file_id")->second;
+      ss >> file_id;
+      filename = search_engine_list_[ search_engine_id ]->get_filename(file_id);
+    }
+
+    if ( uri_param.count("filename") == 1 ) {
+      filename = uri_param.find("filename")->second;
+      if ( search_engine_list_[ search_engine_id ]->file_exists(filename) ) {
+        file_id = search_engine_list_[ search_engine_id ]->get_file_id(filename);
+      } else {
+        filename = "";
+      }
+    }
+
+    if ( filename == "" ) {
+      response.set_status(400);
+      return;
+    }
+
+    // prepare json
+    std::ostringstream json;
+    json << "{\"search_engine_id\":\"" << search_engine_id << "\","
+         << "\"home_uri\":\"" << "/vise/home.html\","
+         << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
+         << "\"image_uri_namespace\":\"image/\","
+         << "\"query_uri_prefix\":\"" << get_query_uri_prefix(search_engine_id) << "\","
+         << "\"query_search_namespace\":\"_search\","
+         << "\"query_file_namespace\":\"_file\","
+         << "\"query_filelist_namespace\":\"_filelist\","
+         << "\"filename\":\"" << filename << "\","
+         << "\"file_id\":" << file_id
+         << "}";
+
+    if ( uri_param.count("format") == 0 ) {
+      // return html
+      std::ostringstream html;
+      html << vise::search_engine_manager::RESPONSE_HTML_PAGE_PREFIX
+           << "\n<body onload=\"_vise_file()\">"
+           << "\n  <script>var _vise_file_str = '" << json.str() << "';\nvar _vise_file = {};</script>"
+           << "\n  <script src=\"/vise/_vise_common.js\"></script>"
+           << "\n  <script src=\"/vise/_via_min.js\"></script>"
+           << "\n  <script src=\"/vise/_vise_file.js\"></script>"
+           << "\n</body>\n"
+           << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
+      response.set_field("Content-Type", "text/html");
+      response.set_payload(html.str());
+      BOOST_LOG_TRIVIAL(debug) << "responded with html";
+    } else {
+      if ( uri_param.find("format")->second == "json" ) {
+        response.set_field("Content-Type", "application/json");
+        response.set_payload(json.str());
+        BOOST_LOG_TRIVIAL(debug) << "responded with json";
+      } else {
+        response.set_status(400);
+      }
+    }
+
+    return;
+  }
+
   if ( search_engine_command == "_filelist" ) {
     std::string filename_regex;
     unsigned int filelist_size;
 
-    std::vector<uint32_t> file_id_list;
+    std::vector<unsigned int> file_id_list;
     std::vector<std::string> filename_list;
 
     std::stringstream ss;
@@ -391,7 +456,7 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
     }
 
     unsigned int count;
-    unsigned int default_count = 20;
+    unsigned int default_count = 1024;
     if ( uri_param.count("count") == 1 ) {
       ss.clear();
       ss.str("");
@@ -407,13 +472,13 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
       search_engine_list_[ search_engine_id ]->get_filelist(filename_regex, file_id_list);
       filelist_size = file_id_list.size();
     } else {
-      search_engine_list_[ search_engine_id ]->get_filelist(from, count, file_id_list, filename_list);
+      search_engine_list_[ search_engine_id ]->get_filelist(file_id_list);
       filelist_size = search_engine_list_[ search_engine_id ]->get_filelist_size();
       filename_regex = "";
     }
 
     std::string show_from = "0";
-    std::string show_count = "25";
+    std::string show_count = "45";
     if ( uri_param.count("show_from") == 1 ) {
       show_from = uri_param.find("show_from")->second;
     }
@@ -424,7 +489,6 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
     // prepare json
     std::ostringstream json;
     json << "{\"search_engine_id\":\"" << search_engine_id << "\","
-         << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
          << "\"home_uri\":\"" << "/vise/home.html\","
          << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
          << "\"image_uri_namespace\":\"image/\","
@@ -458,17 +522,18 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
       html << vise::search_engine_manager::RESPONSE_HTML_PAGE_PREFIX
            << "\n<body onload=\"_vise_filelist()\">"
            << "\n  <script>var _vise_filelist_str = '" << json.str() << "';\nvar _vise_filelist = {};</script>"
+           << "\n  <script src=\"/vise/_vise_common.js\"></script>"
            << "\n  <script src=\"/vise/_vise_filelist.js\"></script>"
            << "\n</body>\n"
            << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
       response.set_field("Content-Type", "text/html");
       response.set_payload(html.str());
-      BOOST_LOG_TRIVIAL(debug) << "responsed with html containing " << file_id_list.size() << " entries";
+      BOOST_LOG_TRIVIAL(debug) << "responded with html containing " << file_id_list.size() << " entries";
     } else {
       if ( uri_param.find("format")->second == "json" ) {
         response.set_field("Content-Type", "application/json");
         response.set_payload(json.str());
-        BOOST_LOG_TRIVIAL(debug) << "responsed with json containing " << file_id_list.size() << " entries";
+        BOOST_LOG_TRIVIAL(debug) << "responded with json containing " << file_id_list.size() << " entries";
       } else {
         response.set_status(400);
       }
@@ -478,8 +543,13 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
 
   if ( search_engine_command == "_search" ) {
     // validation
-    if ( uri_param.count("file_id") != 1 ||
-         uri_param.count("region") != 1 ) {
+    if ( uri_param.count("file_id") != 1 ) {
+      response.set_status(400);
+    }
+    if ( uri_param.count("x")      != 1 ||
+         uri_param.count("y")      != 1 ||
+         uri_param.count("width")  != 1 ||
+         uri_param.count("height") != 1 ) {
       response.set_status(400);
     }
 
@@ -488,12 +558,23 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
     ss << uri_param.find("file_id")->second;
     ss >> file_id;
 
+    unsigned int x, y, width, height;
     ss.clear();
     ss.str("");
-    ss << uri_param.find("region")->second;
-    unsigned int x, y, w, h;
-    char t;
-    ss >> x >> t >> y >> t >> w >> t >> h;
+    ss << uri_param.find("x")->second;
+    ss >> x;
+    ss.clear();
+    ss.str("");
+    ss << uri_param.find("y")->second;
+    ss >> y;
+    ss.clear();
+    ss.str("");
+    ss << uri_param.find("width")->second;
+    ss >> width;
+    ss.clear();
+    ss.str("");
+    ss << uri_param.find("height")->second;
+    ss >> height;
 
     ss.clear();
     ss.str("");
@@ -505,20 +586,20 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
 
     ss.clear();
     ss.str("");
-    unsigned int result_count = 10;
-    if ( uri_param.count("result_count") == 1 ) {
-      ss << uri_param.find("result_count")->second;
-      ss >> result_count;
+    unsigned int count = 1024;
+    if ( uri_param.count("count") == 1 ) {
+      ss << uri_param.find("count")->second;
+      ss >> count;
     }
-    /*
-    ss.clear();
-    ss.str("");
-    double score_threshold = 0.0;
-    if ( uri_param.count("score_threshold") == 1 ) {
-      ss << uri_param.find("score_threshold")->second;
-      ss >> score_threshold;
+
+    std::string show_from = "0";
+    std::string show_count = "45";
+    if ( uri_param.count("show_from") == 1 ) {
+      show_from = uri_param.find("show_from")->second;
     }
-    */
+    if ( uri_param.count("show_count") == 1 ) {
+      show_count = uri_param.find("show_count")->second;
+    }
 
     std::vector<unsigned int> result_file_id;
     std::vector<float> result_score;
@@ -527,7 +608,7 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
     std::vector<std::string> result_metadata;
 
     search_engine_list_[ search_engine_id ]->query_using_file_region(file_id,
-                                                                     x, y, w, h,
+                                                                     x, y, width, height,
                                                                      result_file_id, result_filename,
                                                                      result_metadata, result_score, result_H);
     std::ostringstream json;
@@ -535,26 +616,26 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
     json << "{\"search_engine_id\":\"" << search_engine_id << "\","
          << "\"query\":{\"file_id\":" << file_id << ","
          << "\"filename\":\"" << query_filename << "\","
-         << "\"x\":" << x << ",\"y\":" << y << ",\"width\":" << w << ",\"height\":" << h << ","
-         << "\"from\":" << from << ",\"result_count\":" << result_count << "},"
-      //         << "\"score_threshold\":" << score_threshold << "},"
+         << "\"x\":" << x << ",\"y\":" << y << ",\"width\":" << width << ",\"height\":" << height << ","
+         << "\"from\":" << from << ",\"count\":" << count << ","
+         << "\"show_from\":" << show_from << ",\"show_count\":" << show_count << "},"
          << "\"home_uri\":\"" << "/vise/home.html\","
          << "\"image_uri_prefix\":\"" << get_image_uri_prefix(search_engine_id) << "\","
          << "\"image_uri_namespace\":\"image/\","
          << "\"query_uri_prefix\":\"" << get_query_uri_prefix(search_engine_id) << "\","
-         << "\"query_result_count\":" << result_file_id.size() << ","
+         << "\"QUERY_RESULT_SIZE\":" << result_file_id.size() << ","
          << "\"query_result_subset\":[";
-    for ( std::size_t i = from; (i < result_score.size()) && (i < (from + result_count)); ++i ) {
-        if ( i != from ) {
-          json << ",";
-        }
-        json << "{\"file_id\":" << result_file_id[i] << ","
-             << "\"filename\":\"" << result_filename[i] << "\","
-             << "\"metadata\":\"" << result_metadata[i] << "\","
-             << "\"score\":" << result_score[i] << ","
-             << "\"H\":[" << result_H[i][0] << "," << result_H[i][1] << "," << result_H[i][2] << ","
-             << result_H[i][3] << "," << result_H[i][4] << "," << result_H[i][5] << ","
-             << result_H[i][6] << "," << result_H[i][7] << "," << result_H[i][8] << "]}";
+    for ( std::size_t i = from; (i < result_score.size()) && (i < (from + count)); ++i ) {
+      if ( i != from ) {
+        json << ",";
+      }
+      json << "{\"file_id\":" << result_file_id[i] << ","
+           << "\"filename\":\"" << result_filename[i] << "\","
+           << "\"metadata\":\"" << result_metadata[i] << "\","
+           << "\"score\":" << result_score[i] << ","
+           << "\"H\":[" << result_H[i][0] << "," << result_H[i][1] << "," << result_H[i][2] << ","
+           << result_H[i][3] << "," << result_H[i][4] << "," << result_H[i][5] << ","
+           << result_H[i][6] << "," << result_H[i][7] << "," << result_H[i][8] << "]}";
     }
     json << "]}";
 
@@ -564,17 +645,18 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
       html << vise::search_engine_manager::RESPONSE_HTML_PAGE_PREFIX
            << "\n<body onload=\"_vise_search()\">"
            << "\n  <script>var _vise_search_result_str = '" << json.str() << "';\nvar _vise_search_result = {};</script>"
+           << "\n  <script src=\"/vise/_vise_common.js\"></script>"
            << "\n  <script src=\"/vise/_vise_search.js\"></script>"
            << "\n</body>\n"
            << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
       response.set_field("Content-Type", "text/html");
       response.set_payload(html.str());
-      BOOST_LOG_TRIVIAL(debug) << "responsed with html containing " << result_score.size() << " entries";
+      BOOST_LOG_TRIVIAL(debug) << "responded with html containing " << result_score.size() << " entries";
     } else {
       if ( uri_param.find("format")->second == "json" ) {
         response.set_field("Content-Type", "application/json");
         response.set_payload(json.str());
-        BOOST_LOG_TRIVIAL(debug) << "responsed with json containing " << result_score.size() << " entries";
+        BOOST_LOG_TRIVIAL(debug) << "responded with json containing " << result_score.size() << " entries";
       } else {
         response.set_status(400);
       }

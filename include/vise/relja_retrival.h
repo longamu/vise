@@ -145,11 +145,9 @@ namespace vise {
 
     bool index();
 
-    void get_filelist(const uint32_t from, const uint32_t result_count,
-                      std::vector<uint32_t> &file_id_list,
-                      std::vector<std::string> &filename_list);
+    void get_filelist(std::vector<unsigned int> &file_id_list);
     void get_filelist(const std::string filename_regex,
-                      std::vector<uint32_t> &file_id_list);
+                      std::vector<unsigned int> &file_id_list);
     uint32_t get_filelist_size();
 
     std::string get_filename(unsigned int file_id);
@@ -157,6 +155,7 @@ namespace vise {
     bool file_exists(unsigned int file_id);
     std::string get_filename_absolute_path(std::string filename);
     std::string get_filename_absolute_path(unsigned int file_id);
+    unsigned int get_file_id(std::string filename);
   };
 }
 #endif

@@ -1,8 +1,8 @@
 /*
-  @file        _via_ctrl.js
+  @file        _vise.js
   @description Handles the user interactions in web based user interface of VISE
   @author      Abhishek Dutta <adutta@robots.ox.ac.uk>
-  @date        22 June 2017
+  @date        22 June 2018
 */
 
 var _vise_server_hostname = 'http://localhost';
