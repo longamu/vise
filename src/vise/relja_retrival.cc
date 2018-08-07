@@ -24,6 +24,8 @@ vise::relja_retrival::relja_retrival(const std::string search_engine_id,
 
   imlist_fn_ = data_dir_ / "imlist.txt";
   config_fn_ = data_dir_ / "config.txt";
+
+  load_config();
 }
 
 std::string vise::relja_retrival::id() {
@@ -326,6 +328,24 @@ void vise::relja_retrival::load_config() {
   try {
     config_.clear();
     boost::property_tree::ini_parser::read_ini(config_fn_.string(), config_);
+
+    dset_fn_   = config_.get<std::string>( search_engine_id_ + ".dsetFn" );
+    clst_fn_   = config_.get<std::string>( search_engine_id_ + ".clstFn" );
+    iidx_fn_   = config_.get<std::string>( search_engine_id_ + ".iidxFn" );
+    fidx_fn_   = config_.get<std::string>( search_engine_id_ + ".fidxFn" );
+    wght_fn_   = config_.get<std::string>( search_engine_id_ + ".wghtFn" );
+    hamm_fn_   = config_.get<std::string>( search_engine_id_ + ".hammFn" );
+    assign_fn_   = config_.get<std::string>( search_engine_id_ + ".assignFn" );
+    imlist_fn_   = config_.get<std::string>( search_engine_id_ + ".imagelistFn" );
+
+    data_dir_  = config_.get<std::string>( search_engine_id_ + ".data_dir" );
+    asset_dir_ = config_.get<std::string>( search_engine_id_ + ".asset_dir" );
+    temp_dir_  = config_.get<std::string>( search_engine_id_ + ".temp_dir" );
+
+    image_dir_     = asset_dir_ / "image";
+    thumbnail_dir_ = asset_dir_ / "thumbnail";
+    original_dir_  = asset_dir_ / "original";
+
     BOOST_LOG_TRIVIAL(debug) << "loaded config from file [" << config_fn_.string() << "]";
   }  catch( std::exception &e ) {
     BOOST_LOG_TRIVIAL(debug) << "exception occured while loading config file [" << config_fn_.string() << "] : " << e.what();
@@ -347,6 +367,7 @@ void vise::relja_retrival::set_default_config() {
     config_.put( search_engine_id_ + ".fidxFn", fidx_fn_ );
     config_.put( search_engine_id_ + ".wghtFn", wght_fn_ );
     config_.put( search_engine_id_ + ".tmpDir", temp_dir_);
+    config_.put( search_engine_id_ + ".assignFn", assign_fn_);
     config_.put( search_engine_id_ + ".trainNumDescs", "-1");
     config_.put( search_engine_id_ + ".vocSize", "-1");
     save_config();
