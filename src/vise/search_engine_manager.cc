@@ -428,6 +428,8 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
            << "\n  <script src=\"/vise/_vise_common.js\"></script>"
            << "\n  <script src=\"/vise/_via_min.js\"></script>"
            << "\n  <script src=\"/vise/_vise_file.js\"></script>"
+           << "\n  <script>var _VISE_VERSION = '" << VISE_SERVER_VERSION_MAJOR << "."
+           << VISE_SERVER_VERSION_MINOR << "." << VISE_SERVER_VERSION_PATCH << "';</script>"
            << "\n</body>\n"
            << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
       response.set_field("Content-Type", "text/html");
@@ -474,6 +476,14 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
     if ( uri_param.count("filename_regex") == 1 ) {
       unsigned int MAX_RESULT_SIZE = 1000;
       filename_regex = uri_param.find("filename_regex")->second;
+      // @todo: find a better way to encode and decode uri
+      // filename_regex is url encoded (space -> +), hence decode
+      for ( std::size_t i=0; i < filename_regex.length(); ++i ) {
+        if ( filename_regex[i] == '+' ) {
+          filename_regex[i] = ' ';
+        }
+      }
+
       search_engine_list_[ search_engine_id ]->get_filelist(filename_regex, file_id_list);
       filelist_size = file_id_list.size();
     } else {
@@ -527,6 +537,8 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
            << "\n  <script>var _vise_filelist_str = '" << json.str() << "';\nvar _vise_filelist = {};</script>"
            << "\n  <script src=\"/vise/_vise_common.js\"></script>"
            << "\n  <script src=\"/vise/_vise_filelist.js\"></script>"
+           << "\n  <script>var _VISE_VERSION = '" << VISE_SERVER_VERSION_MAJOR << "."
+           << VISE_SERVER_VERSION_MINOR << "." << VISE_SERVER_VERSION_PATCH << "';</script>"
            << "\n</body>\n"
            << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
       response.set_field("Content-Type", "text/html");
@@ -597,6 +609,14 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
       ss >> count;
     }
 
+    ss.clear();
+    ss.str("");
+    double score_threshold = 0;
+    if ( uri_param.count("score_threshold") == 1 ) {
+      ss << uri_param.find("score_threshold")->second;
+      ss >> score_threshold;
+    }
+
     std::string show_from = "0";
     std::string show_count = "45";
     if ( uri_param.count("show_from") == 1 ) {
@@ -613,13 +633,14 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
     std::vector<std::string> result_metadata;
 
     search_engine_list_[ search_engine_id ]->query_using_file_region(file_id,
-                                                                     x, y, width, height,
+                                                                     x, y, width, height, score_threshold,
                                                                      result_file_id, result_filename,
                                                                      result_metadata, result_score, result_H);
     std::ostringstream json;
     std::string query_filename = search_engine_list_[ search_engine_id ]->get_filename(file_id);
     json << "{\"search_engine_id\":\"" << search_engine_id << "\","
          << "\"query\":{\"file_id\":" << file_id << ","
+         << "\"score_threshold\":" << score_threshold << ","
          << "\"filename\":\"" << query_filename << "\","
          << "\"x\":" << x << ",\"y\":" << y << ",\"width\":" << width << ",\"height\":" << height << ","
          << "\"from\":" << from << ",\"count\":" << count << ","
@@ -659,6 +680,8 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
            << "\n  <script>var _vise_search_result_str = '" << json.str() << "';\nvar _vise_search_result = {};</script>"
            << "\n  <script src=\"/vise/_vise_common.js\"></script>"
            << "\n  <script src=\"/vise/_vise_search.js\"></script>"
+           << "\n  <script>var _VISE_VERSION = '" << VISE_SERVER_VERSION_MAJOR << "."
+           << VISE_SERVER_VERSION_MINOR << "." << VISE_SERVER_VERSION_PATCH << "';</script>"
            << "\n</body>\n"
            << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
       response.set_field("Content-Type", "text/html");
@@ -673,6 +696,89 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
         response.set_status(400);
       }
     }
+    return;
+  }
+
+  if ( search_engine_command == "_register" ) {
+    // validation
+    if ( uri_param.count("file1_id") != 1 ||
+         uri_param.count("x1") != 1 ||
+         uri_param.count("y1") != 1 ||
+         uri_param.count("width1") != 1 ||
+         uri_param.count("height1") != 1 ||
+         uri_param.count("file2_id") != 1 ) {
+      std::cout << "\nmissing arguments" << std::flush;
+      response.set_status(400);
+      return;
+    }
+
+    unsigned int file1_id, file2_id;
+    unsigned int x1, y1, width1, height1;
+
+    std::stringstream ss;
+    ss << uri_param.find("file1_id")->second;
+    ss >> file1_id;
+
+    ss.clear();
+    ss.str("");
+    ss << uri_param.find("file2_id")->second;
+    ss >> file2_id;
+
+    ss.clear();
+    ss.str("");
+    ss << uri_param.find("x1")->second;
+    ss >> x1;
+
+    ss.clear();
+    ss.str("");
+    ss << uri_param.find("y1")->second;
+    ss >> y1;
+
+    ss.clear();
+    ss.str("");
+    ss << uri_param.find("width1")->second;
+    ss >> width1;
+
+    ss.clear();
+    ss.str("");
+    ss << uri_param.find("height1")->second;
+    ss >> height1;
+
+    // perform image registration
+    std::string im1_fn = search_engine_list_[ search_engine_id ]->get_filename_absolute_path(file1_id);
+    std::string im2_fn = search_engine_list_[ search_engine_id ]->get_filename_absolute_path(file2_id);
+    Eigen::MatrixXd Hopt;
+    std::size_t fp_match_count;
+    bool success = false;
+    Magick::Image im2_crop_tx( Magick::Geometry(width1, height1, 0, 0), "white");
+
+    try {
+      // @todo: use H_initial as the initial guess for homography
+      imreg_sift::ransac_dlt(im1_fn.c_str(), im2_fn.c_str(),
+                             x1, y1, width1, height1,
+                             Hopt, fp_match_count, im2_crop_tx, success);
+    } catch( std::exception& e ) {
+      //std::cout << "\nexception: " << e.what() << std::flush;;
+      response.set_status(400);
+      return;
+    }
+
+    if ( ! success ) {
+      //std::cout << "\nsuccess=" << success << std::flush;;
+      response.set_status(400);
+      return;
+    }
+
+    // extract image data
+    Magick::Blob blob;
+    im2_crop_tx.magick("JPEG");
+    im2_crop_tx.colorSpace(Magick::sRGBColorspace);
+    im2_crop_tx.write( &blob );
+
+    std::string img_data( (char *) blob.data(), blob.length() );
+    response.set_field("Content-Type", "image/jpeg");
+    response.set_payload( img_data );
+    BOOST_LOG_TRIVIAL(debug) << "responded with registered jpeg image of size " << blob.length();
     return;
   }
 }

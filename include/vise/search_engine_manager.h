@@ -9,9 +9,11 @@
 #ifndef _VISE_SEARCH_ENGINE_MANAGER_H_
 #define _VISE_SEARCH_ENGINE_MANAGER_H_
 
+#include "vise_server_config.h"    // contains vise version number
 #include "vise/util.h"
 #include "vise/search_engine.h"
 #include "vise/relja_retrival.h"
+#include "imreg_sift/imreg_sift.h" // for image registration
 
 #include <iostream>
 #include <sstream>

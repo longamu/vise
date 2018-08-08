@@ -23,7 +23,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set (VISE_SERVER_NAME "vise_server")
 set (VISE_SERVER_VERSION_MAJOR "2")
 set (VISE_SERVER_VERSION_MINOR "0")
-set (VISE_SERVER_VERSION_PATCH "0")
+set (VISE_SERVER_VERSION_PATCH "0-beta")
 set (VISE_SERVER_URL "http://www.robots.ox.ac.uk/~vgg/software/vise/")
 set (VISE_SERVER_AUTHOR_NAME "Abhishek Dutta")
 set (VISE_SERVER_AUTHOR_EMAIL "adutta@robots.ox.ac.uk")
@@ -93,6 +93,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/src/search_engin
 find_package(fastann REQUIRED)
 include_directories( ${fastann_INCLUDE_DIRS} )
 
+# VLFEAT
+# VLFEAT_LIB must be defined during cmake
+# e.g. cmake -DVLFEAT_LIB=/data/mybin/vlfeat/vlfeat-0.9.20/bin/glnxa64/libvl.so -DVLFEAT_INCLUDE_DIR=/data/mybin/vlfeat/vlfeat-0.9.20/vl
+# @todo: get rid of absolute path
+include_directories( ${VLFEAT_INCLUDE_DIR})
+
 message("Boost_LIBRARIES: " ${Boost_LIBRARIES})
 message("Boost_INCLUDE_DIRS: " ${Boost_INCLUDE_DIRS})
 message("ImageMagick_LIBRARIES: " ${ImageMagick_LIBRARIES} )
@@ -101,6 +107,8 @@ message("EIGEN3_INCLUDE_DIR: " ${EIGEN3_INCLUDE_DIR} )
 message("PROTOBUF_INCLUDE_DIR: " ${PROTOBUF_INCLUDE_DIR} )
 message("Protobuf_LIBRARIES: " ${Protobuf_LIBRARIES} )
 message("fastann_INCLUDE_DIRS: " ${fastann_INCLUDE_DIRS} )
+message("VLFEAT_LIB: " ${VLFEAT_LIB} )
+message("VLFEAT_INCLUDE_DIR: " ${VLFEAT_INCLUDE_DIR} )
 
 include_directories("${PROJECT_INCLUDE_DIR}")
 add_subdirectory("${PROJECT_SOURCE_DIR}" )

@@ -13,6 +13,12 @@ a { text-decoration:none; }
 
 .page .nav { display:block; width:100%; padding:0.3rem 0; font-size:small; border-bottom:1px solid #e6e6e6;}
 .page .nav .left_space { margin-left:2rem; }
+.page .nav div {
+  display: inline-block;
+}
+.page .nav div:last-child {
+  float: right;
+}
 .page .top { display:block; width:100%; margin:0.5rem 0; }
 
 /* panel containing VISE logo and some links */
@@ -59,7 +65,7 @@ a { text-decoration:none; }
 .img_grid {display:block; border:none; margin:0; font-size:0 !important;} /* font-size:0 is needed to get rid of vertical space between image rows */
 .img_with_region { position:relative; display:inline-block; height:200px; margin:0.1rem 0.13rem; }
 .img_with_region img { display:block; max-height:100%; width:auto; }
-.img_with_region svg { display:none; position:absolute; top:0; left:0; fill:none; stroke-width:0.7rem; stroke:yellow; }
+.img_with_region svg { display:none; position:absolute; top:0; left:0; fill:none; stroke-width:0.7%; stroke:yellow; }
 .cursor_pointer { cursor:pointer; }
 .cursor_default { cursor:default; }
 
@@ -92,9 +98,9 @@ a { text-decoration:none; }
 #page_overlay .content .compare_panel { display:table; width:100%; text-align:center; margin:0.5rem 0;}
 #page_overlay .content .compare_panel .row { display:table-row; width:100%; }
 #page_overlay .content .compare_panel .col { display:table-cell; border:1px solid #f2f2f2; padding:1rem 0; font-size:0.8rem; }
-#page_overlay .content .compare_panel .query { display:table-cell; width:10%; border:1px solid #f2f2f2; }
-#page_overlay .content .compare_panel .match { display:table-cell; width:10%; border:1px solid #f2f2f2; }
-#page_overlay .content .compare_panel .compare { display:table-cell; width:10%; border:1px solid #f2f2f2; }
+#page_overlay .content .compare_panel .query { display:table-cell; border:1px solid #f2f2f2; padding:1rem; }
+#page_overlay .content .compare_panel .match { display:table-cell; border:1px solid #f2f2f2; padding:1rem; }
+#page_overlay .content .compare_panel .compare { display:table-cell; border:1px solid #f2f2f2; padding:1rem; }
 #page_overlay .content .compare_panel canvas { } /* height or width sould be 100% based on fit */
 #page_overlay .content .compare_panel img { height:auto; padding:1rem; }
 

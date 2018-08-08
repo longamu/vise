@@ -30,6 +30,7 @@ namespace vise {
     virtual bool query_using_upload_region() = 0;
     virtual bool query_using_file_region(unsigned int file_id,
                                          unsigned int x, unsigned int y, unsigned int w, unsigned int h,
+                                         float score_threshold,
                                          std::vector<unsigned int> &result_file_id,
                                          std::vector<std::string> &result_filename,
                                          std::vector<std::string> &result_metadata,
@@ -40,7 +41,7 @@ namespace vise {
 
     virtual void get_filelist(std::vector<unsigned int> &file_id_list) = 0;
     virtual void get_filelist(const std::string filename_regex,
-                              std::vector<unsigned int> &file_id_list) = 0;
+                              std::vector<unsigned int> &file_id_list ) = 0;
 
     virtual uint32_t get_filelist_size() = 0;
 

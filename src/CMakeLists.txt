@@ -27,6 +27,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src/search_engine/relja_retrival/compre
 add_subdirectory( search_engine/relja_retrival )
 add_subdirectory( http_server )
 add_subdirectory( vise )
+add_subdirectory( imreg_sift )
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   add_executable( vise_server vise_server.cc )

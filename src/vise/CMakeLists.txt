@@ -21,7 +21,7 @@ target_link_libraries(  relja_retrival
                         ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES} ${fastann_LIBRARIES})
 
 add_library( search_engine_manager search_engine_manager.cc)
-target_link_libraries( search_engine_manager relja_retrival http_request http_response util ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries( search_engine_manager relja_retrival http_request http_response util imreg_sift ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES} )
 
 add_library( vise_request_handler vise_request_handler.cc)
 target_link_libraries( vise_request_handler http_request http_response util search_engine_manager ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES} )

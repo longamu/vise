@@ -45,7 +45,7 @@ function _vise_filelist() {
 
   // _vise_filelist is a global variable
   _vise_filelist = JSON.parse(_vise_filelist_str);
-  console.log(_vise_filelist); // debug
+  //console.log(_vise_filelist); // debug
 
   var page = document.createElement('div');
   var nav = document.createElement('div');
@@ -92,10 +92,10 @@ function _vise_filelist_update_page_nav(d, navbar) {
   console.log(d.filename_regex)
 
   var navtoolhtml = [];
-  navtoolhtml.push( '<form method="GET" action="' + d.query_uri_prefix + '_filelist">' );
-  navtoolhtml.push( '<input name="filename_regex" type="text" title="For example, filtering using keyword abc shows all images whose filename contains the keyword abc" id="filename_regex" placeholder="type partial filename to filter this list" size="34" value="' + d.filename_regex + '">' );
+  navtoolhtml.push( '<form method="GET" action="' + d.query_uri_prefix + '_filelist" enctype="text/plain">' );
+  navtoolhtml.push( '<input name="filename_regex" type="text" title="All image filenames containing the filter keyword will be shown." id="filename_regex" placeholder="keyword to filter file list e.g. &quot;Story of Chicago&quot;" size="34" value="' + d.filename_regex + '">' );
   navtoolhtml.push( '<input type="hidden" name="from" value="0">' );
-  navtoolhtml.push( '<input type="hidden" name="count" value="137">' );
+  navtoolhtml.push( '<input type="hidden" name="count" value="1024">' );
   navtoolhtml.push( '<input type="hidden" name="show_from" value="0">' );
   navtoolhtml.push( '<input type="hidden" name="show_count" value="45">' );
   navtoolhtml.push( '&nbsp;<button type="submit">Filter</button>' );
@@ -176,7 +176,7 @@ function _vise_filelist_show_all_files(d, content_panel) {
 
   d.show_to = d.show_from + d.show_count;
   if ( d.show_to > d.file_id_list_subset.length ) {
-    d.show_to = d.file_id_list_subset.length - 1;
+    d.show_to = d.file_id_list_subset.length;
   }
 
   // filelist navigation bar : prev,next, ... buttons
@@ -209,13 +209,6 @@ function _vise_filelist_show_file_i(d, i, content_panel) {
 
   var img = document.createElement('img');
   img.setAttribute('src', d.image_uri_prefix + d.image_uri_namespace + d.file_id_list_subset[i]);
-  img.addEventListener('load', function(e) {
-    // automatically set viewBox attribute of SVG element so that
-    // the correct region is visible
-    this.nextElementSibling.setAttributeNS(null, 'viewBox', '0 0 ' + this.naturalWidth + ' ' + this.naturalHeight);
-    this.nextElementSibling.style.display = 'block'; // by default, the region is invisible. Now, make the region visible
-  });
-
   link.appendChild(img);
   img_with_region.appendChild(link);
 

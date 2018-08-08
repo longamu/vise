@@ -58,7 +58,7 @@ function _vise_search() {
 
   // _vise_search_result is a global variable
   _vise_search_result = JSON.parse(_vise_search_result_str);
-  console.log(_vise_search_result); // debug
+  //console.log(_vise_search_result); // debug
 
   var page = document.createElement('div');
   var nav = document.createElement('div');
@@ -117,7 +117,8 @@ function _vise_search_update_page_nav(d, navbar) {
   navbar.appendChild(navbuttons);
   var links = [];
 
-  console.log('_vise_search_update_page_nav(): from=' + d.query.from + ', count=' + d.query.count + ', show_from=' + d.query.show_from + ', show_count=' + d.query.show_count + ', show_to=' + d.query.show_to);
+  //console.log('_vise_search_update_page_nav(): from=' + d.query.from + ', count=' + d.query.count + ', show_from=' + d.query.show_from + ', show_count=' + d.query.show_count + ', show_to=' + d.query.show_to);
+
   // check if this page is the first page
   if ( (d.query.from + d.query.show_from) !== 0) {
     links.push( '<a href="' + _vise_search_now_get_first_uri(d) + '" title="Jump to first page">First</a>' );
@@ -162,7 +163,7 @@ function _vise_search_show_all_result(d, content_panel) {
 
   d.query.show_to = d.query.show_from + d.query.show_count;
   if ( d.query.show_to > d.query_result_subset.length ) {
-    d.query.show_to = d.query_result_subset.length - 1;
+    d.query.show_to = d.query_result_subset.length;
   }
 
   // filelist navigation bar : prev,next, ... buttons
@@ -286,10 +287,30 @@ function _vise_search_show_query(d, content_panel) {
 function _vise_search_show_query_metadata(d) {
   var metadata = document.createElement('div');
   metadata.classList.add('metadata');
-  metadata.innerHTML  = '<p>Search Query</p>';
-  metadata.innerHTML += '<div class="row"><span class="col">Filename</span><span class="col"><a href="">' + d.query.filename + '</a></span></div>';
+  var html = [];
+  html.push('<p>Search Query</p>');
+  var query_img_url = d.query_uri_prefix + '_file?file_id=' + d.query.file_id;
+  html.push('<div class="row"><span class="col">Filename</span><span class="col"><a href="' + query_img_url + '">' + d.query.filename + '</a></span></div>');
   var dimg = [ d.query.x, d.query.y, d.query.width, d.query.height ];
-  metadata.innerHTML += '<div class="row"><span class="col">Region</span><span class="col" title="x, y, width, height">[' + dimg.join(', ') + ']</span></div>';
+  html.push('<div class="row"><span class="col">Region</span><span class="col" title="x, y, width, height">[' + dimg.join(', ') + ']</span></div>');
+  html.push('<div class="row"><span class="col">Score Threshold</span><span class="col">');
+  var query_uri = d.query_uri_prefix + '_search';
+  html.push( '<form method="GET" action="' + query_uri + '">' );
+  html.push( '<input type="hidden" name="file_id" value="' + d.query.file_id + '">' );
+  html.push( '<input type="hidden" name="x" value="' + d.query.x + '">' );
+  html.push( '<input type="hidden" name="y" value="' + d.query.y + '">' );
+  html.push( '<input type="hidden" name="width" value="' + d.query.width + '">' );
+  html.push( '<input type="hidden" name="height" value="' + d.query.height + '">' );
+  html.push( '<input type="hidden" name="from" value="0">' );
+  html.push( '<input type="hidden" name="count" value="1024">' );
+  html.push( '<input type="hidden" name="show_from" value="0">' );
+  html.push( '<input type="hidden" name="show_count" value="45">' );
+  html.push( '<input type="text" size="4" name="score_threshold" value="' + d.query.score_threshold + '" placeholder="score threshold">' );
+  html.push( '&nbsp;<button id="search_button" title="Search again using new score threshold" type="submit">Search Again</button' );
+  html.push( '</form>' );
+
+  html.push('</span></div>');
+  metadata.innerHTML = html.join('');
   return metadata;
 }
 
@@ -382,7 +403,7 @@ function _vise_search_show_match_pair_comparison(match_index, content) {
   r1.appendChild(r1c3);
   r1c3.classList.add('col');
   r1c3.classList.add('col_match');
-  r1c3.innerHTML = 'Match';
+  r1c3.innerHTML = 'Match ( score = ' + _vise_search_result.query_result_subset[match_index].score + ' )';
 
   // image row
   var r2 = document.createElement('div');
@@ -406,8 +427,7 @@ function _vise_search_show_match_pair_comparison(match_index, content) {
   var r2c3 = document.createElement('span');
   r2.appendChild(r2c3);
   r2c3.classList.add('match');
-  var msrc = _vise_search_result.image_uri_prefix + _vise_search_result.image_uri_namespace + _vise_search_result.query_result_subset[match_index].file_id;
-  _vise_search_set_transform_and_cropped_img(r2c3, msrc, _vise_search_result.query.x, _vise_search_result.query.y, _vise_search_result.query.width, _vise_search_result.query.height, _vise_search_result.query_result_subset[match_index].H);
+  _vise_search_set_cropped_match_img(r2c3, match_index);
 
   // filename row
   var r3 = document.createElement('div');
@@ -427,7 +447,6 @@ function _vise_search_show_match_pair_comparison(match_index, content) {
   r3c3.classList.add('col');
   var match_img_url = _vise_search_result.query_uri_prefix + '_file?file_id=' + _vise_search_result.query_result_subset[match_index].file_id;
   r3c3.innerHTML  = '<a href="' + match_img_url + '">' + _vise_search_result.query_result_subset[match_index].filename + '</a>';
-  r3c3.innerHTML += '<br/>( match score = ' + _vise_search_result.query_result_subset[match_index].score + ' )';
 }
 
 function _vise_search_get_img_element(src, id, classname, alt, title) {
@@ -454,13 +473,11 @@ function _vise_search_get_img_element(src, id, classname, alt, title) {
 
 function _vise_search_set_compare_element(container) {
   var left = document.getElementById('compare_detail_left_canvas');
-  var right = document.getElementById('compare_detail_right_canvas');
-
-  if ( !left || !right ) {
+  if ( !left ) {
     // retry after some delay
     setTimeout( function() {
       _vise_search_set_compare_element(container);
-    }.bind(this), 500);
+    }.bind(this), 100);
     return;
   }
 
@@ -472,7 +489,10 @@ function _vise_search_set_compare_element(container) {
   c.width  = left.width;
   cx.drawImage(left, 0, 0);
   c.addEventListener('mousedown', function(e) {
-    cx.drawImage(right, 0, 0);
+    var right = document.getElementById('compare_detail_right_img');
+    if ( right ) {
+      cx.drawImage(right, 0, 0);
+    }
   });
   c.addEventListener('mouseup', function(e) {
     cx.drawImage(left, 0, 0);
@@ -494,28 +514,26 @@ function _vise_search_set_cropped_img(element, img_src, x, y, width, height) {
   img.src = img_src;
 }
 
-function _vise_search_set_transform_and_cropped_img(element, img_src, x, y, width, height, H) {
-  var img = new Image();
-  img.addEventListener('load', function(e) {
-    // draw transformed image in canvas 'c'
-    var Hinv = _vise_homography_inverse(H);
-    var c = document.createElement('canvas');
-    var cx = c.getContext('2d', { alpha: false });
-    c.height = img.naturalWidth;
-    c.width  = img.naturalHeight;
-    cx.transform(Hinv[0], Hinv[3], Hinv[1], Hinv[4], Hinv[2], Hinv[5]);
-    cx.drawImage(img, 0, 0)
-
-    // crop rectangular region from canvas 'c'
-    var c2 = document.createElement('canvas', { alpha: false });
-    c2.setAttribute('id', 'compare_detail_right_canvas');
-    var cx2 = c2.getContext('2d');
-    c2.width = width;
-    c2.height = height;
-    cx2.drawImage(c, x, y, width, height, 0, 0, width, height)
-    element.appendChild(c2);
+function _vise_search_set_cropped_match_img(element, match_index) {
+  var match_img = document.createElement('img');
+  match_img.setAttribute('id', 'compare_detail_right_img');
+  match_img.addEventListener('error', function() {
+    element.innerHTML = '<p style="color:red;">Failed to register match image with the query region</p>';
   });
-  img.src = img_src;
+  match_img.addEventListener('load', function() {
+    element.innerHTML = '';
+    element.appendChild(match_img);
+  });
+  var register_uri = [];
+  register_uri.push('file1_id=' + _vise_search_result.query.file_id);
+  register_uri.push('file2_id=' + _vise_search_result.query_result_subset[match_index].file_id);
+  register_uri.push('x1=' + _vise_search_result.query.x);
+  register_uri.push('y1=' + _vise_search_result.query.y);
+  register_uri.push('width1=' + _vise_search_result.query.width);
+  register_uri.push('height1=' + _vise_search_result.query.height);
+  match_img.src = _vise_search_result.query_uri_prefix + '_register?' + register_uri.join('&');
+  element.innerHTML = '<p style="color:blue;">Registering match image with the query region ...</p>';
+  element.innerHTML += '<p>(this usually takes around 2 sec but may take longer for high resolution images)</p>';
 }
 
 //

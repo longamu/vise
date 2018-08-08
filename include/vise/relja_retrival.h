@@ -137,6 +137,7 @@ namespace vise {
     bool query_using_upload_region();
     bool query_using_file_region(unsigned int file_id,
                                  unsigned int x, unsigned int y, unsigned int w, unsigned int h,
+                                 float score_threshold,
                                  std::vector<unsigned int> &result_file_id,
                                  std::vector<std::string> &result_filename,
                                  std::vector<std::string> &result_metadata,

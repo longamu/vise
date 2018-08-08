@@ -130,7 +130,7 @@ function _vise_file_set_image_region(r) {
 
 function _vise_file_init_metadata_panel(d, panel) {
   var html = [];
-  var img_url = d.image_uri_prefix + d.image_uri_namespace + d.filename
+  var img_url = d.image_uri_prefix + d.image_uri_namespace + d.file_id;
   html.push('<div>Filename: <a href="' + img_url + '">' + d.filename + '</a></div>');
   html.push('<div class="info" id="search_region_info">To define a search region in the image shown above, drag mouse cursor by keeping the right mouse button pressed on the image.</div>');
   panel.innerHTML = html.join('');
@@ -149,6 +149,7 @@ function _vise_file_init_search_toolbar(d, panel) {
   html.push( '<input type="hidden" name="count" value="1024">' );
   html.push( '<input type="hidden" name="show_from" value="0">' );
   html.push( '<input type="hidden" name="show_count" value="45">' );
+  html.push( '<input type="hidden" name="score_threshold" value="8">' );
   html.push( '<button id="search_button" disabled title="First define a search region and press this button to perform visual search of this region." type="submit">Search</button' );
   html.push( '</form>' );
   panel.innerHTML = html.join('');

@@ -215,6 +215,7 @@ bool vise::relja_retrival::is_loaded() {
 bool vise::relja_retrival::query_using_upload_region() { }
 bool vise::relja_retrival::query_using_file_region(unsigned int file_id,
                                                    unsigned int x, unsigned int y, unsigned int w, unsigned int h,
+                                                   float score_threshold,
                                                    std::vector<unsigned int> &result_file_id,
                                                    std::vector<std::string> &result_filename,
                                                    std::vector<std::string> &result_metadata,
@@ -233,16 +234,17 @@ bool vise::relja_retrival::query_using_file_region(unsigned int file_id,
   result_metadata.clear();
   result_H.clear();
 
-  double HOMOGRAPHY_TOLERANCE = 1e-20;
+  double HOMOGRAPHY_TOLERANCE = 1ve-20;
   for ( unsigned int i = 0; i < all_result.size(); ++i ) {
     unsigned int file_id = all_result[i].first;
 
     // check if valid homography is available
     std::map<uint32_t, homography>::iterator it = H.find(file_id);
-    if ( it != H.end() ) {
+    float score = (float) all_result[i].second;
+    if ( (it != H.end()) && (score > score_threshold) ) {
       //std::cout << "\n" << file_id << ": " << all_result[i].second << std::flush;
       result_file_id.push_back(file_id);
-      result_score.push_back( (float) all_result[i].second );
+      result_score.push_back( score );
       result_filename.push_back( get_filename(file_id) );
       result_metadata.push_back("");
 
@@ -259,22 +261,22 @@ bool vise::relja_retrival::query_using_file_region(unsigned int file_id,
 void vise::relja_retrival::get_filelist(std::vector<unsigned int> &file_id_list) {
 
   file_id_list.clear();
-  for ( uint32_t i = 0; i < dataset_->getNumDoc(); ++i ) {
+  for ( unsigned int i = 0; i < dataset_->getNumDoc(); ++i ) {
     file_id_list.push_back(i);
   }
-  BOOST_LOG_TRIVIAL(debug) << "get_filelist(): file_id_list=" << file_id_list.size();
+  //BOOST_LOG_TRIVIAL(debug) << "get_filelist(): file_id_list=" << file_id_list.size();
 }
 
 
 void vise::relja_retrival::get_filelist(const std::string filename_regex,
                                         std::vector<unsigned int> &file_id_list) {
   file_id_list.clear();
-  for ( uint32_t i = 0; i < dataset_->getNumDoc(); ++i ) {
+  for ( unsigned int i = 0; i < dataset_->getNumDoc(); ++i ) {
     if ( dataset_->getInternalFn(i).find(filename_regex) != std::string::npos ) {
       file_id_list.push_back(i);
     }
   }
-  BOOST_LOG_TRIVIAL(debug) << "get_filelist(): filename_regex=[" << filename_regex << "]"
+  //BOOST_LOG_TRIVIAL(debug) << "get_filelist(): filename_regex=[" << filename_regex << "]"
                            << ", file_id_list=" << file_id_list.size();
 }
 
