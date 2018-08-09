@@ -16,7 +16,7 @@ void vise::vise_request_handler::init(const boost::filesystem::path vise_asset_d
 }
 
 void vise::vise_request_handler::handle_http_request(const http_request& request, http_response& response) {
-  BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
+  //BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
   std::vector<std::string> uri_components;
   std::map<std::string, std::string> uri_param;
   vise::util::decompose_uri(request.uri_, uri_components, uri_param);
@@ -84,6 +84,7 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
     */
 
     if ( vise::util::starts_with(request.uri_, "/vise/query/") ) {
+      BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
       //std::cout << "\nuri_components.size() = " << uri_components.size() << ", uri_param=" << uri_param.size() << std::flush;
       if ( uri_components.size() != 5 && uri_components.size() != 6 ) {
         response.set_status(404);
