@@ -222,7 +222,7 @@ int main(int argc, char* argv[]){
     // embedder
     embedderFactory *embFactory= NULL;
     if (useHamm){
-        uint32_t const vocSize= pt.get<uint32_t>( dsetname+".vocSize" );
+        //uint32_t const vocSize= pt.get<uint32_t>( dsetname+".vocSize" );
         std::string const trainFilesPrefix= util::expandUser(pt.get<std::string>( dsetname+".trainFilesPrefix" ));
         //std::string const trainHammFn= trainFilesPrefix + util::uintToShortStr(vocSize) + "_hamm" + boost::lexical_cast<std::string>(*hammEmbBits) + ".v2bin";
         std::string const trainHammFn = trainFilesPrefix + "hamm.v2bin";

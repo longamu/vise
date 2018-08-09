@@ -234,7 +234,6 @@ bool vise::relja_retrival::query_using_file_region(unsigned int file_id,
   result_metadata.clear();
   result_H.clear();
 
-  double HOMOGRAPHY_TOLERANCE = 1ve-20;
   for ( unsigned int i = 0; i < all_result.size(); ++i ) {
     unsigned int file_id = all_result[i].first;
 
@@ -276,8 +275,7 @@ void vise::relja_retrival::get_filelist(const std::string filename_regex,
       file_id_list.push_back(i);
     }
   }
-  //BOOST_LOG_TRIVIAL(debug) << "get_filelist(): filename_regex=[" << filename_regex << "]"
-                           << ", file_id_list=" << file_id_list.size();
+  //BOOST_LOG_TRIVIAL(debug) << "get_filelist(): filename_regex=[" << filename_regex << "]" << ", file_id_list=" << file_id_list.size();
 }
 
 uint32_t vise::relja_retrival::get_filelist_size() {
