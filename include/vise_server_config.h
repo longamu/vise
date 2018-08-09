@@ -5,7 +5,7 @@
 
 #define VISE_SERVER_VERSION_MAJOR "2"
 #define VISE_SERVER_VERSION_MINOR "0"
-#define VISE_SERVER_VERSION_PATCH "0-beta"
+#define VISE_SERVER_VERSION_PATCH "0-beta1"
 #define VISE_SERVER_URL "http://www.robots.ox.ac.uk/~vgg/software/vise/"
 
 #define VISE_SERVER_AUTHOR_NAME "Abhishek Dutta"

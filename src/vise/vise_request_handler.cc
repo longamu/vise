@@ -16,7 +16,7 @@ void vise::vise_request_handler::init(const boost::filesystem::path vise_asset_d
 }
 
 void vise::vise_request_handler::handle_http_request(const http_request& request, http_response& response) {
-  //BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
+  BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
   std::vector<std::string> uri_components;
   std::map<std::string, std::string> uri_param;
   vise::util::decompose_uri(request.uri_, uri_components, uri_param);
@@ -84,9 +84,14 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
     */
 
     if ( vise::util::starts_with(request.uri_, "/vise/query/") ) {
+      //std::cout << "\nuri_components.size() = " << uri_components.size() << ", uri_param=" << uri_param.size() << std::flush;
+      if ( uri_components.size() != 5 && uri_components.size() != 6 ) {
+        response.set_status(404);
+        return;
+      }
+
       std::string search_engine_name      = uri_components[3];
       std::string search_engine_version   = uri_components[4];
-      std::string search_engine_command   = uri_components[5];
 
       /*
         if ( vise::util::has_special_char(search_engine_name) ||
@@ -103,11 +108,26 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
         vise::search_engine_manager::instance()->load_search_engine(search_engine_id);
 
         if ( ! vise::search_engine_manager::instance()->is_search_engine_loaded(search_engine_id) ) {
-          response.set_status(400);
+          response.set_status(404);
           BOOST_LOG_TRIVIAL(debug) << "failed to load search engine: " << search_engine_id;
           return;
         }
       }
+
+      // by default, show _filelist
+      std::string search_engine_command;
+      if ( uri_components.size() == 6 ) {
+        search_engine_command = uri_components[5];
+      } else {
+        // forward request to vise/query/19c_image_match/1/_filelist?from=0&count=1024&show_from=0&show_count=45
+        response.set_status(303);
+        std::ostringstream forward;
+        forward << "/vise/query/" << search_engine_id << "/_filelist?from=0&count=1024&show_from=0&show_count=45";
+        response.set_field("Location", forward.str());
+        return;
+      }
+
+      //std::cout << "\nsearch_engine_command = " << search_engine_command << std::flush;
 
       //BOOST_LOG_TRIVIAL(debug) << "running [" << search_engine_command << "] on [" << search_engine_id << "]";
       vise::search_engine_manager::instance()->query(search_engine_id,
@@ -122,7 +142,7 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
     // are static resources that can be served by a more efficient file server
     if ( vise::util::starts_with(request.uri_, "/vise/asset/") ) {
       if ( uri_components.size() != 7 ) {
-        response.set_status(400);
+        response.set_status(404);
         BOOST_LOG_TRIVIAL(debug) << "got " << request.uri_ << ", expected /vise/asset/_NAME_/_VERSION_/{image,thumnail,original}/{filename,file_id}";
         return;
       }
@@ -159,13 +179,14 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
       if ( request.uri_ == "/vise" ||
            request.uri_ == "/vise/"  ||
            request.uri_ == "/vise/index.html") {
-        fn = asset_dir_ / "/vise/home.html";
+        //fn = asset_dir_ / "/vise/home.html";
+        response.set_status(400);
+        return;
       }
 
       respond_with_static_file( response, fn );
       return;
     }
-
   }
 
   // all unhandled cases result in HTTP response 400 (Bad Request)

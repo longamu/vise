@@ -23,6 +23,13 @@
 #include "http_server/http_server.h"
 #include "vise/vise_request_handler.h"
 
+// for logging
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+
 #if defined(_WIN32) || defined(WIN32)
   #include <windows.h>
   #include <ShellAPI.h>
@@ -113,6 +120,15 @@ int main(int argc, char** argv) {
   if ( !boost::filesystem::exists(se_temp_dir) ) {
     boost::filesystem::create_directories( se_temp_dir );
   }
+
+  /*
+  // initialize logger
+  boost::filesystem::path log_fn = se_temp_dir / boost::filesystem::unique_path("vise-%%%%%%.log");
+  boost::log::add_file_log(log_fn.string());
+  boost::log::trivial::add_common_attributes();
+  boost::log::trivial::core::get()->add_global_attribute("TimeStamp", boost::log::attributes::local_clock());
+  boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
+  */
 
   // this is critical to avoid race conditions for vise_request_handler::instance()
   // initialize http request handler

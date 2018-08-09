@@ -30,7 +30,7 @@ function _vise_file() {
 
   // _vise_file is a global variable
   _vise_file = JSON.parse(_vise_file_str);
-  console.log(_vise_file); // debug
+  //console.log(_vise_file); // debug
 
   var page = document.createElement('div');
   var file = document.createElement('div');
@@ -71,7 +71,6 @@ function _vise_file_init_via_panel(d, panel) {
   _vise_file_via.init(panel);
 
   var img_url = d.image_uri_prefix + d.image_uri_namespace + d.file_id;
-  console.log(img_url)
   var promise = _vise_file_via.m.add_file_from_url(img_url, 'image');
   promise.then( function(ok) {
     _vise_file_via.c.load_file_from_index(0);

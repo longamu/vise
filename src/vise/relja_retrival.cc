@@ -252,9 +252,11 @@ bool vise::relja_retrival::query_using_file_region(unsigned int file_id,
     }
   }
 
+  /*
   BOOST_LOG_TRIVIAL(debug) << "query_using_file_region(): file_id=" << file_id << ", "
                            << "region=[" << x << "," << y << "," << w << "," << h << "], "
                            << "search result = " << result_file_id.size();
+  */
 }
 
 void vise::relja_retrival::get_filelist(std::vector<unsigned int> &file_id_list) {
