@@ -184,6 +184,9 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
         return;
       }
 
+      // @todo: set header fields such that these files are cached
+      //response.set_field("Cache-Control", "public;max-age=3600");
+
       respond_with_static_file( response, fn );
       return;
     }
