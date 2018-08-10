@@ -48,7 +48,7 @@ cd $DEP_SRC && wget https://www.imagemagick.org/download/releases/ImageMagick-6.
 # boost
 cd $DEP_SRC && wget https://kent.dl.sourceforge.net/project/boost/boost/1.66.0/boost_1_66_0.tar.gz && tar -zxvf boost_1_66_0.tar.gz && cd boost_1_66_0 && ./bootstrap.sh --prefix=$DEP_PREFIX --with-toolset=gcc --with-libraries=filesystem,system,thread,date_time,chrono,atomic,timer,mpi,log,serialization && echo "using mpi ;" >> project-config.jam && ./b2 --with-filesystem --with-system --with-thread --with-date_time --with-chrono --with-atomic --with-timer --with-mpi --with-log variant=release threading=multi toolset=gcc install ; \
 ## to fix a bug with boost
-sed -i 's/\ result.count/\ (result.count)/g' $DEP_PREFIX"/include/boost/asio/detail/consuming_buffers.hpp" ; \
+sed -i "s/\ result.count/\ (result.count)/g" $DEP_PREFIX"/include/boost/asio/detail/consuming_buffers.hpp" ; \
 # eigen
 cd $DEP_SRC && wget -O eigen-3.3.5.tar.gz http://bitbucket.org/eigen/eigen/get/3.3.5.tar.gz && tar -zxvf eigen-3.3.5.tar.gz && mv eigen-eigen* eigen-3.3.5 && cd eigen-3.3.5/ && mkdir cmake_build && cd cmake_build && $DEP_PREFIX"/bin/cmake" -DCMAKE_INSTALL_PREFIX=$DEP_PREFIX ../ && make -j8 && make install ; \
 # vlfeat
@@ -64,7 +64,7 @@ cd $VISE_CODE_DIR"/vise/src/search_engine/relja_retrival/external/dkmeans_relja"
 #
 # Compile VISE
 #
-cd $VISE_CODE_DIR"/vise/cmake_build" && $DEP_PREFIX"/bin/cmake" -DCMAKE_PREFIX_PATH=$DEP_PREFIX -DVLFEAT_LIB=$DEP_SRC"/vlfeat-0.9.21/bin/glnxa64/libvl.so" -DVLFEAT_INCLUDE_DIR=$DEP_SRC"/vlfeat-0.9.21/" ../ && make j 8 ; \
+cd $VISE_CODE_DIR"/vise/cmake_build" && $DEP_PREFIX"/bin/cmake" -DCMAKE_PREFIX_PATH=$DEP_PREFIX -DVLFEAT_LIB=$DEP_SRC"/vlfeat-0.9.21/bin/glnxa64/libvl.so" -DVLFEAT_INCLUDE_DIR=$DEP_SRC"/vlfeat-0.9.21/" ../ && make -j 8 ; \
 echo "Done"'
 
 
