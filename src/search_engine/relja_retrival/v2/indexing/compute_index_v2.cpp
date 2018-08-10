@@ -99,6 +99,7 @@ int main(int argc, char* argv[]){
         // ------------------------------------ assign training descs to clusters
         std::string const trainDescsFn       = data_dir + pt.get<std::string>( dsetname+".descsFn", "descs.e3bin" );
         std::string const trainAssignsFn     = data_dir + pt.get<std::string>( dsetname+".assignFn", "assign.bin" );
+        std::string const clstFn             = data_dir + pt.get<std::string>( dsetname+".clstFn", "clst.e3bin" );
 
         buildIndex::computeTrainAssigns( clstFn, useRootSIFT, trainDescsFn, trainAssignsFn);
 
@@ -108,25 +109,24 @@ int main(int argc, char* argv[]){
 
         uint32_t const hammEmbBits= pt.get<uint32_t>( dsetname+".hammEmbBits" );
         std::string const trainFilesPrefix= util::expandUser(pt.get<std::string>( dsetname+".trainFilesPrefix" ));
-        std::string const trainDescsFn= trainFilesPrefix+"descs.e3bin";
-        //std::string const trainAssignsFn= trainFilesPrefix + util::uintToShortStr(vocSize) + "_assigns.bin";
-        std::string const trainAssignsFn = trainFilesPrefix + "assign.bin";
-
-        //std::string const trainHammFn= trainFilesPrefix + util::uintToShortStr(vocSize) + "_hamm" + boost::lexical_cast<std::string>(hammEmbBits) + ".v2bin";
-        std::string const trainHammFn = trainFilesPrefix + "hamm.v2bin";
+        std::string const trainDescsFn       = data_dir + pt.get<std::string>( dsetname+".descsFn", "descs.e3bin" );
+        std::string const trainAssignsFn     = data_dir + pt.get<std::string>( dsetname+".assignFn", "assign.bin" );
+        std::string const trainHammFn        = data_dir + pt.get<std::string>( dsetname+".hammFn", "hamm.v2bin" );
+        std::string const clstFn             = data_dir + pt.get<std::string>( dsetname+".clstFn", "clst.e3bin" );
 
         buildIndex::computeHamming(clstFn, useRootSIFT, trainDescsFn, trainAssignsFn, trainHammFn, hammEmbBits);
 
     } else if (stage=="index"){
         // ------------------------------------ compute index
 
-        std::string const imagelistFn= util::expandUser(pt.get<std::string>( dsetname+".imagelistFn" ));
-        std::string const databasePath= util::expandUser(pt.get<std::string>( dsetname+".databasePath" ));
-        boost::optional<uint32_t> const hammEmbBits= pt.get_optional<uint32_t>( dsetname+".hammEmbBits" );
-        std::string const dsetFn= util::expandUser(pt.get<std::string>( dsetname+".dsetFn" ));
-        std::string const iidxFn= util::expandUser(pt.get<std::string>( dsetname+".iidxFn" ));
-        std::string const fidxFn= util::expandUser(pt.get<std::string>( dsetname+".fidxFn" ));
-        std::string const tmpDir= util::expandUser(pt.get<std::string>( dsetname+".tmpDir" ));
+        std::string const imagelistFn  = data_dir + pt.get<std::string>( dsetname+".imagelistFn" );
+        std::string const databasePath = asset_dir + "image/";
+        uint32_t const hammEmbBits     = pt.get<uint32_t>( dsetname+".hammEmbBits" );
+        std::string const dsetFn       = data_dir + pt.get<std::string>( dsetname+".dsetFn" );
+        std::string const iidxFn       = data_dir + pt.get<std::string>( dsetname+".iidxFn" );
+        std::string const fidxFn       = data_dir + pt.get<std::string>( dsetname+".fidxFn" );
+        std::string const tmpDir       = data_dir + pt.get<std::string>( dsetname+".temp_dir" );
+        std::string const clstFn             = data_dir + pt.get<std::string>( dsetname+".clstFn", "clst.e3bin" );
 
         // feature getter
         featGetter_standard const featGetter_obj( (
@@ -138,8 +138,7 @@ int main(int argc, char* argv[]){
         // embedder
         embedderFactory *embFactory= NULL;
         if (hammEmbBits.is_initialized()){
-            std::string const trainFilesPrefix= util::expandUser(pt.get<std::string>( dsetname+".trainFilesPrefix" ));
-            std::string const trainHammFn= trainFilesPrefix + util::uintToShortStr(vocSize) + "_hamm" + boost::lexical_cast<std::string>(*hammEmbBits) + ".v2bin";
+            std::string const trainHammFn        = data_dir + pt.get<std::string>( dsetname+".hammFn", "hamm.v2bin" );
 
             embFactory= new hammingEmbedderFactory(trainHammFn, *hammEmbBits);
         }
