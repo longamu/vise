@@ -96,8 +96,8 @@ echo "clstFn=clst.e3bin" > $CONFIG_FILENAME
 echo "iidxFn=iidx.v2bin" > $CONFIG_FILENAME
 echo "fidxFn=fidx.v2bin" > $CONFIG_FILENAME
 echo "wghtFn=wght.v2bin" > $CONFIG_FILENAME
-echo "trainNumDescs=-1" > $CONFIG_FILENAME          ## BoW based on all descriptors
-echo "vocSize=100000" > $CONFIG_FILENAME            ## BoW cluster count
+echo "trainNumDescs=-1" > $CONFIG_FILENAME          ## descriptors for training visual vocabulary
+echo "vocSize=100000" > $CONFIG_FILENAME            ## visual vocabulary size (e.g. 200k for large dataset)
 echo "cluster_num_iteration=15" > $CONFIG_FILENAME  ## clustering iterations
 echo "hammFn=train_hamm.v2bin" > $CONFIG_FILENAME
 echo "assignFn=train_assign.bin" > $CONFIG_FILENAME
@@ -115,7 +115,12 @@ cd $VISE_CODE_DIR"/src/search_engine/relja_retrival/v2/indexing/"
 mpirun -np $CPU_CORE_COUNT python compute_clusters.py $SE_ID $CONFIG_FILENAME
 
 ## assign descriptors to clusters
-$DEP_LIBDIR"/bin/mpirun" -np $CPU_CORE_COUNT compute_index_v2 trainAssign $SE_ID $CONFIG_FILENAME
+### (still unsolved) using mpirun for trainAssign stage sometimes results in error
+### Read -1, expected 40000, errno = 14
+### *** Process received signal ***
+### $DEP_LIBDIR"/bin/mpirun" -np $CPU_CORE_COUNT compute_index_v2 trainAssign $SE_ID $CONFIG_FILENAME
+cd $VISE_CODE_DIR"/bin" 
+./compute_index_v2 trainAssign $SE_ID $CONFIG_FILENAME
 
 ## compute hamming embeddings
 $DEP_LIBDIR"/bin/mpirun" -np $CPU_CORE_COUNT compute_index_v2 trainHamm $SE_ID $CONFIG_FILENAME
