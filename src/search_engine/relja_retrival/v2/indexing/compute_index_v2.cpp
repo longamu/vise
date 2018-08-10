@@ -61,10 +61,6 @@ int main(int argc, char* argv[]){
     boost::property_tree::ini_parser::read_ini(tempConfigFn, pt);
 
     // ------------------------------------ read config
-
-    std::string const clstFn= util::expandUser(pt.get<std::string>( dsetname+".clstFn" ));
-    uint32_t const vocSize= pt.get<uint32_t>( dsetname+".vocSize" );
-
     bool const useRootSIFT= pt.get<bool>(dsetname+".RootSIFT", true);
     bool const SIFTscale3= pt.get<bool>( dsetname+".SIFTscale3", true);
     std::string const asset_dir = pt.get<std::string>( dsetname+".asset_dir", "./" );
@@ -108,7 +104,6 @@ int main(int argc, char* argv[]){
         // (i.e. rotation, medians)
 
         uint32_t const hammEmbBits= pt.get<uint32_t>( dsetname+".hammEmbBits" );
-        std::string const trainFilesPrefix= util::expandUser(pt.get<std::string>( dsetname+".trainFilesPrefix" ));
         std::string const trainDescsFn       = data_dir + pt.get<std::string>( dsetname+".descsFn", "descs.e3bin" );
         std::string const trainAssignsFn     = data_dir + pt.get<std::string>( dsetname+".assignFn", "assign.bin" );
         std::string const trainHammFn        = data_dir + pt.get<std::string>( dsetname+".hammFn", "hamm.v2bin" );
@@ -121,12 +116,11 @@ int main(int argc, char* argv[]){
 
         std::string const imagelistFn  = data_dir + pt.get<std::string>( dsetname+".imagelistFn" );
         std::string const databasePath = asset_dir + "image/";
-        uint32_t const hammEmbBits     = pt.get<uint32_t>( dsetname+".hammEmbBits" );
         std::string const dsetFn       = data_dir + pt.get<std::string>( dsetname+".dsetFn" );
         std::string const iidxFn       = data_dir + pt.get<std::string>( dsetname+".iidxFn" );
         std::string const fidxFn       = data_dir + pt.get<std::string>( dsetname+".fidxFn" );
-        std::string const tmpDir       = data_dir + pt.get<std::string>( dsetname+".temp_dir" );
-        std::string const clstFn             = data_dir + pt.get<std::string>( dsetname+".clstFn", "clst.e3bin" );
+        std::string const clstFn       = data_dir + pt.get<std::string>( dsetname+".clstFn", "clst.e3bin" );
+	boost::optional<uint32_t> const hammEmbBits  = pt.get_optional<uint32_t>( dsetname+".hammEmbBits" );
 
         // feature getter
         featGetter_standard const featGetter_obj( (
@@ -150,7 +144,7 @@ int main(int argc, char* argv[]){
                           dsetFn,
                           iidxFn,
                           fidxFn,
-                          tmpDir,
+                          temp_dir,
                           featGetter_obj,
                           clstFn,
                           embFactory );
