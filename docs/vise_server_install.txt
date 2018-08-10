@@ -7,8 +7,8 @@
 # Notes
 #   - all dependecies are installed in privately (i.e. custom location)
 #   - assumes that the reader is comfortable with downloading and compiling 
-#     libraries using bash terminal in Unix
-#   - tested in Ubuntu 16.04
+#     libraries using bash terminal in Linux
+#   - tested in Ubuntu 16.04 (for other OS, may require some tweaking)
 #   - requirements: git, virtualenv, python2.7, pip
 
 ################################################################################
@@ -98,6 +98,7 @@ echo "fidxFn=fidx.v2bin" > $CONFIG_FILENAME
 echo "wghtFn=wght.v2bin" > $CONFIG_FILENAME
 echo "trainNumDescs=-1" > $CONFIG_FILENAME          ## BoW based on all descriptors
 echo "vocSize=100000" > $CONFIG_FILENAME            ## BoW cluster count
+echo "cluster_num_iteration=15" > $CONFIG_FILENAME  ## clustering iterations
 echo "hammFn=train_hamm.v2bin" > $CONFIG_FILENAME
 echo "assignFn=train_assign.bin" > $CONFIG_FILENAME
 echo "trainFilesPrefix=train_" > $CONFIG_FILENAME
@@ -110,9 +111,8 @@ cd $VISE_CODE_DIR"/bin"
 $DEP_LIBDIR"/bin/mpirun" -np $CPU_CORE_COUNT compute_index_v2 trainDescs $SE_ID $CONFIG_FILENAME
 
 ## compute clusters in the SIFT descriptor space  (takes a long time to complete)
-cd $VISE_CODE_DIR"/src/search_engine/relja_retrival/src/v2/indexing/" 
-export CLUSTER_ITERATION=10
-mpirun -np $CPU_CORE_COUNT python compute_clusters.py $SE_ID $CONFIG_FILENAME $CLUSTER_ITERATION
+cd $VISE_CODE_DIR"/src/search_engine/relja_retrival/v2/indexing/" 
+mpirun -np $CPU_CORE_COUNT python compute_clusters.py $SE_ID $CONFIG_FILENAME
 
 ## assign descriptors to clusters
 $DEP_LIBDIR"/bin/mpirun" -np $CPU_CORE_COUNT compute_index_v2 trainAssign $SE_ID $CONFIG_FILENAME

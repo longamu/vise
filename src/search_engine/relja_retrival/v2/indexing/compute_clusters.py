@@ -1,6 +1,6 @@
 #
 # ==== Author:
-# 
+#
 # Relja Arandjelovic (relja@robots.ox.ac.uk)
 # Visual Geometry Group,
 # Department of Engineering Science
@@ -20,7 +20,7 @@ from dkmeans_relja.dkmeans import compute_clusters;
 
 
 def getOptional( f, defaultValue ):
-    
+
     try:
         value= f();
     except ConfigParser.NoOptionError:
@@ -30,28 +30,26 @@ def getOptional( f, defaultValue ):
 
 
 if __name__=='__main__':
-    
+
     dsetname= "oxMini20_v2";
     if len(sys.argv)>1: dsetname= sys.argv[1];
     configFn= "../src/ui/web/config/config.cfg";
     if len(sys.argv)>2: configFn= sys.argv[2];
-    num_iteration = 10;
-    if len(sys.argv)>3: num_iteration= int(sys.argv[3]);
-    
+
     config= ConfigParser.ConfigParser();
     config.read( configFn );
-    
+
     RootSIFT= getOptional( lambda: config.getboolean(dsetname, 'RootSIFT'), True );
 
-    clstFn= os.path.expanduser( config.get(dsetname, 'clstFn') );
-    trainFilesPrefix= os.path.expanduser( config.get(dsetname, 'trainFilesPrefix') );
-    pntsFn= trainFilesPrefix + "descs.e3bin";
-    
-    vocSize= getOptional( lambda: config.getint(dsetname, 'vocSize'), 100 );
-    seed= 43;
-    
+    data_dir = config.get(dsetname, 'data_dir');
+    pntsFn   = os.path.join(data_dir, config.get(dsetname, 'descsFn') );
+    clstFn   = os.path.join(data_dir, config.get(dsetname, 'clstFn') );
+    vocSize  = getOptional( lambda: config.getint(dsetname, 'vocSize'), 100 );
+    num_iter = getOptional( lambda: config.getint(dsetname, 'cluster_num_iteration'), 10 );
+    seed     = 43;
+
     compute_clusters(clstFn, pntsFn, vocSize,
-                     num_iteration, approx=True, seed= seed,
+                     num_iter, approx=True, seed= seed,
                      featureWrapper= ("hell" if RootSIFT else None) );
-    
+
     mpi.finalize();

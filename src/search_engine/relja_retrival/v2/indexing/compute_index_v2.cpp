@@ -87,8 +87,7 @@ int main(int argc, char* argv[]){
         std::string const databasePath       = asset_dir + "image/";
         std::string const trainDatabasePath  = pt.get<std::string>( dsetname+".trainDatabasePath", databasePath);
         int32_t trainNumDescs                = pt.get<int32_t>( dsetname+".trainNumDescs", -1 );
-        std::string const trainFilesPrefix   = pt.get<std::string>( dsetname+".trainFilesPrefix" );
-        std::string const trainDescsFn       = data_dir + trainFilesPrefix + "descs.e3bin";
+        std::string const trainDescsFn       = data_dir + pt.get<std::string>( dsetname+".descsFn", "descs.e3bin" );
 
         buildIndex::computeTrainDescs(
             trainImagelistFn, trainDatabasePath,
@@ -98,10 +97,8 @@ int main(int argc, char* argv[]){
 
     } else if (stage=="trainAssign"){
         // ------------------------------------ assign training descs to clusters
-
-        std::string const trainFilesPrefix= util::expandUser(pt.get<std::string>( dsetname+".trainFilesPrefix" ));
-        std::string const trainDescsFn= trainFilesPrefix+"descs.e3bin";
-        std::string const trainAssignsFn= trainFilesPrefix + util::uintToShortStr(vocSize) + "_assigns.bin";
+        std::string const trainDescsFn       = data_dir + pt.get<std::string>( dsetname+".descsFn", "descs.e3bin" );
+        std::string const trainAssignsFn     = data_dir + pt.get<std::string>( dsetname+".assignFn", "assign.bin" );
 
         buildIndex::computeTrainAssigns( clstFn, useRootSIFT, trainDescsFn, trainAssignsFn);
 
