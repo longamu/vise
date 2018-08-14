@@ -68,8 +68,8 @@ class template_15cbt:
 
 
   <div class="acknowledgement pagerow">
-    <a href="http://15cbooktrade.ox.ac.uk/"><img height="50" src="static/images/headers/15cBOOKTRADE_logo.png" alt="15cBOOKTRADE project" title="15cBOOKTRADE project"></a>
-    <a href="http://www.robots.ox.ac.uk/~vgg/software/vise/"><img height="50" src="static/images/headers/vgg_logo.png" alt="Visual Geometry Group (VGG)" title="Visual Geometry Group (VGG)"></a>
+    <a href="http://15cbooktrade.ox.ac.uk/"><img height="60" src="static/images/headers/15cBOOKTRADE_logo.png" alt="15cBOOKTRADE project" title="15cBOOKTRADE project"></a>
+    <a href="http://www.robots.ox.ac.uk/~vgg/projects/seebibyte/"><img height="60" src="static/images/headers/seebibyte_logo.png" alt="Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1)" title="Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1)"></a>
     <p style="font-size:0.8rem">Development and maintenance of 15cILLUSTRATION is supported by <a href="http://15cbooktrade.ox.ac.uk/">15cBOOKTRADE</a> and EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1)</p>
   </div>
 </div>
