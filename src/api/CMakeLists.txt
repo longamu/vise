@@ -3,7 +3,7 @@ if (cREGISTER)
 endif (cREGISTER)
 
 add_library( abs_api abs_api.cpp )
-target_link_libraries( abs_api ViseMessageQueue ${Boost_LIBRARIES} ${MPI_LIBRARIES} )
+target_link_libraries( abs_api ${Boost_LIBRARIES} ${MPI_LIBRARIES} )
 
 add_library( spatial_api spatial_api.cpp )
 target_link_libraries( spatial_api

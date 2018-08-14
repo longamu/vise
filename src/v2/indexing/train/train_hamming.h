@@ -18,8 +18,6 @@ No usage or redistribution is allowed without explicit permission.
 #include <stdint.h>
 #include <string>
 
-#include "ViseMessageQueue.h"
-
 namespace buildIndex {
     
     void

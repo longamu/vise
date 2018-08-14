@@ -25,7 +25,6 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <Eigen/SVD>
 
-#include "ViseMessageQueue.h"
 #include "clst_centres.h"
 #include "flat_desc_file.h"
 #include "hamming_data.pb.h"
@@ -68,9 +67,6 @@ class trainHammingManager : public managerWithTiming<trainHammingResult> {
 
                 // resize the array to its final size
                 median_.resize(numClst*hammEmbBits_, 0);
-
-                completed_jobs = 0;
-                total_jobs = nJobs;
             }
 
         ~trainHammingManager();
@@ -79,9 +75,6 @@ class trainHammingManager : public managerWithTiming<trainHammingResult> {
             compute( uint32_t jobID, trainHammingResult &result );
 
     private:
-        uint32_t completed_jobs;
-        uint32_t total_jobs;
-
         std::string trainHammFn_;
         uint32_t const vocChunkSize_, hammEmbBits_;
         rr::hammingData hamm_;
@@ -122,11 +115,6 @@ trainHammingManager::compute( uint32_t jobID, trainHammingResult &result ){
     std::memcpy( &median_[wordStart*hammEmbBits_],
                  &result[0],
                  result.size() * sizeof(float) );
-
-    completed_jobs += 1;
-    std::ostringstream s;
-    s << "Hamm log \nProcessed " << completed_jobs << " / " << total_jobs;
-    ViseMessageQueue::Instance()->Push( s.str() );
 }
 
 
@@ -258,8 +246,7 @@ computeHamming(
 
     if (boost::filesystem::exists(trainHammFn)){
         if (rank==0) {
-            //std::cout<<"buildIndex::computeHamming: trainHammFn already exist ("<<trainHammFn<<")\n";
-            ViseMessageQueue::Instance()->Push( "Hamm log \nfile already exists!" );
+            std::cout<<"buildIndex::computeHamming: trainHammFn already exist ("<<trainHammFn<<")\n";
         }
         return;
     }
@@ -269,24 +256,19 @@ computeHamming(
 
     // clusters
     if (rank==0) {
-        //std::cout<<"buildIndex::computeHamming: Loading cluster centres\n";
-        ViseMessageQueue::Instance()->Push( "Hamm log \nLoading cluster centres ... " );
+        std::cout<<"buildIndex::computeHamming: Loading cluster centres\n";
     }
     double t0= timing::tic();
     clstCentres const clstCentres_obj( clstFn.c_str(), true );
     uint32_t numClst= clstCentres_obj.numClst;
     uint32_t numDims= clstCentres_obj.numDims;
     if (rank==0) {
-        //std::cout<<"buildIndex::computeHamming: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
-        s.str("");
-        s.clear();
-        s << "Hamm log done (" << timing::toc(t0) << " ms)";
-        ViseMessageQueue::Instance()->Push( s.str() );
+        std::cout<<"buildIndex::computeHamming: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
     }
     ASSERT(numDims>=hammEmbBits);
 
     bool useThreads= detectUseThreads();
-    uint32_t numWorkerThreads= 8;
+    uint32_t numWorkerThreads= 4;
 
     // rotation
     std::vector<float> rot;
@@ -318,11 +300,7 @@ computeHamming(
         float const *descsEnd= descs + numTrainDescsPCA*numDims;
         uint32_t *clusterIDs= new uint32_t[blockSize];
 
-        //std::cout<<"buildIndex::computeHamming: Reading training "<<numTrainDescsPCA<<" descriptors for PCA\n";
-        s.str("");
-        s.clear();
-        s << "Hamm log \nReading " << numTrainDescsPCA << " training descriptors for PCA";
-        ViseMessageQueue::Instance()->Push( s.str() );
+        std::cout<<"buildIndex::computeHamming: Reading training "<<numTrainDescsPCA<<" descriptors for PCA\n";
 
         for (uint32_t iDescStart= 0; itDesc!=descsEnd; iDescStart+= blockStep){
             float *thisBlockDescs;
@@ -347,8 +325,7 @@ computeHamming(
 
         double t0= timing::tic();
 
-        //std::cout<<"buildIndex::computeHamming: Computing PCA\n";
-        ViseMessageQueue::Instance()->Push( "Hamm log \nComputing PCA" );
+        std::cout<<"buildIndex::computeHamming: Computing PCA\n";
 
         Eigen::Map<Eigen::MatrixXf> trainData(descs, numDims, numTrainDescsPCA);
         Eigen::JacobiSVD<Eigen::MatrixXf> svdForPCA(trainData, Eigen::ComputeThinU);
@@ -358,8 +335,7 @@ computeHamming(
         delete []descs;
 
         // --- get the random rotation (hammEmbBits x hammEmbBits)
-        //std::cout<<"buildIndex::computeHamming: Computing random rotation\n";
-        ViseMessageQueue::Instance()->Push( "Hamm log \nComputing random rotation" );
+        std::cout<<"buildIndex::computeHamming: Computing random rotation\n";
 
         // make random matrix
         sameRandomUint32 sr(hammEmbBits * hammEmbBits, 43);
@@ -386,8 +362,7 @@ computeHamming(
         double t0= timing::tic();
 
         // --- get the random rotation (hammEmbBits x numDims)
-        //std::cout<<"buildIndex::computeHamming: Computing random rotation\n";
-        ViseMessageQueue::Instance()->Push( "Hamm log \nComputing random rotation" );
+        std::cout<<"buildIndex::computeHamming: Computing random rotation\n";
 
         // make random matrix
         sameRandomUint32 sr(numDims * numDims, 43);
@@ -413,11 +388,7 @@ computeHamming(
             for (uint32_t j= 0; j<numDims; ++j)
                 rot.push_back(R(i,j));
 
-        //std::cout<<"buildIndex::computeHamming: Done with rotation ("<< timing::toc(t0) <<" ms)\n";
-        s.str("");
-        s.clear();
-        s << "Hamm log \nFinished with rotation (" << timing::toc(t0) << " ms)";
-        ViseMessageQueue::Instance()->Push( s.str() );
+        std::cout<<"buildIndex::computeHamming: Done with rotation ("<< timing::toc(t0) <<" ms)\n";
     }
 
     #ifdef RR_MPI

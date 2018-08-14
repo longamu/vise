@@ -26,7 +26,6 @@
 #include <boost/serialization/string.hpp>
 #endif
 
-#include "ViseMessageQueue.h"
 #include "image_util.h"
 #include "mpi_queue.h"
 #include "par_queue.h"
@@ -42,26 +41,24 @@ namespace buildIndex {
   class trainDescsManager : public queueManager<trainDescsResult> {
   public:
 
-    trainDescsManager(uint32_t numDocs,
-                      uint32_t numDims,
-                      uint8_t dtypeCode,
-                      int64_t trainNumDescs,
-                      std::string const trainDescsFn)
-      : allDescs_(trainNumDescs<0),
-        remainNumDescs_(trainNumDescs<0 ? 0 : trainNumDescs),
-        nextID_(0),
-        progressPrint_(
-                       trainNumDescs<0 ? numDocs : trainNumDescs,
-                       std::string("Descriptor") ) {
-
-      numDescs_            = trainNumDescs;
-      processed_numDescs_  = 0;
-      f_= fopen(trainDescsFn.c_str(), "wb");
-      ASSERT(f_!=NULL);
-      fwrite( &numDims, sizeof(numDims), 1, f_ );
-      fwrite( &dtypeCode, sizeof(dtypeCode), 1, f_ );
-    }
-
+        trainDescsManager(uint32_t numDocs,
+                          uint32_t numDims,
+                          uint8_t dtypeCode,
+                          int64_t trainNumDescs,
+                          std::string const trainDescsFn)
+              : allDescs_(trainNumDescs<0),
+                remainNumDescs_(trainNumDescs<0 ? 0 : trainNumDescs),
+                nextID_(0),
+                progressPrint_(
+                    trainNumDescs<0 ? numDocs : trainNumDescs,
+                    std::string("trainDescsManager") + (trainNumDescs<0 ? "(images)" : "(descs)") ) {
+                  
+                  f_= fopen(trainDescsFn.c_str(), "wb");
+                  ASSERT(f_!=NULL);
+                  fwrite( &numDims, sizeof(numDims), 1, f_ );
+                  fwrite( &dtypeCode, sizeof(dtypeCode), 1, f_ );
+              }
+        
     ~trainDescsManager(){ fclose(f_); }
 
     void
@@ -74,9 +71,6 @@ namespace buildIndex {
     std::map<uint32_t, trainDescsResult> results_;
     FILE *f_;
     timing::progressPrint progressPrint_;
-
-    uint64_t processed_numDescs_;
-    uint64_t numDescs_;
 
     DISALLOW_COPY_AND_ASSIGN(trainDescsManager)
   };
@@ -102,7 +96,6 @@ namespace buildIndex {
         trainDescsResult const &res= it->second;
         if (allDescs_) {
           progressPrint_.inc();
-          processed_numDescs_ += 1;
         }
 
         if (res.first>0) {
@@ -117,17 +110,6 @@ namespace buildIndex {
                   f_ );
           if (!allDescs_) {
             progressPrint_.inc(numToCopy);
-
-            processed_numDescs_ += numToCopy;
-
-            std::ostringstream s;
-            //s << "Descriptor log \nDone " << processed_img_count_ << " / " << total_img_count_;
-            s << "Descriptor log \nFinished computing descriptors " << processed_numDescs_ << " / " << numDescs_;
-            ViseMessageQueue::Instance()->Push( s.str() );
-
-            std::ostringstream progress;
-            progress << "Descriptor progress " << processed_numDescs_ << "/" << numDescs_;
-            ViseMessageQueue::Instance()->Push( progress.str() );
           }
           remainNumDescs_-= numToCopy;
         }

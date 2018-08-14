@@ -4,7 +4,6 @@ target_link_libraries( flat_desc_file )
 
 add_library( train_assign train_assign.cpp )
 target_link_libraries( train_assign
-    ViseMessageQueue
     feat_getter
     flat_desc_file
     image_util
@@ -16,7 +15,6 @@ target_link_libraries( train_assign
 
 add_library( train_descs train_descs.cpp )
 target_link_libraries( train_descs
-    ViseMessageQueue
     clst_centres
     par_queue
     same_random # added by @Abhishek to support compilation in Mac
@@ -26,7 +24,6 @@ target_link_libraries( train_descs
 
 add_library( train_hamming train_hamming.cpp )
 target_link_libraries( train_hamming
-    ViseMessageQueue
     clst_centres
     flat_desc_file
     median_computer

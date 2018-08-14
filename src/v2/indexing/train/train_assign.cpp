@@ -22,7 +22,6 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <fastann.hpp>
 
-#include "ViseMessageQueue.h"
 #include "clst_centres.h"
 #include "flat_desc_file.h"
 #include "mpi_queue.h"
@@ -48,9 +47,6 @@ class trainAssignsManager : public managerWithTiming<trainAssignsResult> {
               nextID_(0){
                 f_= fopen(trainAssignsFn.c_str(), "wb");
                 ASSERT(f_!=NULL);
-
-                completed_jobs = 0;
-                total_jobs = numDocs;
             }
 
         ~trainAssignsManager(){ fclose(f_); }
@@ -62,9 +58,6 @@ class trainAssignsManager : public managerWithTiming<trainAssignsResult> {
         FILE *f_;
         uint32_t nextID_;
         std::map<uint32_t, trainAssignsResult> results_;
-
-        uint32_t completed_jobs;
-        uint32_t total_jobs;
 
         DISALLOW_COPY_AND_ASSIGN(trainAssignsManager)
 };
@@ -89,12 +82,7 @@ trainAssignsManager::compute( uint32_t jobID, trainAssignsResult &result ){
                     f_ );
 
             results_.erase(it++);
-            completed_jobs += 1;
         }
-
-        std::ostringstream s;
-        s << "Assignment log \nProcessed " << completed_jobs << " / " << total_jobs;
-        ViseMessageQueue::Instance()->Push( s.str() );
     }
 }
 
@@ -165,24 +153,19 @@ computeTrainAssigns(
     ASSERT( boost::filesystem::exists(trainDescsFn) );
 
     bool useThreads= detectUseThreads();
-    uint32_t numWorkerThreads= 8;
+    uint32_t numWorkerThreads= 4;
 
     // clusters
     if (rank==0) {
-        //std::cout<<"buildIndex::computeTrainAssigns: Loading cluster centres\n";
-        ViseMessageQueue::Instance()->Push( "Assignment log \nLoading cluster centers ..." );
+        std::cout<<"buildIndex::computeTrainAssigns: Loading cluster centres\n";
     }
     double t0= timing::tic();
     clstCentres clstCentres_obj( clstFn.c_str(), true );
     if (rank==0) {
-        //std::cout<<"buildIndex::computeTrainAssigns: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
-        std::ostringstream s;
-        s << "Assignment log done (" << timing::toc(t0) << " ms)";
-        ViseMessageQueue::Instance()->Push( s.str() );
+        std::cout<<"buildIndex::computeTrainAssigns: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
     }
     if (rank==0) {
-      //std::cout<<"buildIndex::computeTrainAssigns: Constructing NN search object\n";
-      ViseMessageQueue::Instance()->Push( "Assignment log \nConstructing NN search object ..." );
+      std::cout<<"buildIndex::computeTrainAssigns: Constructing NN search object\n";
     }
 
     t0= timing::tic();
@@ -199,18 +182,12 @@ computeTrainAssigns(
             clstCentres_obj.numDims);
     #endif
     if (rank==0) {
-      //std::cout<<"buildIndex::computeTrainAssigns: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
-      std::ostringstream s;
-      s << "Assignment log done (" << timing::toc(t0) << " ms)";
-      ViseMessageQueue::Instance()->Push( s.str() );
+      std::cout<<"buildIndex::computeTrainAssigns: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
     }
     flatDescsFile const descFile(trainDescsFn, RootSIFT);
     uint32_t const numTrainDescs= descFile.numDescs();
     if (rank==0) {
-      //std::cout<<"buildIndex::computeTrainAssigns: numTrainDescs= "<<numTrainDescs<<"\n";
-      std::ostringstream s;
-      s << "Assignment log \nnumTrainDescs= "<<numTrainDescs;
-      ViseMessageQueue::Instance()->Push( s.str() );
+      std::cout<<"buildIndex::computeTrainAssigns: numTrainDescs= "<<numTrainDescs<<"\n";
     }
     uint32_t const chunkSize=
         std::min( static_cast<uint32_t>(10000),

@@ -30,7 +30,6 @@ No usage or redistribution is allowed without explicit permission.
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
-#include "ViseMessageQueue.h"
 #include "timing.h"
 
 void
@@ -111,31 +110,6 @@ absAPI::session( socket_ptr sock ){
     }
 
     boost::asio::write(*sock, boost::asio::buffer(reply));
-}
-
-
-void InitReljaRetrivalFrontend(std::string dsetname, std::string configFn, std::string vise_src_code_dir) {
-  // @todo: avoid relative path and discover the file "compute_clusters.py" automatically
-  std::string exec_name = vise_src_code_dir + "/src/ui/web/webserver2.py";
-
-  std::cout << "\nLoading frontend using : " << exec_name << std::flush;
-  std::ostringstream s;
-  s << "python " << exec_name << " 9973";
-  s << " " << dsetname;
-  s << " 65521";
-  s << " " << configFn;
-  s << " true";
-
-  FILE *pipe = popen( s.str().c_str(), "r");
-  ViseMessageQueue::Instance()->Push("Query command _redirect http://localhost:9973 1000");
-
-  if ( pipe == NULL ) {
-    std::cerr << " [failed]" << std::flush;
-  } else {
-
-  }
-  pclose( pipe );
-  std::cout << " [done]" << std::flush;
 }
 
 void

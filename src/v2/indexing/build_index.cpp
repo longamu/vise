@@ -30,7 +30,6 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <fastann.hpp>
 
-#include "ViseMessageQueue.h"
 #include "build_index_status.pb.h"
 #include "clst_centres.h"
 #include "dataset_v2.h"
@@ -181,19 +180,12 @@ class buildManagerSemiSorted : public managerWithTiming<buildResultSemiSorted> {
             : managerWithTiming<buildResultSemiSorted>(numDocs, "buildManagerSemiSorted"),
               dsetBuilder_(dsetFn),
               nextID_(0)
-              {
-
-                completed_jobs = 0;
-                total_jobs = numDocs;
-              }
+              {}
 
         void
             compute( uint32_t jobID, buildResultSemiSorted &result );
 
     private:
-        uint32_t completed_jobs;
-        uint32_t total_jobs;
-
         datasetBuilder dsetBuilder_;
         uint32_t nextID_;
         std::map<uint32_t, buildResultSemiSorted> results_;
@@ -217,16 +209,7 @@ buildManagerSemiSorted::compute( uint32_t jobID, buildResultSemiSorted &result )
                               res.second.first,
                               res.second.second );
             results_.erase(it++);
-            completed_jobs += 1;
         }
-        std::ostringstream log;
-        log << "Index log \nSemiSorted processed " << completed_jobs << " / " << total_jobs;
-        ViseMessageQueue::Instance()->Push( log.str() );
-
-        std::ostringstream progress;
-        progress << "Index progress " << completed_jobs << "/" << total_jobs;
-        ViseMessageQueue::Instance()->Push( progress.str() );
-
     }
 }
 
@@ -1055,21 +1038,15 @@ build(
         }
         // clusters
         if (rank==0) {
-            //std::cout<<"buildIndex::build: Loading cluster centres\n";
-            ViseMessageQueue::Instance()->Push( "Index log \nLoading cluster centres ... " );
+            std::cout<<"buildIndex::build: Loading cluster centres\n";
         }
         double t0= timing::tic();
         clstCentres clstCentres_obj( clstFn.c_str(), true );
         if (rank==0) {
-            //std::cout<<"buildIndex::build: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
-            s.str("");
-            s.clear();
-            s << "Index log done (" << timing::toc(t0) << " ms)";
-            ViseMessageQueue::Instance()->Push( s.str() );
+            std::cout<<"buildIndex::build: Loading cluster centres - DONE ("<< timing::toc(t0) <<" ms)\n";
         }
         if (rank==0) {
-            //std::cout<<"buildIndex::build: Constructing NN search object\n";
-            ViseMessageQueue::Instance()->Push( "Index log \nConstructing NN search object ... " );
+            std::cout<<"buildIndex::build: Constructing NN search object\n";
         }
         t0= timing::tic();
 
@@ -1086,11 +1063,7 @@ build(
                 clstCentres_obj.numDims);
         #endif
         if (rank==0) {
-            //std::cout<<"buildIndex::build: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
-            s.str("");
-            s.clear();
-            s << "Index log done (" << timing::toc(t0) << " ms)";
-            ViseMessageQueue::Instance()->Push( s.str() );
+            std::cout<<"buildIndex::build: Constructing NN search object - DONE ("<< timing::toc(t0) << " ms)\n";
         }
 
         // get number of documents
@@ -1221,9 +1194,8 @@ build(
         // sort the previously generated files (sorted within each indexEntry by clusterID) such that sorting is maintained accorss indexEntries as well (i.e. last element of first indexEntry is < than first element of second indexEntry)
 
         if (rank==0){
-            //std::cout<<"buildIndex::build: semiSorted\n";
-            //std::cout<< "\n" << status.DebugString() <<"\n";
-            ViseMessageQueue::Instance()->Push( "Index log \nindex semi sorted" );
+            std::cout<<"buildIndex::build: semiSorted\n";
+            std::cout<< "\n" << status.DebugString() <<"\n";
         }
 
         std::vector<std::string> fns;
@@ -1274,9 +1246,8 @@ build(
     if (status.state()==rr::buildIndexStatus::merged){
 
         if (rank==0){
-            //std::cout<<"buildIndex::build: merged\n";
-            //std::cout<< "\n" << status.DebugString() <<"\n";
-            ViseMessageQueue::Instance()->Push( "Index log \nindex merged" );
+            std::cout<<"buildIndex::build: merged\n";
+            std::cout<< "\n" << status.DebugString() <<"\n";
         }
 
         std::vector<std::string> fns;
@@ -1336,12 +1307,8 @@ build(
     if (rank==0){
         ASSERT(loadStatus(indexingStatusFn, status));
         ASSERT(status.state()==rr::buildIndexStatus::done);
-        //std::cout<<"buildIndex::build: done in "<< timing::hrminsec(timing::toc(t0)/1000) <<"\n";
-        //std::cout<< "\n" << status.DebugString() <<"\n";
-        s.str("");
-        s.clear();
-        s << "Index log \nIndexing completed in " << timing::hrminsec(timing::toc(t0)/1000);
-        ViseMessageQueue::Instance()->Push( s.str() );
+        std::cout<<"buildIndex::build: done in "<< timing::hrminsec(timing::toc(t0)/1000) <<"\n";
+        std::cout<< "\n" << status.DebugString() <<"\n";
     }
 
 }
