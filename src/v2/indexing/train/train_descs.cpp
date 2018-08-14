@@ -212,7 +212,7 @@ namespace buildIndex {
     }
 
     bool useThreads= detectUseThreads();
-    uint32_t numWorkerThreads= 8;
+    uint32_t numWorkerThreads= 4;
     std::cout << "numWorkerThreads = " << numWorkerThreads << std::endl << std::flush;
 
     // read the list of training images and shuffle it
