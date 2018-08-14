@@ -1,0 +1,5 @@
+# Hashes of file build rules.
+dae9bdd7ddc231ac7b3cb94a7d14b5c7 CMakeFiles/perf
+dae9bdd7ddc231ac7b3cb94a7d14b5c7 CMakeFiles/test
+98162751c270c290e0493f8173f000f6 dummy_perf
+102a4425786f042a1c0aad31d0ef68ab dummy_test

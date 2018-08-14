@@ -1,0 +1,46 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/tlm/dev/vise/src/search_engine/relja_retrival/external/fastann/src/randomkit.c
+stddef.h
+-
+stdio.h
+-
+stdlib.h
+-
+errno.h
+-
+limits.h
+-
+math.h
+-
+time.h
+-
+sys/timeb.h
+-
+time.h
+-
+sys/timeb.h
+-
+windows.h
+-
+wincrypt.h
+-
+time.h
+-
+sys/time.h
+-
+unistd.h
+-
+randomkit.h
+/home/tlm/dev/vise/src/search_engine/relja_retrival/external/fastann/src/randomkit.h
+
+/home/tlm/dev/vise/src/search_engine/relja_retrival/external/fastann/src/randomkit.h
+stddef.h
+-
+
