@@ -70,11 +70,10 @@ namespace timing {
                 printStep_( std::max(nJobs/numPrint, static_cast<uint64_t>(1)) ),
                 totalDone_(0),
                 prefix_(prefix) {}
-            
+
             void
                 inc(std::string extraInfo= ""){
                     ++totalDone_;
-/*
                     if (totalDone_==0) t1_= timing::tic();
                     ++totalDone_;
                     if (totalDone_<4 ||
@@ -96,7 +95,6 @@ namespace timing {
                                     <<"; avg "<< avgtime <<" s\n";
                         }
                     }
-*/
                 }
             
             inline void
