@@ -1,1 +1,0 @@
-/usr/bin/c++   -Wall -O2 -g3 -msse2 -fno-exceptions -fno-rtti -O3 -DNDEBUG  -rdynamic CMakeFiles/perf_kdtree.dir/perf_kdtree.cpp.o  -o perf_kdtree -Wl,-rpath,/home/tlm/dev/vise/src/search_engine/relja_retrival/external/fastann/cmake_build libfastann.so 

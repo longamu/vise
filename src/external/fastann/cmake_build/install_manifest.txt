@@ -1,5 +1,0 @@
-/home/tlm/deps/vise-2.x.y/lib/lib/libfastann.so
-/home/tlm/deps/vise-2.x.y/lib/include/fastann/fastann.hpp
-/home/tlm/deps/vise-2.x.y/lib/include/fastann/randomkit.h
-/home/tlm/deps/vise-2.x.y/lib/include/fastann/rand_point_gen.hpp
-/home/tlm/deps/vise-2.x.y/lib/include/fastann/fastann.h

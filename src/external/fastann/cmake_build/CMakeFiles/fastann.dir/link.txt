@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC  -Wall -O2 -g3 -msse2 -fno-exceptions -fno-rtti -O3 -DNDEBUG  -shared -Wl,-soname,libfastann.so -o libfastann.so CMakeFiles/fastann.dir/dist_l2.cpp.o CMakeFiles/fastann.dir/fastann.cpp.o CMakeFiles/fastann.dir/randomkit.c.o 
