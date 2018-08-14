@@ -179,8 +179,8 @@ endif (cREGISTER)
 
 set( RR_SEND_COMMENTS_PY "False" )
 set( RR_AUTO_EMAIL_PASS_PY "replacethis" )
-CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/ui/web/webserver.cmake.py ${CMAKE_SOURCE_DIR}/ui/web/webserver.py )
-CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/ui/web/send_comments.cmake.py ${CMAKE_SOURCE_DIR}/ui/web/send_comments.py )
+#CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/ui/web/webserver.cmake.py ${CMAKE_SOURCE_DIR}/ui/web/webserver.py )
+#CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/ui/web/send_comments.cmake.py ${CMAKE_SOURCE_DIR}/ui/web/send_comments.py )
 
 
 

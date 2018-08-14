@@ -154,7 +154,7 @@ class text_search:
   def get_search_input_page(self, search_keyword1=None, search_target1=None, search_operator='AND', search_keyword2=None, search_target2=None, search_year_from=None, search_year_to=None,):
       return '''
 <div class="text_search_panel pagerow">
-  <span class="title">Search Image Metadata</span>
+  <span class="title">Search Metadata</span>
   <form action="text_search" method="GET" id="text_search">
   <div class="search_input">
     <div class="pagerow">
@@ -208,11 +208,23 @@ class text_search:
 
 
   # return a list of matching filename
-  def search_region_metadata(self, keyword):
+  def search_region_metadata(self, keyword, year_from=None, year_to=None):
     # filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
     match = self.file_attributes.region_attributes['region_attributes'].str.contains(keyword, case=False, na=False, regex=True);
-    return set(self.file_attributes.region_attributes[match]['filename'].unique());
+    match_filenames = set(self.file_attributes.region_attributes[match]['filename'].unique())
 
+    # create subset so that further search only happens in entries between year [from, to)
+    istc_subset = None;
+    if year_from is not None or year_to is not None:
+      if year_from is not None:
+        istc_subset = self.file_attributes.istc_db[ self.file_attributes.istc_db['imprint_year'] >= int(year_from) ]
+        if year_to is not None:
+          istc_subset = istc_subset[ istc_subset['imprint_year'] <= int(year_to) ]
+        #
+        matched_year_filenames = set(self.file_attributes.file_attributes_index.loc[ self.file_attributes.file_attributes_index['istc_id'].isin( istc_subset['id'] )]['filename'].unique());
+        return match_filenames.intersection(matched_year_filenames);
+    else:
+      return match_filenames;
 
   def search_istc_metadata(self, keyword, year_from=None, year_to=None):
     # id,author,title,imprint,format
@@ -225,7 +237,7 @@ class text_search:
       if year_from is not None:
         istc_subset = self.file_attributes.istc_db[ self.file_attributes.istc_db['imprint_year'] >= int(year_from) ]
         if year_to is not None:
-          istc_subset = istc_subset[ istc_subset['imprint_year'] < int(year_to) ]
+          istc_subset = istc_subset[ istc_subset['imprint_year'] <= int(year_to) ]
     else:
       istc_subset = self.file_attributes.istc_db;
 
@@ -298,13 +310,13 @@ class text_search:
 
     body = self.get_search_input_page(search_keyword1, search_target1, search_operator, search_keyword2, search_target2, search_year_from, search_year_to)
     if search_keyword1 is None:
-      return self.pT.get(title = "Metadata Search", headExtra = "", body = body);
+      return self.pT.get(title = "Search Metadata", headExtra = "", body = body);
 
     search_keyword1 = urllib.unquote(search_keyword1).decode('utf8');
     match = None
     match1 = None;
     if search_target1 == 'region_metadata':
-      match1 = self.search_region_metadata(search_keyword1);
+      match1 = self.search_region_metadata(search_keyword1, search_year_from, search_year_to);
     elif search_target1 == 'istc_metadata':
       match1 = self.search_istc_metadata(search_keyword1, search_year_from, search_year_to);
     text_search_uri += 'search_keyword1=' + search_keyword1 + '&search_target1=' + search_target1;
@@ -316,7 +328,7 @@ class text_search:
 
       match2 = None;
       if search_target2 == 'region_metadata':
-        match2 = self.search_region_metadata(search_keyword2);
+        match2 = self.search_region_metadata(search_keyword2, search_year_from, search_year_to);
       elif search_target2 == 'istc_metadata':
         match2 = self.search_istc_metadata(search_keyword2, search_year_from, search_year_to);
       text_search_uri += '&search_keyword2=' + search_keyword2 + '&search_target2=' + search_target2;

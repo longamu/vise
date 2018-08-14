@@ -43,7 +43,7 @@ print 'scriptroot = %s' %(scriptroot);
 print 'uploadDir = %s' %(uploadDir);
 print 'tmpDir = %s' %(tmpDir);
 
-maxSizeDefault= 600;
+maxSizeDefault= 1020;
 
 
 

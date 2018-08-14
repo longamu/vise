@@ -104,7 +104,7 @@ class pathManager_open:
 
 class webserver2:
 
-    def __init__(self, API_obj, serveraddress, serverroot, docMap, enableUpload, guiOpts, pathManager=None, examples=None, externalExamples=None, file_attributes_fn=None, file_attributes_filename_colname=None, istc_db_fn=None, istc_id_colname=None, region_attributes_fn=None, region_attributes_filename_colname=None):
+    def __init__(self, API_obj, serveraddress, serverroot, docMap, enableUpload, guiOpts, pathManager=None, examples=None, externalExamples=None, file_attributes_fn=None, file_attributes_filename_colname=None, istc_db_fn=None, istc_id_colname=None, region_attributes_fn=None, region_attributes_filename_colname=None, preprocess_fn=None, preprocess_filename_colname=None):
 
         def_dsetname= docMap.keys()[0];
 
@@ -130,7 +130,7 @@ class webserver2:
         self.file_index_obj = file_index.file_index( self.template_15cbt, self.docMap, self.pathManager_obj );
         self.file_index = self.file_index_obj.index;
         #self.file_attributes_obj = file_attributes.file_attributes( self.pT, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True, file_attributes_fn=file_attributes_fn, file_attributes_filename_colname=file_attributes_filename_colname );
-        self.file_attributes_obj = file_attributes_15cbt.file_attributes_15cbt( self.template_15cbt, self.docMap, self.pathManager_obj, file_attributes_fn, file_attributes_filename_colname, istc_db_fn, istc_id_colname, region_attributes_fn, region_attributes_filename_colname );
+        self.file_attributes_obj = file_attributes_15cbt.file_attributes_15cbt( self.template_15cbt, self.docMap, self.pathManager_obj, file_attributes_fn, file_attributes_filename_colname, istc_db_fn, istc_id_colname, region_attributes_fn, region_attributes_filename_colname, preprocess_fn, preprocess_filename_colname );
         self.file_attributes= self.file_attributes_obj.index;
 
         self.doSearch_obj= do_search.doSearch( self.template_15cbt,
@@ -307,6 +307,10 @@ def get(
         istc_id_colname = getOptional( lambda: config.get(dsetname, 'istc_id_colname'), 'id' );
         region_attributes_fn = getOptional( lambda: config.get(dsetname, 'region_attributes_fn'), None );
         region_attributes_filename_colname = getOptional( lambda: config.get(dsetname, 'region_attributes_filename_colname'), None );
+        preprocess_fn = getOptional( lambda: config.get(dsetname, 'preprocess_fn'), None );
+        preprocess_filename_colname = getOptional( lambda: config.get(dsetname, 'preprocess_filename_colname'), None );
+        print preprocess_fn
+        print preprocess_filename_colname
 
         if ( file_attributes_fn != None ):
           print "Loading file attributes from: %s ..." %(file_attributes_fn);
@@ -382,7 +386,9 @@ def get(
                                 istc_db_fn = istc_db_fn,
                                 istc_id_colname = istc_id_colname,
                                 region_attributes_fn=region_attributes_fn,
-                                region_attributes_filename_colname=region_attributes_filename_colname);
+                                region_attributes_filename_colname=region_attributes_filename_colname,
+                                preprocess_fn=preprocess_fn,
+                                preprocess_filename_colname=preprocess_filename_colname);
 
     return webserver_obj, conf;
 

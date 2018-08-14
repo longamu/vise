@@ -23,6 +23,16 @@ class template_15cbt:
   <meta name="description" content="15cILLUSTRATION : searchable database of 15th century printed illustrations.">
   <link rel="shortcut icon" type="image/x-icon" href="./static/favicon.ico"/>
   <link rel="stylesheet" type="text/css" href="./static/vise2.css" />
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-20555581-3', 'auto');
+    ga('set', 'page', '/vise/15cillustration/vise_15cbt-1.0.0');
+    ga('send', 'pageview');
+  </script>
   <script src="./static/vise.js"></script>
   %s
 </head>
@@ -40,7 +50,7 @@ class template_15cbt:
           <li><a href="page0">Search Using Database Images</a></li>
           <li><a href="text_search">Search Metadata</a></li>
           <li><a href="file_index">Index of Illustrations</a></li>
-          <li><a href="istc">Illustrations Grouped by ISTC Id</a></li>
+          <li><a href="istc">Illustrations Grouped by ISTC</a></li>
         </ul>
       </div>
       <div>

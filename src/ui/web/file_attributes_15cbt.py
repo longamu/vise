@@ -16,7 +16,7 @@ import json;
 
 class file_attributes_15cbt:
     
-  def __init__(self, pageTemplate, docMap, pathManager_obj, file_attributes_fn= None, file_attributes_filename_colname= "filename", istc_db_fn=None, istc_id_colname="id", region_attributes_fn=None, region_attributes_filename_colname="filename"):
+  def __init__(self, pageTemplate, docMap, pathManager_obj, file_attributes_fn= None, file_attributes_filename_colname= "filename", istc_db_fn=None, istc_id_colname="id", region_attributes_fn=None, region_attributes_filename_colname="filename", preprocess_fn=None, preprocess_filename_colname=None):
     self.pT= pageTemplate;
     self.docMap= docMap;
     self.pathManager_obj= pathManager_obj;
@@ -27,10 +27,43 @@ class file_attributes_15cbt:
     self.filename_to_docid_map = {};
     self.istc_db = None;
     self.region_attributes = None;
+    self.image_scale_factor = None;
 
     self.load_istc_db(istc_db_fn, istc_id_colname);
     self.load_file_attributes(file_attributes_fn, file_attributes_filename_colname);
     self.load_region_attributes(region_attributes_fn, region_attributes_filename_colname);
+    #self.load_image_scale_factor(preprocess_fn, preprocess_filename_colname);
+
+  #
+  # @todo: scale image region to resized image
+  #
+  def load_image_scale_factor(self, preprocess_fn, preprocess_filename_colname):
+    #image_fn,original_size,original_width,original_height,tx_width,tx_height
+    if preprocess_fn != None:
+      file_count = len(self.docMap[self.dsetname]);  
+      self.image_scale_factor = {};
+      self.image_scale_factor['doc_id'] = range(0, file_count);
+      self.image_scale_factor['filename'] = list();
+      self.image_scale_factor['scale_factor'] = list();
+
+      preprocess_data = pd.read_csv(preprocess_fn, sep=',', header=0, engine='python', encoding='utf-8');
+      preprocess_data.rename( columns={preprocess_filename_colname: 'filename'}, inplace=True );
+      for doc_id in range(0,file_count):
+        filename = self.pathManager_obj[self.dsetname].displayPath(doc_id);
+        self.image_scale_factor['filename'].append(filename);
+        #print preprocess_data['filename']
+        print filename
+        print( preprocess_data.columns)
+        print preprocess_data.loc[ preprocess_data['filename'] == 'ib00297900_02001216_A1r.jpg' ]
+
+        print row
+        if row is not None:
+          self.image_scale_factor['scale_factor'].append( row['original_width'] / row['tx_width'] );
+        else:
+          self.image_scale_factor['scale_factor'].append(1.0);
+
+      print 'Finished loading %d image scale factor' % (self.image_scale_factor.shape[0]);
+      print self.image_scale_factor;
 
   def load_region_attributes(self, region_attributes_fn, region_attributes_filename_colname):
     #filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
@@ -39,8 +72,6 @@ class file_attributes_15cbt:
       self.region_attributes.drop([col for col in self.region_attributes.columns if "Unnamed" in col], axis=1, inplace=True) # remove unnamed columns
       self.region_attributes.rename( columns={region_attributes_filename_colname: 'filename'}, inplace=True );
       print 'Finished loading %d region attributes' % (self.region_attributes.shape[0]);
-
-    
 
   def load_istc_db(self, istc_db_fn, istc_id_colname):
     if istc_db_fn != None:
@@ -110,6 +141,12 @@ class file_attributes_15cbt:
           istc_id = filename[ 0 : s1 ]; 
           mei_id  = filename[ (s1+1) : s2 ];
           folio   = filename[ (s2+1) : dot_index ];
+        else:
+          # for all other formats, discard folio
+          s1 = filename.find('_', 0);
+          istc_id = filename[ 0 : s1 ]; 
+          mei_id  = filename[ (s1+1) : (s1+8) ];
+          folio   = ''
 
     if folio == '':
       folio = '_UNKNOWN_';
@@ -185,8 +222,14 @@ class file_attributes_15cbt:
 
       metadata_index = metadata_index + 1;
 
+#http://localhost:9981/15cILLUSTRATION/getImage?docID=237&height=200&xl=267.00&xu=843.00&yl=450.00&yu=1023.00&H=1.030070,0.000000,-36.005528,0.022533,0.970808,-88.125657,0.000000,0.000000,1.000000&crop
+
+    # add the corresponding region (crop of image) for visualization
+
     # end of for metadata_i
     region_metadata_html += '</tbody></table><label for="region_%d_metadata" class="show_more_trigger"></label>' % (rank);
+    # @todo: show scaled region
+    #region_metadata_html += '<div><img src="getImage?docID=%d&%s&crop"></div>' % (doc_id, region_spec);
     region_metadata_html += '</div></div>';
 
     return region_metadata_html;

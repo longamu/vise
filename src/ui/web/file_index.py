@@ -33,7 +33,7 @@ class file_index:
       print(file_count)
       for doc_id in range(0,file_count):
       #for doc_id in range(0,100):
-        print "Processing doc_id %d" % (doc_id);
+        #print "Processing doc_id %d" % (doc_id);
         filename = self.pathManager_obj[self.dsetname].displayPath(doc_id);
         html.append('<li>[<a href="search?docID=%d">%.5d</a>] <a href="file_attributes?docID=%d">%s</a></li>' % (doc_id, doc_id, doc_id, filename) );
 

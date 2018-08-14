@@ -358,12 +358,17 @@ ul.hlist {
 .compare_panel img { width:100%; padding:1rem;}
 
 /* home page */
-.home_page {}
-.home_page .top_description { max-width:740px; }
-.home_page .task { padding:2rem 0; vertical-align:middle;}
-.home_page .task .task_i { float:left; display:inline-block; padding:1rem; width:320px; height:140px; margin:0 1rem 1rem 0; border-radius:0.7rem;}
-.home_page .task .task_i .task_title { display:block; text-align:center; font-size:1.2rem;}
-.home_page .task .task_i .task_description { display:block; text-align:left; font-size:0.8rem; margin-top:1rem; }
+.home_page { font-size:default; }
+.home_page .top_description { display:inline-block; max-width:70rem; font-size:medium;}
+.home_page .task { padding:2rem 0; vertical-align:middle; }
+.home_page .task a:link {
+  color:black;
+  text-decoration:none;
+}
+
+.home_page .task .task_i { float:left; display:inline-block; padding:1rem; width:20rem; height:8rem; margin:0 2rem 2rem 0; border-radius:0.7rem; }
+.home_page .task .task_i .task_title { display:block; text-align:center; font-size:large; }
+.home_page .task .task_i .task_description { text-align:left; font-size:0.9rem; margin-top:1rem; }
 
 .task1_bg_color { background-color: #fff6d5; }
 .task2_bg_color { background-color: #ffd5e5; }
