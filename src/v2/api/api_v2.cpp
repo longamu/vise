@@ -12,40 +12,64 @@ The library belongs to Relja Arandjelovic and the University of Oxford.
 No usage or redistribution is allowed without explicit permission.
 */
 
-#include "api_v2.h"
+#include "spatial_api.h"
 
-/*
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <stdio.h>
+#include <vector>
+#include <stdexcept>
+#include <string>
+
+#include <boost/bind.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/lambda/construct.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/thread.hpp>
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+
+#include <fastann/fastann.hpp>
+
+#include "clst_centres.h"
+#include "dataset_v2.h"
+#include "feat_getter.h"
+#include "feat_standard.h"
+#include "hamming.h"
+#include "hamming_embedder.h"
+#include "index_entry.pb.h"
+#include "macros.h"
+#include "mq_filter_outliers.h"
+#include "par_queue.h"
+#include "proto_db.h"
+#include "proto_db_file.h"
+#include "proto_index.h"
+#include "python_cfg_to_ini.h"
+#include "slow_construction.h"
+#include "soft_assigner.h"
+#include "spatial_verif_v2.h"
+#include "tfidf_data.pb.h"
+#include "tfidf_v2.h"
+#include "util.h"
+
+#include "ImageMetadata.h"
+
 int main(int argc, char* argv[]){
     MPI_INIT_ENV
-    std::vector< std::string > param;
-    for( unsigned int i=0; i<argc; i++) {
-      param.push_back( argv[i] );
-    }
-    api_v2( param );
-    return 0;
-}
-*/
-
-
-//
-// so that this can be invoked from within C++
-// (temporary: used until JS based frontend is ready)
-//
-void api_v2(std::vector< std::string > argv) {
-// ------------------------------------ setup basic
-    int argc = argv.size();
+    
+    // ------------------------------------ setup basic
     int APIport= 35200;
-    if (argc>1) APIport= atoi(argv[1].c_str());
+    if (argc>1) APIport= atoi(argv[1]);
     std::cout<<"APIport= "<<APIport<<"\n";
-
+    
     std::string dsetname= "oxMini20_v2";
     if (argc>2) dsetname= argv[2];
-
+    
     std::string configFn= "../src/ui/web/config/config.cfg";
     if (argc>3) configFn= argv[3];
-
-    std::string vise_src_code_dir = "";
-    if (argc>4) vise_src_code_dir = argv[4];
 
     configFn= util::expandUser(configFn);
     std::string tempConfigFn= util::getTempFileName();
@@ -288,7 +312,7 @@ void api_v2(std::vector< std::string > argv) {
     // start
     boost::asio::io_service io_service;
 
-    API_obj.server(io_service, APIport, dsetname, configFn, vise_src_code_dir);
+    API_obj.server(io_service, APIport, dsetname, configFn);
 
     // make sure this is deleted before everything which uses it
     delete consQueue;

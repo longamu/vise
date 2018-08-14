@@ -15,7 +15,7 @@ target_link_libraries( spatial_api
     ${MPI_LIBRARIES}
     ${REGISTER_LIB} )
 
-add_library( ImageMetadata ImageMetadata.cc )
+add_library( ImageMetadata ImageMetadata.cc ${Boost_LIBRARIES})
 
 # TODO: can be trivially ported to v2
 # add_executable( single_api single_api.cpp )

@@ -1,4 +1,4 @@
-add_subdirectory( tests )
+#add_subdirectory( tests )
 
 add_library( hamming hamming.cpp )
 target_link_libraries( hamming

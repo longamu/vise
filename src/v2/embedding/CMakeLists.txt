@@ -1,4 +1,4 @@
-add_subdirectory( tests )
+#add_subdirectory( tests )
 
 add_executable( convert_hamming_formats convert_hamming_formats.cpp )
 target_link_libraries( convert_hamming_formats

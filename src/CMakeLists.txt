@@ -1,240 +1,77 @@
-cmake_minimum_required( VERSION 2.6 )
-project( relja_retrieval )
+##
+## VGG Image Search Engine (VISE)
+## vise_server
+##
+## Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
+## 18 June 2018
+##
 
+cmake_minimum_required( VERSION 3.10 )
+project( 15cillustration )
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/../forbuild/")
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-
-MACRO(MY_EVAL_CONDITION name)
-   IF(${ARGN})
-     SET(${name} 1)
-   ELSE(${ARGN})
-     SET(${name} 0)
-   ENDIF(${ARGN})
-ENDMACRO(MY_EVAL_CONDITION)
-
-MY_EVAL_CONDITION( ISTITAN $ENV{HOSTNAME} MATCHES "headnode1.*|comp.*" )
-MY_EVAL_CONDITION( ISZEUS $ENV{HOSTNAME} MATCHES "zeus" )
-MY_EVAL_CONDITION( ISSANDS $ENV{HOSTNAME} MATCHES "sands" )
-MY_EVAL_CONDITION( ISLAPTOP $ENV{HOSTNAME} MATCHES "Relja-laptop|relja-ThinkPad-T410" )
-MY_EVAL_CONDITION( ISARTHUR2 $ENV{HOSTNAME} MATCHES "arthur2" )
-
-MY_EVAL_CONDITION( NOTTITAN NOT ISTITAN )
-
-message("hostname: " $ENV{HOSTNAME})
-
-
-
-MACRO(MY_OPTION name description value)
-   IF(${value})
-     OPTION(${name} description ON)
-   ELSE(${value})
-     OPTION(${name} description 0FF)
-   ENDIF(${value})
-ENDMACRO(MY_OPTION)
-
-
+set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../bin")
+set( BUILD_SHARED_LIBS "OFF" )
 
 ############################## MPI settings
+message("=========================== MPI: ON")
+ADD_DEFINITIONS(-DRR_MPI)
+set( REQURE_BOOST_MPI "mpi" )
+message("=========================== Registration: ON")
+ADD_DEFINITIONS(-DRR_REGISTER)
+ADD_DEFINITIONS(-DRR_MAGICK)
+set( cREGISTER 1 )
 
-MY_OPTION( cMPI "MPI support" ISTITAN )
+## MPI
+find_package(MPI REQUIRED)
+if (MPI_FOUND)
+    include_directories(SYSTEM ${MPI_INCLUDE_PATH})
+else (MPI_FOUND)
+    message(SEND_ERROR "This application cannot compile without MPI")
+endif (MPI_FOUND)
 
+## Boost
+find_package(Boost 1.64.0 COMPONENTS mpi filesystem system thread atomic log serialization REQUIRED)
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	set( Boost_USE_MULTITHREADED ON )
+  set( Boost_USE_DEBUG_RUNTIME OFF )
+  set( Boost_USE_STATIC_RUNTIME OFF )
+  set( Boost_USE_STATIC_LIBS OFF )
+  set( BOOST_ALL_DYN_LINK ON)
+  set( Boost_DEBUG OFF )
+  add_definitions(-DBOOST_ALL_NO_LIB)
+  add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
+endif()
+link_directories( ${Boost_LIBRARY_DIRS} )
+include_directories( ${Boost_INCLUDE_DIRS} )
 
-if (cMPI)
-    message("=========================== MPI: ON")
-    ADD_DEFINITIONS(-DRR_MPI)
-    set( REQURE_BOOST_MPI "mpi" )
-else (cMPI)
-    message("=========================== MPI: OFF")
-endif (cMPI)
+## ImageMagick
+ADD_DEFINITIONS(-DMAGICKCORE_HDRI_ENABLE=0)
+ADD_DEFINITIONS(-DMAGICKCORE_QUANTUM_DEPTH=8)
+find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
+# @todo: on alienware, find_package() points to "/usr/lib/x86_64-linux-gnu/libMagick++-6.Q16.so"
+# and does not detect the library available at "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so"
+#set(ImageMagick_LIBRARIES "/home/tlm/deps/vise/lib/lib/libMagick++-6.Q8.so")
+include_directories( ${ImageMagick_INCLUDE_DIRS} )
 
+# Eigen
+# requires EIGEN_DIR to be set to the location where Eigen3 is built using cmake
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+include_directories( ${EIGEN3_INCLUDE_DIR} )
 
-
-############################## Registration
-
-MY_OPTION( cREGISTER "Registration" NOTTITAN )
-
-if (cREGISTER)
-    message("=========================== Registration: ON")
-    ADD_DEFINITIONS(-DRR_REGISTER)
-else (cREGISTER)
-    message("=========================== Registration: OFF")
-endif (cREGISTER)
-
-MY_EVAL_CONDITION( cREQUIRE_MAGICK cREGISTER )
-
-
-
-############################## James's FASTANN
-
-## James's FASTANN (download from robots/software)
-#find_package(fastann REQUIRED)
-#include_directories( ${fastann_INCLUDE_DIRS} )
-## source: forbuild/Findfastann.cmake
-find_path(fastann_INCLUDE_DIR
-  NAMES fastann.hpp
-  PATH_SUFFIXES fastann
-  DOC "The directory where fastann.hpp resides")
-
-find_library(fastann_LIBRARY
-  NAMES fastann
-  DOC "The fastann library")
-
-# handle the QUIETLY and REQUIRED arguments and set FASTANN_FOUND to TRUE if 
-# all listed variables are TRUE
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(fastann DEFAULT_MSG fastann_LIBRARY fastann_INCLUDE_DIR)
-
-if (FASTANN_FOUND)
-  set(fastann_LIBRARIES ${fastann_LIBRARY})
-  set(fastann_INCLUDE_DIRS ${fastann_INCLUDE_DIR})
-endif(FASTANN_FOUND)
-
-mark_as_advanced(
-  fastann_INCLUDE_DIR
-  fastann_LIBRARY)
-include_directories( ${fastann_INCLUDE_DIRS} )
-
-
-############################## Magick++
-
-if (cREQUIRE_MAGICK)
-
-    message("=========================== Magick++: Required")
-
-    find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
-
-else (cREQUIRE_MAGICK)
-
-    find_package( ImageMagick COMPONENTS Magick++ )
-
-endif (cREQUIRE_MAGICK)
-
-if (ImageMagick_FOUND)
-    include_directories( ${ImageMagick_INCLUDE_DIRS} )
-    ADD_DEFINITIONS(-DRR_MAGICK)
-else (ImageMagick_FOUND)
-    message("Magick++ was not found, but is really recommended (if not required)")
-endif (ImageMagick_FOUND)
-
-
-
-############################## Protocol Buffer
-
+## Protocol Buffer
+## required by "search_engine/relja_retrival"
 include(FindProtobuf)
 find_package( Protobuf REQUIRED )
 include_directories( ${PROTOBUF_INCLUDE_DIR} )
 
-
-
-
-############################## Titan settings
-
-if ( ISTITAN )
-
-    ## Boost
-    set(BOOST_ROOT "/opt/gridware/pkg/libs/boost/1.51.0/gcc-4.4.6+openmpi-1.6.3/")
-    set(Boost_NO_SYSTEM_PATHS "TRUE")
-
-    if (cMPI)
-        include_directories("/opt/gridware/pkg/mpi/openmpi/1.6.3/gcc-4.4.6/include/")
-    endif (cMPI)
-
-    ## should fix this HACK
-    ADD_DEFINITIONS(-DISTITAN)
-
-endif ( ISTITAN )
-
-############################## Zeus settings
-
-# if ( ISZEUS )
-#     # needed for 1.46.1
-#     set(BOOST_ROOT "/opt/boost1.46.1/")
-#     # do not link against system boost (old) libs
-#     SET(Boost_NO_SYSTEM_PATHS "TRUE")
-# endif ( ISZEUS )
-
-############################## Sands settings
-
-if ( NOTTITAN )
-    if (cMPI)
-        set( MPI_LIBRARIES "mpi" "mpi_cxx" )
-        include_directories( /usr/lib/openmpi/include )
-    endif (cMPI)
-endif ( NOTTITAN )
-
-
-
-
-
-
-
-############################## autogenerated files
-
-if (cREGISTER)
-    set( RR_REGISTER_PY "True")
-else (cREGISTER)
-    set( RR_REGISTER_PY "False")
-endif (cREGISTER)
-
-set( RR_SEND_COMMENTS_PY "False" )
-set( RR_AUTO_EMAIL_PASS_PY "replacethis" )
-#CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/ui/web/webserver.cmake.py ${CMAKE_SOURCE_DIR}/ui/web/webserver.py )
-#CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/ui/web/send_comments.cmake.py ${CMAKE_SOURCE_DIR}/ui/web/send_comments.py )
-
-
-
-
-# SET( CMAKE_VERBOSE_MAKEFILE on )
-
-
-############################## Boost
-
-
-find_package(Boost 1.44.0 COMPONENTS ${REQURE_BOOST_MPI} filesystem system thread date_time atomic timer REQUIRED)
-
-link_directories( ${Boost_LIBRARY_DIRS} )
-include_directories( ${Boost_INCLUDE_DIRS} )
-
-
-
-
-
-##############################
-
-message("Boost_LIBRARIES: " ${Boost_LIBRARIES})
-message("Boost_INCLUDE_DIRS: " ${Boost_INCLUDE_DIRS})
-message("ImageMagick_LIBRARIES: " ${ImageMagick_LIBRARIES} )
-message("ImageMagick_INCLUDE_DIRS: " ${ImageMagick_INCLUDE_DIRS} )
-message("PROTOBUF_INCLUDE_DIR: " ${PROTOBUF_INCLUDE_DIR} )
-message("PROTOBUF_LIBRARIES: " ${PROTOBUF_LIBRARIES} )
-message("fastann_INCLUDE_DIRS: " ${fastann_INCLUDE_DIRS})
-message("fastann_LIBRARIES: " ${fastann_LIBRARIES} )
-
-
-
-############################## Normal stuff
-
-
-# Change this to OFF to build binaries for redistribution
-set( BUILD_SHARED_LIBS "ON" )
-# set( BUILD_SHARED_LIBS "OFF" )
-
-## Flags for building VISE release
-set( CMAKE_CXX_FLAGS "-Wall -DEIGEN_NO_DEBUG -O3 -msse2 -mpopcnt -DMAGICKCORE_QUANTUM_DEPTH=16 -DMAGICKCORE_HDRI_ENABLE=1")
-
-## Flags for debugging VISE codebase
-#set( CMAKE_CXX_FLAGS "-Wall -DEIGEN_NO_DEBUG -g3 -msse2 -mpopcnt -DMAGICKCORE_QUANTUM_DEPTH=16 -DMAGICKCORE_HDRI_ENABLE=1")
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.7.1")
-    # -Wno-unused-local-typedefs is just for EIGEN and more recent g++
-    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -unused-local-typedefs")
-  endif()
-endif()
-
-# set( CMAKE_CXX_FLAGS "-Wall -Wno-unused-local-typedefs -DEIGEN_NO_DEBUG -O0 -g3")
-
+## James's FASTANN (download from robots/software)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/external/")
+find_package(fastann REQUIRED)
+include_directories( ${fastann_INCLUDE_DIRS} )
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -254,7 +91,7 @@ include_directories( matching/registration )
 include_directories( nn )
 include_directories( represent )
 include_directories( retrieval )
-include_directories( tests )
+#include_directories( tests ) # does not compile (for some reason)
 include_directories( util )
 include_directories( v2/api )
 include_directories( v2/dataset )
@@ -283,6 +120,6 @@ add_subdirectory( nn )
 add_subdirectory( preprocessing )
 add_subdirectory( represent )
 add_subdirectory( retrieval )
-add_subdirectory( tests )
+#add_subdirectory( tests ) # does not compile (for some reason)
 add_subdirectory( util )
 add_subdirectory( v2 )

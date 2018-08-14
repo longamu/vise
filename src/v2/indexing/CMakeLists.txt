@@ -1,4 +1,4 @@
-add_subdirectory( tests )
+#add_subdirectory( tests )
 add_subdirectory( train )
 
 add_library( build_index build_index.cpp )

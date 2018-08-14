@@ -113,16 +113,13 @@ absAPI::session( socket_ptr sock ){
 }
 
 void
-absAPI::server(boost::asio::io_service& io_service, unsigned int port, std::string dsetname, std::string configFn, std::string vise_src_code_dir) {
+absAPI::server(boost::asio::io_service& io_service, unsigned int port, std::string dsetname, std::string configFn) {
 
     std::cout << "\nabsAPI::server() : Waiting for requests on port " << port << std::flush;
 try_again:
     try {
         tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), port));
         a.set_option(tcp::acceptor::reuse_address(true));
-
-
-        //boost::thread t( boost::bind( &InitReljaRetrivalFrontend, dsetname, configFn, vise_src_code_dir ) );
 
         while (1) {
             socket_ptr sock(new tcp::socket(io_service));

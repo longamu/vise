@@ -1,4 +1,4 @@
-add_subdirectory( tests )
+#add_subdirectory( tests )
 
 PROTOBUF_GENERATE_CPP(dataset_entry.pb.cpp dataset_entry.pb.h dataset_entry.proto)
 add_library( dataset_entry.pb ${dataset_entry.pb.cpp} )

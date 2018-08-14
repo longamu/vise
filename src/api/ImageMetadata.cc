@@ -67,7 +67,8 @@ void ImageMetadata::LoadMetadata(boost::filesystem::path metadata_fn) {
 
         //std::cout << "\nfilename=" << filename << " : " << metadata_i.region_[0] << "," << metadata_i.region_[1] << "," << metadata_i.region_[2] << "," << metadata_i.region_[3] << std::flush;
         if ( metadata_.find(filename) == metadata_.end() ) {
-          metadata_.insert( std::make_pair<std::string, std::vector<ImageRegionMetadata> >(filename, std::vector<ImageRegionMetadata>()) );
+          //metadata_.insert( std::make_pair<std::string, std::vector<ImageRegionMetadata> >(filename, std::vector<ImageRegionMetadata>()) );
+          metadata_.insert( std::make_pair(filename, std::vector<ImageRegionMetadata>()) );
         }
         metadata_.find(filename)->second.push_back(metadata_i);
       }/* else {
@@ -105,7 +106,8 @@ void ImageMetadata::LoadPreprocessData( boost::filesystem::path preprocess_log_f
       std::vector<double> scale;
       scale.push_back( ((double) w0) / ((double) wtx) ); // scale x
       scale.push_back( ((double) h0) / ((double) htx) ); // scale y
-      img_scale_.insert( std::make_pair<std::string, std::vector<double> >(filename, scale) );
+      //img_scale_.insert( std::make_pair<std::string, std::vector<double> >(filename, scale) );
+      img_scale_.insert( std::make_pair(filename, scale) );
       //printf("\n%s : w0=%ld, h0=%ld, wtx=%ld, htx=%ld", filename.c_str(), w0, h0, wtx, htx);
       //std::cout << "\n  " << filename << " : sx=" << scale.at(0) << ", sy=" << scale.at(1) << std::flush;
     }
@@ -206,7 +208,8 @@ void ImageMetadata::JsonParse(std::string& json, std::map<std::string, std::stri
     for ( it = pt.begin(); it != pt.end(); it++ ) {
       std::string key = it->first;
       std::string val = pt.get<std::string>(key);
-      data.insert( std::make_pair<std::string, std::string>(key, val) );
+      //data.insert( std::make_pair<std::string, std::string>(key, val) );
+      data.insert( std::make_pair(key, val) );
     }
   } catch( std::exception& e ) {
     std::cerr << "\nImageMetadata::JsonParse() : error parsing json : " << json << " : " << e.what() << std::flush;

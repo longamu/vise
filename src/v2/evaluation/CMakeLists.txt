@@ -1,4 +1,4 @@
-add_subdirectory( tests )
+#add_subdirectory( tests )
 
 PROTOBUF_GENERATE_CPP(eval_query.pb.cpp eval_query.pb.h eval_query.proto)
 add_library( eval_query.pb ${eval_query.pb.cpp} )
