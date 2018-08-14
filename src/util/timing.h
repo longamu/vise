@@ -25,7 +25,11 @@ No usage or redistribution is allowed without explicit permission.
 
 #include "macros.h"
 
+
+
 namespace timing {
+    
+    
     
     inline double now(){
         struct timeval t;
@@ -70,19 +74,16 @@ namespace timing {
                 printStep_( std::max(nJobs/numPrint, static_cast<uint64_t>(1)) ),
                 totalDone_(0),
                 prefix_(prefix) {}
-
+            
             void
                 inc(std::string extraInfo= ""){
-                    ++totalDone_;
                     if (totalDone_==0) t1_= timing::tic();
                     ++totalDone_;
                     if (totalDone_<4 ||
                         !(totalDone_ & (totalDone_-1)) || // power of 2
                         totalDone_%printStep_==0 || totalDone_==nJobs_){
-
-                        if (totalDone_==1) {
-                            //std::cout<<prefix_<<": "<< timing::getTimeString()<<" 1 / "<<nJobs_<<"\n";
-                        }
+                        if (totalDone_==1)
+                            std::cout<<prefix_<<": "<< timing::getTimeString()<<" 1 / "<<nJobs_<<"\n";
                         else {
                             double time= timing::toc(t1_)/1000;
                             double avgtime= time / (totalDone_-1);
