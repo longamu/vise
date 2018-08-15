@@ -261,7 +261,10 @@ class doSearch:
             match_filename = self.pathManager_obj[dsetname].hidePath(docIDres).decode('utf-8');
 
             is_result_hidden = False;
-            if (score < 50.0):
+            ##
+            ## @todo: use the score threshold provided in configuration file
+            ##
+            if (score < 10.0):
                 is_result_hidden = True;
 
             ## We add a footer mentioning the hidden search results
