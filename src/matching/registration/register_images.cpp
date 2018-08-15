@@ -84,7 +84,7 @@ registerImages::registerFromGuess(
     Magick::Image im1; im1.read( fullSizeFn1 );
     Magick::Image im2; im2.read( fullSizeFn2 );
     Magick::Image im2t;
-    
+
     if (fullSizeExist) {
         // modify Hinit to account for scale change
         Magick::Image imSmall1; imSmall1.read( image_fn1 );
@@ -188,7 +188,7 @@ registerImages::registerFromGuess(
         // AffineProjection(sx, rx, ry, sy, tx, ty) <=> H=[sx, ry, tx; sy, rx, ty; 0 0 1]
         double MagickAffine[6]={Hinv[0],Hinv[3],Hinv[1],Hinv[4],Hinv[2],Hinv[5]};
         im2t.virtualPixelMethod(Magick::BlackVirtualPixelMethod);
-        im2t.distort(Magick::AffineProjectionDistortion, 6, MagickAffine, false);
+        im2t.distort(Magick::AffineProjectionDistortion, 6, MagickAffine, true);
         
         firstGo= false;
         
