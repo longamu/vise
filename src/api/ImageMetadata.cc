@@ -86,7 +86,7 @@ void ImageMetadata::LoadPreprocessData( boost::filesystem::path preprocess_log_f
   std::ifstream f(preprocess_log_fn.string().c_str(), std::ifstream::in);
 
   while( f ) {
-    //#image_fn,original_size,original_width,original_height,tx_size,tx_width,tx_height
+    //"filename","width_original","height_original","width","height"
     std::string csvline;
     std::getline( f, csvline);
 
@@ -96,13 +96,17 @@ void ImageMetadata::LoadPreprocessData( boost::filesystem::path preprocess_log_f
       ParseCsvLine(csvline, tokens);
 
       std::string filename = tokens.at(0);
+      if ( filename[0] == '"' && filename[ filename.size() - 1] == '"' ) {
+        // remove double quotes
+        filename = filename.substr(1, filename.size() - 2);
+      }
       unsigned long w0, h0, wtx, htx;
 
       std::stringstream s;
-      s << tokens.at(2); s >> w0; s.clear();
-      s << tokens.at(3); s >> h0; s.clear();
-      s << tokens.at(5); s >> wtx; s.clear();
-      s << tokens.at(6); s >> htx; s.clear();
+      s << tokens.at(1); s >> w0; s.clear();
+      s << tokens.at(2); s >> h0; s.clear();
+      s << tokens.at(3); s >> wtx; s.clear();
+      s << tokens.at(4); s >> htx; s.clear();
       std::vector<double> scale;
       scale.push_back( ((double) w0) / ((double) wtx) ); // scale x
       scale.push_back( ((double) h0) / ((double) htx) ); // scale y

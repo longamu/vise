@@ -268,40 +268,25 @@ int main(int argc, char* argv[]){
     }
 
     boost::optional<std::string> region_attributes_fn_str = pt.get_optional<std::string>( util::expandUser( dsetname+".region_attributes_fn" ));
-    boost::optional<std::string> vise_preprocess_fn_str = pt.get_optional<std::string>( util::expandUser( dsetname+".vise_preprocess_fn" ));
-    if ( region_attributes_fn_str && vise_preprocess_fn_str ) {
+    boost::optional<std::string> image_scale_stat_fn_str = pt.get_optional<std::string>( util::expandUser( dsetname+".image_scale_stat_fn" ));
+    if ( region_attributes_fn_str && image_scale_stat_fn_str ) {
       boost::filesystem::path region_attributes_fn(region_attributes_fn_str.get());
-      boost::filesystem::path vise_preprocess_fn(vise_preprocess_fn_str.get());
+      boost::filesystem::path image_scale_stat_fn(image_scale_stat_fn_str.get());
       std::cout << "\napiv2::apiv2() : region_attributes_fn = " << region_attributes_fn.string() << std::flush;
-      std::cout << "\napiv2::apiv2() : vise_preprocess_fn = " << vise_preprocess_fn.string() << std::flush;
-      if ( boost::filesystem::exists(region_attributes_fn) && boost::filesystem::exists(vise_preprocess_fn) ) {
+      std::cout << "\napiv2::apiv2() : vise_preprocess_fn = " << image_scale_stat_fn.string() << std::flush;
+      if ( boost::filesystem::exists(region_attributes_fn) && boost::filesystem::exists(image_scale_stat_fn) ) {
         std::cout << "\napiv2::apiv2() Loading image region metadata ..." << std::flush;
-        ImageMetadata::Instance()->LoadPreprocessData( vise_preprocess_fn );
+        ImageMetadata::Instance()->LoadPreprocessData( image_scale_stat_fn );
         std::cout << "[loaded preprocess]" << std::flush;
         ImageMetadata::Instance()->LoadMetadata( region_attributes_fn );
         std::cout << "[loaded metadata]" << std::flush;
       } else {
-        std::cout << "\napiv2::apiv2() cannot find metadata_fn and preprocess_fn." << std::flush;
+        std::cout << "\napiv2::apiv2() cannot find region_attributes_fn and image_scale_stat_fn." << std::flush;
       }
     } else {
-      std::cout << "\napiv2::apiv2() Skipped loading image region metadata as config does not contain: metadata_fn and preprocess_fn" << std::flush;
+      std::cout << "\napiv2::apiv2() Skipped loading image region metadata as config does not contain: region_attributes_fn and image_scale_stat_fn" << std::flush;
     }
-/*
-    // ImageMetadata
-    std::string metadata_fn_str = pt.get_optional<std::string>( util::expandUser( dsetname+".metadata_fn" )).get();
-    std::string preprocess_fn_str = pt.get_optional<std::string>( util::expandUser( dsetname+".preprocess_fn" )).get();
-    boost::filesystem::path metadata_fn(metadata_fn_str);
-    boost::filesystem::path preprocess_fn(preprocess_fn_str);
-    if ( !boost::filesystem::exists(metadata_fn) || !boost::filesystem::exists(preprocess_fn) ) {
-      std::cout << "\napiv2::apiv2() Loading image region metadata ..." << std::flush;
-      std::cout << "\n  - metadata_fn = " << metadata_fn.string() << std::flush;
-      std::cout << "\n  - preprocess_fn = " << preprocess_fn.string() << std::flush;
-      ImageMetadata::Instance()->LoadPreprocessData( preprocess_fn );
-      ImageMetadata::Instance()->LoadMetadata( metadata_fn );
-    } else {
-      std::cout << "\napiv2::apiv2() Skipped loading image region metadata as config does not contain: metadata_fn and preprocess_fn" << std::flush;
-    }
-*/
+
     // API object
     API API_obj( spatVerifObj, mq, dset);
 
