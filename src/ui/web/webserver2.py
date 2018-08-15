@@ -16,6 +16,7 @@ import api;
 
 import template, page0, dynamic_image, search_page, do_search, details, home;
 import template_15cbt;
+import contribution;
 import file_index;
 import file_attributes_15cbt;
 import istc;
@@ -119,6 +120,7 @@ class webserver2:
         # page template for all pages
         self.template_15cbt = template_15cbt.template_15cbt();
         self.home_obj= home.home( self.template_15cbt, docMap);
+        self.contribution_obj= contribution.contribution( self.template_15cbt);
 
         self.upload_obj= upload.upload(self.template_15cbt, API_obj);
         self.page0_obj= page0.page0( self.template_15cbt, self.docMap, self.pathManager_obj, examples= examples, externalExamples= externalExamples, browse= True );
@@ -158,6 +160,7 @@ class webserver2:
         # definition of link between url and corresponding python script that handle those request
         self.index= self.home_obj.index;
         self.home= self.index;
+        self.contribution = self.contribution_obj.index;
         self.page0= self.page0_obj.index;
         self.getImage= self.dynamicImage_obj.index;
         self.search= self.searchPage_obj.index;

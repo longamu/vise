@@ -51,6 +51,7 @@ class template_15cbt:
           <li><a href="text_search">Search Metadata</a></li>
           <li><a href="file_index">Index of Illustrations</a></li>
           <li><a href="istc">Illustrations Grouped by ISTC</a></li>
+          <li><a href="contribution">Contributing Libraries</a></li>
         </ul>
       </div>
       <div>

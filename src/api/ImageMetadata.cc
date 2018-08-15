@@ -178,7 +178,7 @@ void ImageMetadata::GetImageMetadata(std::string image_fn,
       metadata_region_str = s.str();
     }
   } else {
-    std::cerr << "\nMetadata not found: " << image_fn << std::flush;
+    //std::cerr << "\nMetadata not found: " << image_fn << std::flush;
   }
 }
 
