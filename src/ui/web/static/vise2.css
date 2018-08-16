@@ -345,7 +345,7 @@ ul.hlist {
   padding-right: 1rem;
 }
 
-.acknowledgement { text-align:center; margin:4rem 0; }
+.acknowledgement { text-align:center; margin:6rem 0 1rem 0; }
 .acknowledgement img {padding:0 1rem;}
 
 /* image comparison page */
@@ -366,7 +366,7 @@ ul.hlist {
   text-decoration:none;
 }
 
-.home_page .task .task_i { float:left; display:inline-block; padding:1rem; width:20rem; height:8rem; margin:0 2rem 2rem 0; border-radius:0.7rem; }
+.home_page .task .task_i { float:left; display:inline-block; padding:1rem; width:20rem; height:12rem; margin:0 2rem 2rem 0; border-radius:0.7rem; }
 .home_page .task .task_i .task_title { display:block; text-align:center; font-size:large; }
 .home_page .task .task_i .task_description { text-align:left; font-size:0.9rem; margin-top:1rem; }
 
