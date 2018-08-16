@@ -2,7 +2,7 @@
 #
 # Author    Abhishek Dutta <adutta@robots.ox.ac.uk>
 # Date      9 August 2018
-# Revision  ?
+# Revision  1
 #
 # Notes
 #   - all dependecies are installed in privately (i.e. custom location)
@@ -145,4 +145,12 @@ export PRELOAD_SEARCH_ENGINE_ID=$SE_ID
 ./vise_server $VISE_HOSTNAME $VISE_PORT $NUM_THREADS $VISE_CODE_DIR"/vise/asset" $VISE_DATA_DIR $VISE_ASSET_DIR $VISE_TEMP_DIR $PRELOAD_SEARCH_ENGINE_ID
 
 ## in a web browser, open http://localhost:9971/vise/query/myse/1/
+
+
+(the instructions below are optional)
+
+################################################################################
+# 5. Building Docker container (optional)
+cd $VISE_CODE_DIR"/scripts/docker" 
+sudo docker build --rm --no-cache=true -t vise:2.0.0-beta1 .
 
