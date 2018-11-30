@@ -1,3 +1,6 @@
+################################################################################
+############################ DOES NOT WORK NOW #################################
+################################################################################
 #
 # Dockerfile for creating a docker image that runs the VGG Image Search Engine 
 # (VISE) version 2.x.y
@@ -16,9 +19,6 @@ FROM debian:jessie
 # Define image labels
 #
 LABEL name="VGG Image Search Engine" codename="VISE" version="2.0.0-beta1" maintainer="Abhishek Dutta <adutta@robots.ox.ac.uk>" description="VGG Image Search Engine (VISE) enables instance based search of a large collection of images."
-
-# All VISE services are available through this port
-EXPOSE 9971
 
 VOLUME /data/vgg/software/vise
 
