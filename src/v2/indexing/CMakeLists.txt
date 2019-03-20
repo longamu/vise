@@ -23,19 +23,19 @@ PROTOBUF_GENERATE_CPP(build_index_status.pb.cpp build_index_status.pb.h build_in
 add_library( build_index_status.pb ${build_index_status.pb.cpp} )
 target_link_libraries( build_index_status.pb ${PROTOBUF_LIBRARIES} )
 
-#add_executable( compute_index_v2 compute_index_v2.cpp )
-#target_link_libraries( compute_index_v2
-#    ViseMessageQueue
-#    build_index
-#    dataset_v2
-#    embedder
-#    feat_standard
-#    hamming_embedder
-#    mpi_queue
-#    train_assign
-#    train_descs
-#    train_hamming
-#    ${Boost_LIBRARIES} )
+add_executable( compute_index_v2 compute_index_v2.cpp )
+target_link_libraries( compute_index_v2
+    ViseMessageQueue
+    build_index
+    dataset_v2
+    embedder
+    feat_standard
+    hamming_embedder
+    mpi_queue
+    train_assign
+    train_descs
+    train_hamming
+    ${Boost_LIBRARIES} )
 
 add_library( daat daat.cpp )
 target_link_libraries( daat index_entry_util index_entry.pb uniq_entries )
