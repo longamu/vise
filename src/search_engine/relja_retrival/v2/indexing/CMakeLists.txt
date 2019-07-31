@@ -33,6 +33,7 @@ target_link_libraries( compute_index_v2
     train_assign
     train_descs
     train_hamming
+    train_cluster
     ${Boost_LIBRARIES} )
 
 add_library( daat daat.cpp )

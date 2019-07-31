@@ -43,6 +43,30 @@ target_link_libraries( retriever_v2
     ${Boost_LIBRARIES}
     ${fastann_LIBRARIES} )
 
+add_executable( create_image_graph create_image_graph.cpp )
+target_link_libraries( create_image_graph
+    dataset_v2
+    hamming
+    image_graph
+    mpi_queue
+    proto_db
+    proto_db_file
+    proto_index
+    spatial_verif_v2
+    tfidf_v2 )
+
+add_executable( export_image_graph export_image_graph.cpp )
+target_link_libraries( export_image_graph
+    dataset_v2
+    hamming
+    image_graph
+    mpi_queue
+    proto_db
+    proto_db_file
+    proto_index
+    spatial_verif_v2
+    tfidf_v2 )
+
 add_library( spatial_verif_v2 spatial_verif_v2.cpp )
 target_link_libraries( spatial_verif_v2 daat det_ransac ellipse homography index_entry_util par_queue retriever_v2 uniq_entries ${Boost_LIBRARIES} )
 

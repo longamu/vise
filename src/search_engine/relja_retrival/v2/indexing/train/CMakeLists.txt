@@ -2,6 +2,9 @@ add_library( flat_desc_file flat_desc_file.cpp )
 target_link_libraries( flat_desc_file )
 
 
+add_library( train_cluster train_cluster.cpp )
+target_link_libraries( train_cluster ${VLFEAT_LIB} )
+
 add_library( train_assign train_assign.cpp )
 target_link_libraries( train_assign
     feat_getter

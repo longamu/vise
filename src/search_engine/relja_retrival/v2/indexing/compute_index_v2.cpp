@@ -28,6 +28,7 @@ No usage or redistribution is allowed without explicit permission.
 #include "python_cfg_to_ini.h"
 #include "train_assign.h"
 #include "train_descs.h"
+#include "train_cluster.h"
 #include "train_hamming.h"
 #include "util.h"
 
@@ -90,6 +91,13 @@ int main(int argc, char* argv[]){
             trainDescsFn,
             trainNumDescs,
             featGetter_obj);
+
+    } else if (stage=="trainCluster"){
+        // ------------------------------------ assign training descs to clusters
+        std::string const train_desc_fn      = data_dir + pt.get<std::string>( dsetname+".descsFn", "descs.e3bin" );
+        std::string const cluster_fn         = data_dir + pt.get<std::string>( dsetname+".clstFn", "clst.e3bin" );
+
+        buildIndex::compute_train_cluster( train_desc_fn, useRootSIFT, cluster_fn);
 
     } else if (stage=="trainAssign"){
         // ------------------------------------ assign training descs to clusters

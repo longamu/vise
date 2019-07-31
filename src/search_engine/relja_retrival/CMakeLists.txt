@@ -66,6 +66,7 @@ include_directories( v2/retrieval )
 # for protobufs
 # protobuf compiles *.pb.cc and *.pb.h headers in the cmake build tree
 # therefore, we need to include the corresponding folders in the build tree
+# should point to a folder inside "cmake_build/"
 include_directories( ${CMAKE_BINARY_DIR}/src/search_engine/relja_retrival/util )
 include_directories( ${CMAKE_BINARY_DIR}/src/search_engine/relja_retrival/v2/dataset )
 include_directories( ${CMAKE_BINARY_DIR}/src/search_engine/relja_retrival/v2/embedding )
