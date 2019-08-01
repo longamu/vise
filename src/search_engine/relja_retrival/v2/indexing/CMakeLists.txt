@@ -22,8 +22,8 @@ PROTOBUF_GENERATE_CPP(build_index_status.pb.cpp build_index_status.pb.h ./build_
 add_library( build_index_status.pb ${build_index_status.pb.cpp} )
 target_link_libraries( build_index_status.pb ${PROTOBUF_LIBRARIES} )
 
-add_executable( compute_index_v2 compute_index_v2.cpp )
-target_link_libraries( compute_index_v2
+add_executable( create_index create_index.cpp )
+target_link_libraries( create_index
     build_index
     dataset_v2
     embedder

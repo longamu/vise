@@ -17,9 +17,10 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <stdint.h>
 #include <string>
+#include <omp.h>
 
 namespace buildIndex {
-    
+
     void
         computeHamming(std::string const clstFn,
                        bool const RootSIFT,

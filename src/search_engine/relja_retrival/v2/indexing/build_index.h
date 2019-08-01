@@ -16,6 +16,7 @@ No usage or redistribution is allowed without explicit permission.
 #define _BUILD_INDEX_H_
 
 #include <string>
+#include <omp.h>
 
 #include "embedder.h"
 #include "feat_getter.h"
@@ -23,7 +24,7 @@ No usage or redistribution is allowed without explicit permission.
 
 
 namespace buildIndex {
-    
+
     void
         build(std::string const imagelistFn, std::string const databasePath,
               std::string const dsetFn,

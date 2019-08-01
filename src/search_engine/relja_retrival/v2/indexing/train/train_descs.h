@@ -17,11 +17,12 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <stdint.h>
 #include <string>
+#include <omp.h>
 
 #include "feat_getter.h"
 
 namespace buildIndex {
-    
+
     void
         computeTrainDescs(std::string const trainImagelistFn, std::string const trainDatabasePath,
                           std::string const trainDescsFn,

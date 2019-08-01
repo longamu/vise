@@ -16,9 +16,10 @@ No usage or redistribution is allowed without explicit permission.
 #define _TRAIN_ASSIGN_H_
 
 #include <string>
+#include <omp.h>
 
 namespace buildIndex {
-    
+
     void
         computeTrainAssigns(std::string const clstFn,
                             bool const RootSIFT,

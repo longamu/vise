@@ -1,16 +1,13 @@
 /*
-==== Author:
 
-Relja Arandjelovic (relja@robots.ox.ac.uk)
-Visual Geometry Group,
-Department of Engineering Science
-University of Oxford
+  The task of creating a searchable index of images requires
+  multiple stages (e.g. trainDescs, trainCluster, etc.). This
+  module allows invocation of all those stages.
 
-==== Copyright:
+  Author: Abhishek Dutta (adutta@robots.ox.ac.uk)
+  Original Author: Relja Arandjelovic (relja@robots.ox.ac.uk, 2014)
+ */
 
-The library belongs to Relja Arandjelovic and the University of Oxford.
-No usage or redistribution is allowed without explicit permission.
-*/
 
 #include <string>
 
@@ -40,7 +37,7 @@ int main(int argc, char* argv[]){
     MPI_GLOBAL_ALL
 
     if (rank==0)
-        std::cout<<"numProc= "<<numProc<<"\n";
+        std::cout<<"MPI numProc= "<<numProc<<"\n";
 
     // ------------------------------------ setup config
 
@@ -94,10 +91,12 @@ int main(int argc, char* argv[]){
 
     } else if (stage=="trainCluster"){
         // ------------------------------------ assign training descs to clusters
-        std::string const train_desc_fn      = data_dir + pt.get<std::string>( dsetname+".descsFn", "descs.e3bin" );
-        std::string const cluster_fn         = data_dir + pt.get<std::string>( dsetname+".clstFn", "clst.e3bin" );
+        std::string const train_desc_fn = data_dir + pt.get<std::string>( dsetname+".descsFn", "descs.e3bin" );
+        std::string const cluster_fn    = data_dir + pt.get<std::string>( dsetname+".clstFn", "clst.e3bin" );
+        uint32_t const bow_cluster_count     = pt.get<uint32_t>( dsetname+".bow_cluster_count" );
+        uint32_t const cluster_num_iteration = pt.get<uint32_t>( dsetname+".cluster_num_iteration" );
 
-        buildIndex::compute_train_cluster( train_desc_fn, useRootSIFT, cluster_fn);
+        buildIndex::compute_train_cluster( train_desc_fn, useRootSIFT, cluster_fn, bow_cluster_count, cluster_num_iteration);
 
     } else if (stage=="trainAssign"){
         // ------------------------------------ assign training descs to clusters
