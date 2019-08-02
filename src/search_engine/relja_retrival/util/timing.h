@@ -19,9 +19,12 @@ No usage or redistribution is allowed without explicit permission.
 #include <sys/time.h>
 #include <string>
 #include <stdio.h>
+#include <cmath>
+#include <iomanip>
+#include <sstream>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
+#include <ctime>
+#include <chrono>
 
 #include "macros.h"
 
@@ -48,14 +51,17 @@ namespace timing {
 
 
     static inline std::string getTimeString(){
-        boost::posix_time::ptime now= boost::posix_time::second_clock::local_time();
-        return boost::posix_time::to_simple_string( now );
+      auto now = std::chrono::system_clock::now();
+      auto itt = std::chrono::system_clock::to_time_t(now);
+      std::ostringstream ss;
+      ss << std::put_time(gmtime(&itt), "%FT%T");
+      return ss.str();
     }
 
 
 
     inline std::string hrminsec(double seconds){
-        int hr= std::max( 0.0, floor(seconds/60/60) );
+        int hr= std::max( 0.0, floor(seconds / (60*60)) );
         int min= std::max( 0.0, floor(seconds/60 - hr*60) );
         int sec= std::max( 0.0, floor(seconds - hr*60*60 - min*60) );
         char t[9];

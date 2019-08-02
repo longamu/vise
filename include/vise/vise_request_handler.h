@@ -15,9 +15,6 @@
 
 #include <boost/filesystem.hpp>
 
-#define BOOST_LOG_DYN_LINK 1
-#include <boost/log/trivial.hpp>
-
 // to generate uuid
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>

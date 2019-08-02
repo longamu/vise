@@ -22,10 +22,6 @@
 // for filesystem i/o
 #include <boost/filesystem.hpp>
 
-// for logging
-#define BOOST_LOG_DYN_LINK 1
-#include <boost/log/trivial.hpp>
-
 // for config file i/o
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
@@ -35,8 +31,11 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 
+// for kd-tree based nearest neighbour search
+#include <vl/generic.h>
+#include <vl/kdtree.h>
+
 // relja_retrival
-#include <fastann.hpp>
 #include "dataset_v2.h"        // for datasetAbs
 #include "slow_construction.h" // for sequentialConstructions
 #include "proto_db.h"
@@ -106,7 +105,7 @@ namespace vise {
     protoIndex *iidx_;
     featGetter *feat_getter_;
     clstCentres *clst_centres_;
-    fastann::nn_obj<float> *nn_;
+    VlKDForest* kd_forest_;
     bool use_hamm_;
     softAssigner *soft_assigner_;
     hamming *hamming_emb_;

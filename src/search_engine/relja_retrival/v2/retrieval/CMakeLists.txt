@@ -4,7 +4,7 @@ add_library( hamming hamming.cpp )
 target_link_libraries( hamming
     hamming_embedder
     tfidf_v2
-    retriever_v2)
+    retriever_v2 )
 
 add_library( image_graph image_graph.cpp )
 target_link_libraries( image_graph
@@ -40,8 +40,7 @@ target_link_libraries( retriever_v2
     proto_index
     retriever
     uniq_entries
-    ${Boost_LIBRARIES}
-    ${fastann_LIBRARIES} )
+    ${Boost_LIBRARIES} ${VLFEAT_LIB} )
 
 add_executable( create_image_graph create_image_graph.cpp )
 target_link_libraries( create_image_graph
@@ -68,14 +67,14 @@ target_link_libraries( export_image_graph
     tfidf_v2 )
 
 add_library( spatial_verif_v2 spatial_verif_v2.cpp )
-target_link_libraries( spatial_verif_v2 daat det_ransac ellipse homography index_entry_util par_queue retriever_v2 uniq_entries ${Boost_LIBRARIES} )
+target_link_libraries( spatial_verif_v2 daat det_ransac ellipse homography index_entry_util par_queue retriever_v2 uniq_entries ${Boost_LIBRARIES} ${VLFEAT_LIB} )
 
 PROTOBUF_GENERATE_CPP(tfidf_data.pb.cpp tfidf_data.pb.h ./tfidf_data.proto)
 add_library( tfidf_data.pb ${tfidf_data.pb.cpp} )
 target_link_libraries( tfidf_data.pb ${PROTOBUF_LIBRARIES} )
 
 add_library( tfidf_v2 tfidf_v2.cpp )
-target_link_libraries( tfidf_v2 feat_getter retriever_v2 tfidf_data.pb weighter_v2 ${Boost_LIBRARIES} ${fastann_LIBRARIES} )
+target_link_libraries( tfidf_v2 feat_getter retriever_v2 tfidf_data.pb weighter_v2 ${Boost_LIBRARIES} ${VLFEAT_LIB} )
 
 add_library( uniq_retriever uniq_retriever.cpp )
 target_link_libraries( uniq_retriever )

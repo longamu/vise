@@ -11,8 +11,8 @@ vise::vise_request_handler* vise::vise_request_handler::instance() {
 
 void vise::vise_request_handler::init(const boost::filesystem::path vise_asset_dir) {
   asset_dir_ = vise_asset_dir;
-  BOOST_LOG_TRIVIAL(debug) << "ImageMagick Magick++ quantum depth = " << MAGICKCORE_QUANTUM_DEPTH << flush;
-  BOOST_LOG_TRIVIAL(debug) << "vise_request_handler::init() : asset_dir=" << asset_dir_.string() << flush;
+  std::cout << "ImageMagick Magick++ quantum depth = " << MAGICKCORE_QUANTUM_DEPTH << std::endl;
+  std::cout << "vise_request_handler::init() : asset_dir=" << asset_dir_.string() << std::endl;
 }
 
 void vise::vise_request_handler::handle_http_request(const http_request& request, http_response& response) {
@@ -84,7 +84,7 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
     */
 
     if ( vise::util::starts_with(request.uri_, "/vise/query/") ) {
-      BOOST_LOG_TRIVIAL(debug) << request.method_ << " [" << request.uri_ << "]";
+      std::cout << request.method_ << " [" << request.uri_ << "]" << std::endl;
       //std::cout << "\nuri_components.size() = " << uri_components.size() << ", uri_param=" << uri_param.size() << std::flush;
       if ( uri_components.size() != 5 && uri_components.size() != 6 ) {
         response.set_status(404);
@@ -110,7 +110,7 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
 
         if ( ! vise::search_engine_manager::instance()->is_search_engine_loaded(search_engine_id) ) {
           response.set_status(404);
-          BOOST_LOG_TRIVIAL(debug) << "failed to load search engine: " << search_engine_id;
+          std::cout << "failed to load search engine: " << search_engine_id << std::endl;
           return;
         }
       }
@@ -144,7 +144,7 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
     if ( vise::util::starts_with(request.uri_, "/vise/asset/") ) {
       if ( uri_components.size() != 7 ) {
         response.set_status(404);
-        BOOST_LOG_TRIVIAL(debug) << "got " << request.uri_ << ", expected /vise/asset/_NAME_/_VERSION_/{image,thumnail,original}/{filename,file_id}";
+        std::cout << "got " << request.uri_ << ", expected /vise/asset/_NAME_/_VERSION_/{image,thumnail,original}/{filename,file_id}" << std::endl;
         return;
       }
 
@@ -159,7 +159,7 @@ void vise::vise_request_handler::handle_http_request(const http_request& request
 
         if ( ! vise::search_engine_manager::instance()->is_search_engine_loaded(search_engine_id) ) {
           response.set_status(400);
-          BOOST_LOG_TRIVIAL(debug) << "failed to load search engine: " << search_engine_id;
+          std::cout << "failed to load search engine: " << search_engine_id << std::endl;
           return;
         }
       }
@@ -207,6 +207,6 @@ void vise::vise_request_handler::respond_with_static_file(http_response& respons
     //BOOST_LOG_TRIVIAL(debug) << "http response contains file [" << fn.string() << "]";
   } else {
     response.set_status(400);
-    BOOST_LOG_TRIVIAL(debug) << "failed to send file in http response [" << fn.string() << "]";
+    std::cout << "failed to send file in http response [" << fn.string() << "]" << std::endl;
   }
 }

@@ -1,4 +1,3 @@
-add_subdirectory( api )
 add_subdirectory( dataset )
 add_subdirectory( embedding )
 add_subdirectory( evaluation )

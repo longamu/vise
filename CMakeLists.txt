@@ -37,25 +37,23 @@ configure_file (
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 set( BUILD_SHARED_LIBS "OFF" )
 
-IF(CMAKE_BUILD_TYPE MATCHES Debug)
-  message("*** Debug Mode: test code will be compiled and built. ***")
-ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
+IF(CMAKE_BUILD_TYPE MATCHES VISE_SERVER)
+  message("************* VISE_SERVER: Compiling code for vise server. *************")
+  ## MPI
+  find_package(MPI REQUIRED)
+  if (MPI_FOUND)
+    include_directories(SYSTEM ${MPI_INCLUDE_PATH})
+    ADD_DEFINITIONS(-DRR_MPI)
+  endif (MPI_FOUND)
+ENDIF(CMAKE_BUILD_TYPE MATCHES VISE_SERVER)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 	set(CMAKE_CXX_FLAGS "-fpermissive")
 endif()
 
-## MPI
-find_package(MPI REQUIRED)
-if (MPI_FOUND)
-    include_directories(SYSTEM ${MPI_INCLUDE_PATH})
-    ADD_DEFINITIONS(-DRR_MPI)
-else (MPI_FOUND)
-    message(SEND_ERROR "This application cannot compile without MPI")
-endif (MPI_FOUND)
 
 ## Boost
-find_package(Boost 1.64.0 COMPONENTS mpi filesystem system thread atomic log serialization REQUIRED)
+find_package(Boost 1.64.0 COMPONENTS filesystem system thread atomic REQUIRED)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	set( Boost_USE_MULTITHREADED ON )
   set( Boost_USE_DEBUG_RUNTIME OFF )
@@ -68,6 +66,14 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 link_directories( ${Boost_LIBRARY_DIRS} )
 include_directories( ${Boost_INCLUDE_DIRS} )
+
+## OpenMP
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
 
 ## ImageMagick
 ADD_DEFINITIONS(-DMAGICKCORE_HDRI_ENABLE=0)
@@ -88,11 +94,6 @@ include_directories( ${EIGEN3_INCLUDE_DIR} )
 include(FindProtobuf)
 find_package( Protobuf REQUIRED )
 include_directories( ${PROTOBUF_INCLUDE_DIR} )
-
-## James's FASTANN (download from robots/software)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/src/search_engine/relja_retrival/")
-find_package(fastann REQUIRED)
-include_directories( ${fastann_INCLUDE_DIRS} )
 
 # VLFEAT
 # VLFEAT_LIB must be defined during cmake

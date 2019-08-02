@@ -115,11 +115,11 @@ void vise::util::decompose_uri(const std::string &uri, std::vector<std::string>&
 //
 bool vise::util::load_file_content(const boost::filesystem::path fn, std::string& file_content) {
   if( !boost::filesystem::exists(fn) ) {
-    BOOST_LOG_TRIVIAL(debug) << "file does not exist [" << fn.string() << "]";
+    std::cout << "file does not exist [" << fn.string() << "]" << std::endl;
     return false;
   }
   if( !boost::filesystem::is_regular_file(fn) ) {
-    BOOST_LOG_TRIVIAL(debug) << "not a regular file [" << fn.string() << "]";
+    std::cout << "not a regular file [" << fn.string() << "]" << std::endl;
     return false;
   }
 
@@ -135,7 +135,7 @@ bool vise::util::load_file_content(const boost::filesystem::path fn, std::string
     f.close();
     return true;
   } catch(std::exception &e) {
-    BOOST_LOG_TRIVIAL(error) << "failed to load file [" << fn.string() << "]";
+    std::cout << "failed to load file [" << fn.string() << "]" << std::endl;
     return false;
   }
 }
@@ -192,7 +192,7 @@ void vise::util::print_vector( std::string name, std::vector<std::string>& v ) {
   for ( std::size_t i = 0; i < v.size(); ++i ) {
     s << v[i] << ",";
   }
-  BOOST_LOG_TRIVIAL(debug) << name << " = [" << s.str() << "]";
+  std::cout << name << " = [" << s.str() << "]" << std::endl;
 }
 
 void vise::util::print_map( std::string name, std::map<std::string, std::string>& m ) {
@@ -202,5 +202,5 @@ void vise::util::print_map( std::string name, std::map<std::string, std::string>
   for ( it = m.begin(); it != m.end(); ++it ) {
     s << it->first << "=" << it->second << ", ";
   }
-  BOOST_LOG_TRIVIAL(debug) << name << " = [" << s.str() << "]";
+  std::cout << name << " = [" << s.str() << "]" << std::endl;
 }

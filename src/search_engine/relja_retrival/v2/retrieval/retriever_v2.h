@@ -15,8 +15,6 @@ No usage or redistribution is allowed without explicit permission.
 #ifndef _RETRIEVER_V2_H_
 #define _RETRIEVER_V2_H_
 
-#include <fastann/fastann.hpp>
-
 #include "clst_centres.h"
 #include "embedder.h"
 #include "feat_getter.h"
@@ -26,6 +24,9 @@ No usage or redistribution is allowed without explicit permission.
 #include "retriever.h"
 #include "uniq_entries.h"
 
+// for kd-tree based nearest neighbour search
+#include <vl/generic.h>
+#include <vl/kdtree.h>
 
 
 class retrieverV2 : public retriever {
@@ -39,7 +40,7 @@ class retrieverV2 : public retriever {
                      bool needEllipse= false,
                      embedderFactory const *embFactory= NULL,
                      featGetter const *featGetterObj= NULL,
-                     fastann::nn_obj<float> const *nn= NULL,
+                     VlKDForest* kd_forest= NULL,
                      clstCentres const *clstCentresObj= NULL
                      ) : embFactory_(embFactory),
                          fidx_(fidx),
@@ -47,7 +48,7 @@ class retrieverV2 : public retriever {
                          needXY_(needXY),
                          needEllipse_(needEllipse),
                          featGetter_(featGetterObj),
-                         nn_(nn),
+                         kd_forest_(kd_forest),
                          clstCentres_(clstCentresObj) {}
         
         virtual
@@ -80,7 +81,7 @@ class retrieverV2 : public retriever {
         bool const needXY_, needEllipse_;
         
         featGetter const *featGetter_;
-        fastann::nn_obj<float> const *nn_;
+        VlKDForest* kd_forest_;
         clstCentres const *clstCentres_;
     
     private:
@@ -100,9 +101,9 @@ class retrieverFromIter : public retrieverV2 {
                            bool needEllipse= false,
                            embedderFactory const *embFactory= NULL,
                            featGetter const *featGetterObj= NULL,
-                           fastann::nn_obj<float> const *nn= NULL,
+                           VlKDForest* kd_forest= NULL,
                            clstCentres const *clstCentresObj= NULL)
-                           : retrieverV2( fidx, iidx, needXY, needEllipse, embFactory, featGetterObj, nn, clstCentresObj ) {}
+                           : retrieverV2( fidx, iidx, needXY, needEllipse, embFactory, featGetterObj, kd_forest, clstCentresObj ) {}
         
         virtual
             ~retrieverFromIter() {}

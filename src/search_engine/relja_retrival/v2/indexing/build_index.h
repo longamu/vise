@@ -17,11 +17,10 @@ No usage or redistribution is allowed without explicit permission.
 
 #include <string>
 #include <omp.h>
+#include <chrono>
 
 #include "embedder.h"
 #include "feat_getter.h"
-
-
 
 namespace buildIndex {
 

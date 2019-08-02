@@ -15,7 +15,6 @@ target_link_libraries( build_index
     protobuf_util
     proto_db_file
     proto_index
-    ${fastann_LIBRARIES}
     ${Boost_LIBRARIES} )
 
 PROTOBUF_GENERATE_CPP(build_index_status.pb.cpp build_index_status.pb.h ./build_index_status.proto)
@@ -34,7 +33,7 @@ target_link_libraries( create_index
     train_descs
     train_hamming
     train_cluster
-    ${Boost_LIBRARIES} )
+    ${Boost_LIBRARIES})
 
 add_library( daat daat.cpp )
 target_link_libraries( daat index_entry_util index_entry.pb uniq_entries )

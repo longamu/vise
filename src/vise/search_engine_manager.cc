@@ -37,9 +37,9 @@ void vise::search_engine_manager::init(const boost::filesystem::path data_dir,
   search_engine_index_state_desc_list_.push_back("Computing embeddings");
   search_engine_index_state_desc_list_.push_back("Indexing");
 
-  BOOST_LOG_TRIVIAL(debug) << "search_engine_manager::init() : data_dir=" << data_dir_.string() << flush;
-  BOOST_LOG_TRIVIAL(debug) << "search_engine_manager::init() : asset_dir=" << asset_dir_.string() << flush;
-  BOOST_LOG_TRIVIAL(debug) << "search_engine_manager::init() : temp_dir=" << temp_dir_.string() << flush;
+  std::cout << "search_engine_manager::init() : data_dir=" << data_dir_.string() << std::flush;
+  std::cout << "search_engine_manager::init() : asset_dir=" << asset_dir_.string() << std::flush;
+  std::cout << "search_engine_manager::init() : temp_dir=" << temp_dir_.string() << std::flush;
 }
 
 void vise::search_engine_manager::process_cmd(const std::string search_engine_id,
@@ -48,10 +48,10 @@ void vise::search_engine_manager::process_cmd(const std::string search_engine_id
                                               const std::string request_body,
                                               http_response& response) {
   if ( search_engine_command != "index_status" ) {
-    BOOST_LOG_TRIVIAL(debug) << "processing search engine command: "
+    std::cout << "processing search engine command: "
                              << search_engine_command << " on "
                              << search_engine_id << " : payload="
-			     << request_body.size() << " bytes";
+			     << request_body.size() << " bytes" << std::flush;
   }
   /*
   if ( search_engine_command == "init" ) {
@@ -256,12 +256,12 @@ bool vise::search_engine_manager::index_start(const std::string search_engine_na
   bool search_engine_manager::run_shell_command(std::string cmd_name,
   std::string cmd) {
   boost::process::ipstream pipe;
-  BOOST_LOG_TRIVIAL(debug) << "running command: {" << cmd_name << "} [" << cmd << "]";
+  std::cout << "running command: {" << cmd_name << "} [" << cmd << "]";
   boost::process::child p(cmd, boost::process::std_out > pipe);
   std::string line;
 
   while ( pipe && std::getline(pipe, line) && !line.empty() ) {
-  BOOST_LOG_TRIVIAL(debug) << "[" << cmd_name << "] " << line;
+  std::cout << "[" << cmd_name << "] " << line;
   if ( vise::util::starts_with(line, "relja_retrival,") ) {
   //trainDescs:relja_retrival,trainDescsManager(images),2018-Jun-25 11:47:52,1,40
   // 0                       , 1                       , 2                  ,3,4
@@ -315,14 +315,14 @@ bool vise::search_engine_manager::add_image_from_http_payload(const boost::files
       im.magick("JPEG");
       im.colorSpace(Magick::sRGBColorspace);
       im.write(filename.string());
-      BOOST_LOG_TRIVIAL(debug) << "written file [" << filename.string() << "]";
+      std::cout << "written file [" << filename.string() << "]" << std::endl;
       return true;
     } else {
-      BOOST_LOG_TRIVIAL(debug) << "failed to write file [" << filename.string() << "]";
+      std::cout << "failed to write file [" << filename.string() << "]" << std::endl;
       return false;
     }
   } catch( std::exception &e ) {
-    BOOST_LOG_TRIVIAL(debug) << "exception occured while writing file [" << filename.string() << "] : " << e.what();
+    std::cout << "exception occured while writing file [" << filename.string() << "] : " << e.what() << std::endl;
     return false;
   }
 }
@@ -355,8 +355,8 @@ void vise::search_engine_manager::load_search_engine(std::string search_engine_i
       search_engine_list_.insert( std::pair<std::string, vise::search_engine*>(search_engine_id, se) );
     }
   } catch (std::exception &e) {
-    BOOST_LOG_TRIVIAL(debug) << "failed to load search engine [" << search_engine_id << "] : "
-                             << e.what();
+    std::cout << "failed to load search engine [" << search_engine_id << "] : "
+                             << e.what() << std::endl;
   }
 
   load_search_engine_mutex_.unlock();
@@ -366,7 +366,7 @@ bool vise::search_engine_manager::unload_all_search_engine() {
   // unload all the search engines from search_engine_list_
   std::map<std::string, vise::search_engine* >::iterator it;
   for ( it =  search_engine_list_.begin(); it !=  search_engine_list_.end(); ++it ) {
-    BOOST_LOG_TRIVIAL(debug) << "unloading search engine: " << it->second->id();
+    std::cout << "unloading search engine: " << it->second->id() << std::endl;
     it->second->unload();
     delete it->second;
   }
@@ -434,12 +434,12 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
            << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
       response.set_field("Content-Type", "text/html");
       response.set_payload(html.str());
-      //BOOST_LOG_TRIVIAL(debug) << "responded with html";
+      //std::cout << "responded with html";
     } else {
       if ( uri_param.find("format")->second == "json" ) {
         response.set_field("Content-Type", "application/json");
         response.set_payload(json.str());
-        //BOOST_LOG_TRIVIAL(debug) << "responded with json";
+        //std::cout << "responded with json";
       } else {
         response.set_status(400);
       }
@@ -543,12 +543,12 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
            << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
       response.set_field("Content-Type", "text/html");
       response.set_payload(html.str());
-      //BOOST_LOG_TRIVIAL(debug) << "responded with html containing " << file_id_list.size() << " entries";
+      //std::cout << "responded with html containing " << file_id_list.size() << " entries";
     } else {
       if ( uri_param.find("format")->second == "json" ) {
         response.set_field("Content-Type", "application/json");
         response.set_payload(json.str());
-        //BOOST_LOG_TRIVIAL(debug) << "responded with json containing " << file_id_list.size() << " entries";
+        //std::cout << "responded with json containing " << file_id_list.size() << " entries";
       } else {
         response.set_status(400);
       }
@@ -686,12 +686,12 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
            << vise::search_engine_manager::RESPONSE_HTML_PAGE_SUFFIX;
       response.set_field("Content-Type", "text/html");
       response.set_payload(html.str());
-      //BOOST_LOG_TRIVIAL(debug) << "responded with html containing " << result_score.size() << " entries";
+      //std::cout << "responded with html containing " << result_score.size() << " entries";
     } else {
       if ( uri_param.find("format")->second == "json" ) {
         response.set_field("Content-Type", "application/json");
         response.set_payload(json.str());
-        //BOOST_LOG_TRIVIAL(debug) << "responded with json containing " << result_score.size() << " entries";
+        //std::cout << "responded with json containing " << result_score.size() << " entries";
       } else {
         response.set_status(400);
       }
@@ -778,7 +778,7 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
     std::string img_data( (char *) blob.data(), blob.length() );
     response.set_field("Content-Type", "image/jpeg");
     response.set_payload( img_data );
-    BOOST_LOG_TRIVIAL(debug) << "responded with registered jpeg image of size " << blob.length();
+    std::cout << "responded with registered jpeg image of size " << blob.length() << std::endl;
     return;
   }
 }
@@ -791,7 +791,7 @@ void vise::search_engine_manager::admin(const std::string command,
                                         const std::map<std::string, std::string> uri_param,
                                         const std::string request_body,
                                         http_response& response) {
-  BOOST_LOG_TRIVIAL(debug) << "admin command: [" << command << "]";
+  std::cout << "admin command: [" << command << "]" << std::endl;
 }
 
 //
@@ -821,17 +821,17 @@ void vise::search_engine_manager::asset(const std::string search_engine_id,
     file_abs_path = search_engine_list_[ search_engine_id ]->get_filename_absolute_path(asset_name);
   }
 
-  //BOOST_LOG_TRIVIAL(debug) << "serving file_abs_path [" << file_abs_path << "]";
+  //std::cout << "serving file_abs_path [" << file_abs_path << "]";
   std::string file_content;
   bool ok = vise::util::load_file_content(boost::filesystem::path(file_abs_path), file_content);
   if ( ok ) {
     response.set_payload( file_content );
     response.set_content_type_from_filename( file_abs_path );
     response.set_field("Access-Control-Allow-Origin", "*"); // enable CORS for images
-    //BOOST_LOG_TRIVIAL(debug) << "http response contains file [" << file_abs_path << "]";
+    //std::cout << "http response contains file [" << file_abs_path << "]";
   } else {
     response.set_status(400);
-    BOOST_LOG_TRIVIAL(debug) << "failed to send file in http response [" << file_abs_path << "]";
+    std::cout << "failed to send file in http response [" << file_abs_path << "]" << std::endl;
   }
 }
 

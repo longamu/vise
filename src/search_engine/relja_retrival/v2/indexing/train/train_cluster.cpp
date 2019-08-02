@@ -14,8 +14,6 @@
 #include <algorithm>
 #include <chrono>
 
-//#define _OPENMP // to activate OpenMP in vlfeat
-
 namespace buildIndex {
   void compute_train_cluster(std::string const train_desc_fn,
                              bool const use_root_sift,

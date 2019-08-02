@@ -14,9 +14,7 @@
 #include <fstream>
 #include <map>
 
-#define BOOST_LOG_DYN_LINK 1
 #include <boost/filesystem.hpp>
-#include <boost/log/trivial.hpp>
 
 namespace vise {
   namespace util {

@@ -50,12 +50,12 @@ bool vise::relja_retrival::load() {
 
   try {
     // construct dataset
-    BOOST_LOG_TRIVIAL(debug) << "loading dataset from " << dset_fn_;
+    std::cout << "loading dataset from " << dset_fn_ << std::endl;
     dataset_ = new datasetV2( dset_fn_.string(), image_dir_.string() + "/" );
-    BOOST_LOG_TRIVIAL(debug) << "done loading dataset";
+    std::cout << "done loading dataset"<< std::endl;
 
     // needed to setup forward and inverted index
-    BOOST_LOG_TRIVIAL(debug) << "setting up forward and inverted index ";
+    std::cout << "setting up forward and inverted index "<< std::endl;
     cons_queue_ = new sequentialConstructions();
     // setup forward index
     dbFidx_file_ = new protoDbFile( fidx_fn_.string() );
@@ -63,7 +63,7 @@ bool vise::relja_retrival::load() {
                                                                           boost::cref(*dbFidx_file_) );
     dbFidx_ = new protoDbInRamStartDisk( *dbFidx_file_, fidxInRamConstructor, true, cons_queue_ );
     fidx_ = new protoIndex(*dbFidx_, false);
-    BOOST_LOG_TRIVIAL(debug) << "forward index done";
+    std::cout << "forward index done"<< std::endl;
 
     // setup inverted index
     dbIidx_file_ = new protoDbFile( iidx_fn_.string() );
@@ -71,11 +71,11 @@ bool vise::relja_retrival::load() {
                                                                           boost::cref(*dbIidx_file_) );
     dbIidx_ = new protoDbInRamStartDisk( *dbIidx_file_, iidxInRamConstructor, true, cons_queue_ );
     iidx_ = new protoIndex(*dbIidx_, false);
-    BOOST_LOG_TRIVIAL(debug) << "inverted index done";
+    std::cout << "inverted index done"<< std::endl;
     cons_queue_->start(); // start the construction of in-RAM stuff
 
     // feature getter and assigner
-    BOOST_LOG_TRIVIAL(debug) << "loading feature getter ";
+    std::cout << "loading feature getter "<< std::endl;
     bool SIFTscale3  = false;
     if ( config_.get<std::string>(search_engine_id_ + ".SIFTscale3") == "true" ) {
       SIFTscale3 = true;
@@ -93,15 +93,19 @@ bool vise::relja_retrival::load() {
                                              ).c_str() );
 
     // clusters
-    BOOST_LOG_TRIVIAL(debug) << "loading clusters";
+    std::cout << "loading clusters"<< std::endl;
     clst_centres_ = new clstCentres( clst_fn_.c_str(), true );
 
-    nn_ = fastann::nn_obj_build_kdtree(clst_centres_->clstC_flat,
-                                       clst_centres_->numClst,
-                                       clst_centres_->numDims, 8, 1024);
+    // build kd-tree for nearest neighbour search
+    // to assign cluster-id for each descriptor
+    std::size_t num_trees = 8;
+    std::size_t max_num_checks = 1024;
+    kd_forest_ = vl_kdforest_new( VL_TYPE_FLOAT, clst_centres_->numDims, num_trees, VlDistanceL2 );
+    vl_kdforest_set_max_num_comparisons(kd_forest_, max_num_checks);
+    vl_kdforest_build(kd_forest_, clst_centres_->numClst, clst_centres_->clstC_flat);
 
     // soft assigner
-    BOOST_LOG_TRIVIAL(debug) << "loading assigner";
+    std::cout << "loading assigner"<< std::endl;
     use_hamm_ = false;
     uint32_t hamm_emb_bits;
     std::string hamm_emb_bits_str = config_.get<std::string>(search_engine_id_ + ".hammEmbBits");
@@ -126,12 +130,12 @@ bool vise::relja_retrival::load() {
     }
 
     // create retriever
-    BOOST_LOG_TRIVIAL(debug) << "loading retriever";
+    std::cout << "loading retriever"<< std::endl;
     tfidf_ = new tfidfV2(iidx_,
                          fidx_,
                          wght_fn_.string(),
                          feat_getter_,
-                         nn_,
+                         kd_forest_,
                          soft_assigner_);
 
     if ( use_hamm_ ) {
@@ -139,19 +143,19 @@ bool vise::relja_retrival::load() {
                                  iidx_,
                                  *dynamic_cast<hammingEmbedderFactory const *>(emb_factory_),
                                  fidx_,
-                                 feat_getter_, nn_, clst_centres_);
+                                 feat_getter_, kd_forest_, clst_centres_);
       base_retriever_ = hamming_emb_;
     } else {
       base_retriever_ = tfidf_;
     }
 
     // spatial verifier
-    BOOST_LOG_TRIVIAL(debug) << "loading spatial verifier";
-    spatial_verif_v2_ = new spatialVerifV2(*base_retriever_, iidx_, fidx_, true, feat_getter_, nn_, clst_centres_);
+    std::cout << "loading spatial verifier"<< std::endl;
+    spatial_verif_v2_ = new spatialVerifV2(*base_retriever_, iidx_, fidx_, true, feat_getter_, kd_forest_, clst_centres_);
     spatial_retriever_ = spatial_verif_v2_;
 
     // multiple queries
-    BOOST_LOG_TRIVIAL(debug) << "loading multiple queries";
+    std::cout << "loading multiple queries"<< std::endl;
     multi_query_max_ = new multiQueryMax( *spatial_verif_v2_ );
     if (hamming_emb_ != NULL){
       multi_query_= new mqFilterOutliers(*multi_query_max_,
@@ -160,19 +164,19 @@ bool vise::relja_retrival::load() {
     } else {
       multi_query_ = multi_query_max_;
     }
-    BOOST_LOG_TRIVIAL(debug) << "finished loading search engine [" << search_engine_id_ << "]";
+    std::cout << "finished loading search engine [" << search_engine_id_ << "]" << std::endl;
     is_search_engine_loaded_ = true;
   } catch( std::exception& e ) {
     is_search_engine_loaded_ = false;
-    BOOST_LOG_TRIVIAL(debug) << "failed to load search engine [" << search_engine_id_ << "]";
-    BOOST_LOG_TRIVIAL(debug) << e.what();
+    std::cout << "failed to load search engine [" << search_engine_id_ << "]" << std::endl;
+    std::cout << e.what();
   }
   load_mutex_.unlock();
   return is_search_engine_loaded_;
 }
 
 bool vise::relja_retrival::unload() {
-  BOOST_LOG_TRIVIAL(debug) << "vise::relja_retrival::unload()";
+  std::cout << "vise::relja_retrival::unload()" << std::endl;
 
   if ( ! is_search_engine_loaded_ ) {
     return false;
@@ -193,7 +197,7 @@ bool vise::relja_retrival::unload() {
     delete soft_assigner_;
   }
 
-  delete nn_;
+  vl_kdforest_delete(kd_forest_);
   delete clst_centres_;
   delete feat_getter_;
 
@@ -253,7 +257,7 @@ bool vise::relja_retrival::query_using_file_region(unsigned int file_id,
   }
 
   /*
-  BOOST_LOG_TRIVIAL(debug) << "query_using_file_region(): file_id=" << file_id << ", "
+  std::cout << "query_using_file_region(): file_id=" << file_id << ", "
                            << "region=[" << x << "," << y << "," << w << "," << h << "], "
                            << "search result = " << result_file_id.size();
   */
@@ -265,7 +269,7 @@ void vise::relja_retrival::get_filelist(std::vector<unsigned int> &file_id_list)
   for ( unsigned int i = 0; i < dataset_->getNumDoc(); ++i ) {
     file_id_list.push_back(i);
   }
-  //BOOST_LOG_TRIVIAL(debug) << "get_filelist(): file_id_list=" << file_id_list.size();
+  //std::cout << "get_filelist(): file_id_list=" << file_id_list.size();
 }
 
 
@@ -277,7 +281,7 @@ void vise::relja_retrival::get_filelist(const std::string filename_regex,
       file_id_list.push_back(i);
     }
   }
-  //BOOST_LOG_TRIVIAL(debug) << "get_filelist(): filename_regex=[" << filename_regex << "]" << ", file_id_list=" << file_id_list.size();
+  //std::cout << "get_filelist(): filename_regex=[" << filename_regex << "]" << ", file_id_list=" << file_id_list.size();
 }
 
 uint32_t vise::relja_retrival::get_filelist_size() {
@@ -318,11 +322,11 @@ bool vise::relja_retrival::index() { }
 void vise::relja_retrival::save_config() {
   try {
     boost::property_tree::ini_parser::write_ini(config_fn_.string(), config_);
-    BOOST_LOG_TRIVIAL(debug) << "written search engine config to ["
-                             << config_fn_.string() << "]";
+    std::cout << "written search engine config to ["
+                             << config_fn_.string() << "]" << std::endl;
   }  catch( std::exception &e ) {
-    BOOST_LOG_TRIVIAL(debug) << "exception occured while writing config file ["
-                             << config_fn_.string() << "] : " << e.what();
+    std::cout << "exception occured while writing config file ["
+                             << config_fn_.string() << "] : " << e.what() << std::endl;
   }
 }
 
@@ -344,9 +348,9 @@ void vise::relja_retrival::load_config() {
     thumbnail_dir_ = asset_dir_ / "thumbnail";
     original_dir_  = asset_dir_ / "original";
 
-    BOOST_LOG_TRIVIAL(debug) << "loaded config from file [" << config_fn_.string() << "]";
+    std::cout << "loaded config from file [" << config_fn_.string() << "]" << std::endl;
   }  catch( std::exception &e ) {
-    BOOST_LOG_TRIVIAL(debug) << "exception occured while loading config file [" << config_fn_.string() << "] : " << e.what();
+    std::cout << "exception occured while loading config file [" << config_fn_.string() << "] : " << e.what() << std::endl;
   }
 }
 
@@ -369,11 +373,11 @@ void vise::relja_retrival::set_default_config() {
     config_.put( search_engine_id_ + ".trainNumDescs", "-1");
     config_.put( search_engine_id_ + ".vocSize", "-1");
     save_config();
-    BOOST_LOG_TRIVIAL(debug) << "written search engine config to ["
-                             << config_fn_.string() << "]";
+    std::cout << "written search engine config to ["
+                             << config_fn_.string() << "]" << std::endl;
   }  catch( std::exception &e ) {
-    BOOST_LOG_TRIVIAL(debug) << "exception occured while writing config file ["
-                             << config_fn_.string() << "] : " << e.what();
+    std::cout << "exception occured while writing config file ["
+                             << config_fn_.string() << "] : " << e.what() << std::endl;
   }
 }
 
@@ -382,8 +386,8 @@ void vise::relja_retrival::set_config(const std::string name,
   try {
     config_.put( search_engine_id_ + "." + name, value);
     save_config();
-    BOOST_LOG_TRIVIAL(debug) << "updated search engine config " << name << "=" << value << "in config file [" << config_fn_.string() << "]";
+    std::cout << "updated search engine config " << name << "=" << value << "in config file [" << config_fn_.string() << "]" << std::endl;
   }  catch( std::exception &e ) {
-    BOOST_LOG_TRIVIAL(debug) << "exception occured while updating config file [" << config_fn_.string() << "] : " << e.what();
+    std::cout << "exception occured while updating config file [" << config_fn_.string() << "] : " << e.what() << std::endl;
   }
 }
