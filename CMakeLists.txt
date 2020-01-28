@@ -37,6 +37,8 @@ configure_file (
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 set( BUILD_SHARED_LIBS "OFF" )
 
+#set(CMAKE_BUILD_TYPE "Debug")
+
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   message("*** Debug Mode: test code will be compiled and built. ***")
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -65,6 +67,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   add_definitions(-DBOOST_ALL_NO_LIB)
   add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 endif()
+
 link_directories( ${Boost_LIBRARY_DIRS} )
 include_directories( ${Boost_INCLUDE_DIRS} )
 

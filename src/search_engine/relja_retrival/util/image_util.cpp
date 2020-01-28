@@ -76,7 +76,15 @@ imageUtil::checkAndConvertToJpegTemp(std::string inFn, std::string &outFn, bool 
             createdJpeg= false;
             outFn= inFn;
         } else {
-            outFn= util::getTempFileName( "", "rr_image_", ".jpg" );
+            std::string infn_id = inFn + "_";
+            std::size_t pos;
+            do {
+              pos = infn_id.find('/');
+              infn_id[pos] = '_';
+            } while( pos != std::string::npos );
+
+            //outFn= util::getTempFileName( "", "rr_image_", ".jpg" );
+            outFn= util::getTempFileName( "", infn_id, ".jpg" );
             im.write(outFn);
             createdJpeg= true;
         }

@@ -178,11 +178,13 @@ imageGraphManager::compute(uint32_t docID, imageGraphResult &queryRes){
             
             docIDres= itRes->first;
             score= itRes->second;
-            
+
+	    /* Do not skip as we want to find out exact duplicates as well (Abhishek Dutta, 23 Jan. 2020)
             // skip self
             if (docIDres == docID)
                 continue;
-            
+	    */
+
             // if it passes the score threshold, save it
             if (score >= scoreThr_){
                 
@@ -246,7 +248,7 @@ class imageGraphWorker : public queueWorker<imageGraphResult> {
     public:
         
         imageGraphWorker(
-            retriever const &retrieverObj,
+            spatialRetriever const &retrieverObj,
             uint32_t maxNeighs)
                 : retriever_(retrieverObj),
                 maxNeighs_(maxNeighs) {}
@@ -254,12 +256,16 @@ class imageGraphWorker : public queueWorker<imageGraphResult> {
         void
             operator() ( uint32_t docID, imageGraphResult &queryRes ) const {
                 queryRes.clear();
-                retriever_.internalQuery(docID, queryRes, maxNeighs_);
+                //retriever_.internalQuery(docID, queryRes, maxNeighs_);
+
+                query query_obj(docID, true);
+                std::map<uint32_t, homography> Hs;
+                retriever_.spatialQuery(query_obj, queryRes, Hs, maxNeighs_);
                 ASSERT( maxNeighs_==0 || queryRes.size()<=maxNeighs_ );
             }
         
     private:
-        retriever const &retriever_;
+        spatialRetriever const &retriever_;
         uint32_t const maxNeighs_;
 };
 
@@ -269,18 +275,18 @@ void
 imageGraph::computeParallel(
         std::string filename,
         uint32_t numDocs,
-        retriever const &retrieverObj,
+        spatialRetriever const &retrieverObj,
         uint32_t maxNeighs,
         double scoreThr ) {
     
     MPI_GLOBAL_RANK
     bool useThreads= detectUseThreads();
-    uint32_t numWorkerThreads= 4;
+    uint32_t numWorkerThreads= 128;
     
     graph_.clear();
     
     if (rank==0)
-        std::cout<<"imageGraph::computeParallel\n";
+      std::cout<<"imageGraph::computeParallel: maxNeighs=" << maxNeighs << ", scoreThr=" << scoreThr << ", numWorkerThreads=" << numWorkerThreads << "\n";
     
     // make the manager if we are on the master node, otherwise NULL
     imageGraphManager *manager= (rank==0) ?

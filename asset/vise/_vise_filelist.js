@@ -93,7 +93,7 @@ function _vise_filelist_update_page_nav(d, navbar) {
 
   var navtoolhtml = [];
   navtoolhtml.push( '<form method="GET" action="' + d.query_uri_prefix + '_filelist" enctype="text/plain">' );
-  navtoolhtml.push( '<input name="filename_regex" type="text" title="All image filenames containing the filter keyword will be shown." id="filename_regex" placeholder="keyword to filter file list e.g. &quot;Story of Chicago&quot;" size="34" value="' + d.filename_regex + '">' );
+  navtoolhtml.push( '<input name="filename_regex" type="text" title="All image filenames containing the filter keyword will be shown." id="filename_regex" placeholder="keyword to filter file list" size="34" value="' + d.filename_regex + '">' );
   navtoolhtml.push( '<input type="hidden" name="from" value="0">' );
   navtoolhtml.push( '<input type="hidden" name="count" value="1024">' );
   navtoolhtml.push( '<input type="hidden" name="show_from" value="0">' );

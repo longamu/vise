@@ -19,7 +19,8 @@ No usage or redistribution is allowed without explicit permission.
 
 #include "macros.h"
 #include "retriever.h"
-
+#include "spatial_retriever.h"
+#include "homography.h"
 
 class imageGraph {
     
@@ -46,7 +47,7 @@ class imageGraph {
         void
             computeParallel( std::string filename,
                              uint32_t numDocs,
-                             retriever const &retriever,
+                             spatialRetriever const &retriever,
                              uint32_t maxNeighs= 0,
                              double scoreThr= -inf );
         

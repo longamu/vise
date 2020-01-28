@@ -58,7 +58,7 @@ int main(int argc, char* argv[]){
     pythonCfgToIni( configFn, tempConfigFn );
 
     boost::property_tree::ptree pt;
-    boost::property_tree::ini_parser::read_ini(tempConfigFn, pt);
+    boost::property_tree::ini_parser::read_ini(configFn, pt);
 
     // ------------------------------------ read config
     bool const useRootSIFT= pt.get<bool>(dsetname+".RootSIFT", true);
