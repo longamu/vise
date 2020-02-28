@@ -32,15 +32,15 @@
 
 
 int main(int argc, char* argv[]){
-    
+
   // MPI initialization
   MPI_INIT_ENV
-  MPI_GLOBAL_ALL
-    
- if(argc != 4) {
-   std::cerr << "Usage: " << argv[0] << " NBD_COUNT SCORE_THRESHOLD BASE_DIR" << std::endl;
-   return 0;
- }
+    MPI_GLOBAL_ALL
+
+    if(argc != 4) {
+      std::cerr << "Usage: " << argv[0] << " NBD_COUNT SCORE_THRESHOLD BASE_DIR" << std::endl;
+      return 0;
+    }
   // file name
   //std::string imageGraphFn= util::expandUser("/nvme/seebibyte_tap/ashmolean/vise_data/data/ashmolean/1/imgraph_nbd512_th20.v2bin");
   //std::string imageGraphFn= util::expandUser("/nvme/seebibyte_tap/ashmolean/vise_data/data/ashmolean/1/imgraph_nbd256_th50.v2bin");
@@ -52,13 +52,13 @@ int main(int argc, char* argv[]){
     basedir += "/";
   }
   std::string imageGraphFn = basedir + "imgraph_nbd" + argv[1] + "_th" + argv[2] + ".v2bin";
-   
+
   // file names
   std::string iidxFn= basedir + "iidx.v2bin";
   std::string fidxFn= basedir + "fidx.v2bin";
   std::string wghtFn= basedir + "wght.v2bin";
   std::string hammFn= basedir + "hamm.v2bin";
-    
+
   if ( rank == 0 ) {
     std::cout << "\nBuilding image graph (numProc=" << numProc << ") ..." << std::flush;
     std::cout << "\n  iidx = " << iidxFn;
@@ -71,27 +71,29 @@ int main(int argc, char* argv[]){
   }
 
   // load fidx
-    
+
   protoDbFile dbFidx_file(fidxFn);
   protoDbInRam dbFidx(dbFidx_file, rank==0);
   protoIndex fidx(dbFidx, false);
-    
+
   // load iidx
-    
+
   protoDbFile dbIidx_file(iidxFn);
   protoDbInRam dbIidx(dbIidx_file, rank==0);
   protoIndex iidx(dbIidx, false);
-    
+
   // create retriever
-    
+
   tfidfV2 tfidfObj(&iidx, &fidx, wghtFn);
   hammingEmbedderFactory embFactory(hammFn, 64);
   hamming hammingObj(tfidfObj, &iidx, embFactory, &fidx);
   spatialVerifV2 spatVerifHamm(hammingObj, &iidx, &fidx, true);
-    
+
   imageGraph imGraph;
   // compute image graph in parallel
   imGraph.computeParallel(imageGraphFn, fidx.numIDs(), spatVerifHamm, nbd_count, score_threshold ); // 27 Jan. 2020
+  //imGraph.computeParallel(imageGraphFn, 8192, spatVerifHamm, nbd_count, score_threshold );
+  //imGraph.computeParallel(imageGraphFn, 2, spatVerifHamm, nbd_count, score_threshold );
 
   //imGraph.computeParallel(imageGraphFn, fidx.numIDs(), spatVerifHamm, 256, 50 ); // 23 Jan. 2020
 

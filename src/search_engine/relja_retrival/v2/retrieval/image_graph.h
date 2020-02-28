@@ -16,6 +16,7 @@ No usage or redistribution is allowed without explicit permission.
 #define _IMAGE_GRAPH_H_
 
 #include <map>
+#include <cmath>
 
 #include "macros.h"
 #include "retriever.h"
@@ -23,18 +24,18 @@ No usage or redistribution is allowed without explicit permission.
 #include "homography.h"
 
 class imageGraph {
-    
+
     public:
-        
+
         typedef std::map<uint32_t, std::vector<indScorePair> > imageGraphType;
-        
+
         imageGraph(){}
-        
+
         // load
         imageGraph( std::string filename ){
             loadFromFile(filename);
         }
-        
+
         // compute sequentially
         void
             computeSingle( std::string filename,
@@ -42,7 +43,7 @@ class imageGraph {
                            retriever const &retriever,
                            uint32_t maxNeighs= 0,
                            double scoreThr= -inf );
-        
+
         // compute in parallel
         void
             computeParallel( std::string filename,
@@ -50,15 +51,15 @@ class imageGraph {
                              spatialRetriever const &retriever,
                              uint32_t maxNeighs= 0,
                              double scoreThr= -inf );
-        
+
         void
             loadFromFile( std::string filename );
-        
+
         imageGraphType graph_;
-    
+
     private:
         DISALLOW_COPY_AND_ASSIGN(imageGraph)
-        
+
 };
 
 #endif

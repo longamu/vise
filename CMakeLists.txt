@@ -30,7 +30,7 @@ set (VISE_SERVER_AUTHOR_EMAIL "adutta@robots.ox.ac.uk")
 set (VISE_SERVER_FIRST_RELEASE_DATE "25 Sep. 2017")
 set (VISE_SERVER_CURRENT_RELEASE_DATE "18 Jun. 2018")
 configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_SOURCE_DIR}/vise_server_config.h.in" 
+  "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_SOURCE_DIR}/vise_server_config.h.in"
   "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_INCLUDE_DIR}/vise_server_config.h"
   )
 
@@ -47,6 +47,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 	set(CMAKE_CXX_FLAGS "-fpermissive")
 endif()
 
+## OpenMP
+find_package(Threads REQUIRED)
+find_package(OpenMP REQUIRED)
+
 ## MPI
 find_package(MPI REQUIRED)
 if (MPI_FOUND)
@@ -56,7 +60,7 @@ else (MPI_FOUND)
 endif (MPI_FOUND)
 
 ## Boost
-find_package(Boost 1.64.0 COMPONENTS mpi filesystem system thread atomic log serialization REQUIRED)
+find_package(Boost 1.64.0 COMPONENTS mpi filesystem system thread atomic log serialization iostreams REQUIRED)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	set( Boost_USE_MULTITHREADED ON )
   set( Boost_USE_DEBUG_RUNTIME OFF )
@@ -116,4 +120,3 @@ message("VLFEAT_INCLUDE_DIR: " ${VLFEAT_INCLUDE_DIR} )
 include_directories("${PROJECT_INCLUDE_DIR}")
 add_subdirectory("${PROJECT_SOURCE_DIR}" )
 #add_subdirectory("${PROJECT_TEST_DIR}" )
-

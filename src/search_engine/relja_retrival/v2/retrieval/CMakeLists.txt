@@ -87,8 +87,93 @@ target_link_libraries( export_image_graph_topfoto
     spatial_verif_v2
     tfidf_v2 )
 
-add_executable( export_image_graph_ashmolean export_image_graph_ashmolean.cpp )
-target_link_libraries( export_image_graph_ashmolean
+add_executable( export_ashmolean_identical export_ashmolean_identical.cpp )
+target_link_libraries( export_ashmolean_identical
+    dataset_v2
+    hamming
+    image_graph
+    mpi_queue
+    proto_db
+    proto_db_file
+    proto_index
+    spatial_verif_v2
+    tfidf_v2 )
+
+add_executable( export_ashmolean_identical_multithreaded export_ashmolean_identical_multithreaded.cpp )
+target_link_libraries( export_ashmolean_identical_multithreaded
+    dataset_v2
+    hamming
+    image_graph
+    mpi_queue
+    proto_db
+    proto_db_file
+    proto_index
+    spatial_verif_v2
+    tfidf_v2 Threads::Threads OpenMP::OpenMP_CXX)
+
+add_executable( export_ashmolean_transform export_ashmolean_transform.cpp )
+target_link_libraries( export_ashmolean_transform
+    dataset_v2
+    hamming
+    image_graph
+    mpi_queue
+    proto_db
+    proto_db_file
+    proto_index
+    spatial_verif_v2
+    tfidf_v2 )
+
+add_executable( export_ashmolean_transform_debug export_ashmolean_transform_debug.cpp )
+target_link_libraries( export_ashmolean_transform_debug
+    dataset_v2
+    hamming
+    image_graph
+    mpi_queue
+    proto_db
+    proto_db_file
+    proto_index
+    spatial_verif_v2
+    tfidf_v2 )
+
+add_executable( export_ashmolean_identical_sql_html export_ashmolean_identical_sql_html.cpp )
+target_link_libraries( export_ashmolean_identical_sql_html
+    dataset_v2
+    hamming
+    image_graph
+    mpi_queue
+    proto_db
+    proto_db_file
+    proto_index
+    spatial_verif_v2
+    tfidf_v2 )
+
+
+add_executable( export_ashmolean_transform_sql_html export_ashmolean_transform_sql_html.cpp )
+target_link_libraries( export_ashmolean_transform_sql_html
+    dataset_v2
+    hamming
+    image_graph
+    mpi_queue
+    proto_db
+    proto_db_file
+    proto_index
+    spatial_verif_v2
+    tfidf_v2 )
+
+add_executable( analyze_ashmolean_identical analyze_ashmolean_identical.cpp )
+target_link_libraries( analyze_ashmolean_identical
+    dataset_v2
+    hamming
+    image_graph
+    mpi_queue
+    proto_db
+    proto_db_file
+    proto_index
+    spatial_verif_v2
+    tfidf_v2 )
+
+add_executable( dset_query dset_query.cpp )
+target_link_libraries( dset_query
     dataset_v2
     hamming
     image_graph
