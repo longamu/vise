@@ -69,6 +69,7 @@ imageUtil::checkAndConvertToJpegTemp(std::string inFn, std::string &outFn, bool 
     createdJpeg= false;
     try {
         Magick::Image im;
+        im.quiet(true);
         im.read(inFn);
         if (im.columns()<10 || im.rows()<10)
             return false;
@@ -80,6 +81,7 @@ imageUtil::checkAndConvertToJpegTemp(std::string inFn, std::string &outFn, bool 
             im.write(outFn);
             createdJpeg= true;
         }
+        im.quiet(false);
         return true;
     } catch (std::exception &error) {
         std::cerr<< "imageUtil::convertToJpegTemp: Exception= "<<error.what()<<"\n";
@@ -93,10 +95,15 @@ std::pair<uint32_t, uint32_t>
 imageUtil::getWidthHeight(std::string imageFn){
     try {
         Magick::Image im;
+        im.quiet(true);
         im.read(imageFn);
+        im.quiet(false);
         return std::make_pair(im.columns(), im.rows());
-    } catch (std::exception &error) {
-        std::cerr<< "imageUtil::getWidthHeight: Exception= "<<error.what()<<"\n";
+    } catch (Magick::Warning &warning) {
+      // ignore warnings
+      std::cerr<< "imageUtil::getWidthHeight: Warning= "<<warning.what()<<"\n";
+    } catch (Magick::Error &error) {
+        std::cerr<< "imageUtil::getWidthHeight: Error= "<<error.what()<<"\n";
         return std::make_pair(0,0);
     }
 }
