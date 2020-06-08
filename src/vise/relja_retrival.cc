@@ -164,6 +164,30 @@ bool vise::relja_retrival::load() {
     } else {
       multi_query_ = multi_query_max_;
     }
+
+    // load file metadata
+    std::ifstream metadata_f(file_metadata_fn_.string());
+    if(metadata_f.good()) {
+      std::string line, metadata_id_str, filename_without_ext, filename;
+      std::size_t comma;
+      unsigned int file_id, metadata_id;
+      std::getline(metadata_f, line); // ignore header
+      while( std::getline(metadata_f, line) ) {
+        comma = line.find(',');
+        metadata_id_str = line.substr(0, comma);
+        metadata_id = std::stoi(metadata_id_str);
+        filename_without_ext = line.substr(comma+2, line.size() - comma - 2 -1);
+        filename = filename_without_ext + ".png";
+        if(file_exists(filename)) {
+          file_id = get_file_id(filename);
+          file_metadata_[file_id] = metadata_id;
+        }
+      }
+      std::cout << "loaded " << file_metadata_.size() << " file metadata entries" << std::endl;
+    } else {
+      std::cout << "FAILED to load file metadata from " << file_metadata_fn_.string() << std::endl;
+    }
+
     std::cout << "finished loading search engine [" << search_engine_id_ << "]" << std::endl;
     is_search_engine_loaded_ = true;
   } catch( std::exception& e ) {
@@ -292,6 +316,15 @@ std::string vise::relja_retrival::get_filename(unsigned int file_id) {
   return dataset_->getInternalFn(file_id);
 }
 
+std::string vise::relja_retrival::get_file_metadata(unsigned int file_id) {
+  std::unordered_map<unsigned int, unsigned int>::const_iterator itr = file_metadata_.find(file_id);
+  std::string metadata(file_metadata_prefix_);
+  if(itr != file_metadata_.end()) {
+    metadata = metadata + std::to_string(itr->second);
+  }
+  return metadata;
+}
+
 unsigned int vise::relja_retrival::get_file_id(std::string filename) {
   return dataset_->getDocID(filename);
 }
@@ -343,6 +376,8 @@ void vise::relja_retrival::load_config() {
     hamm_fn_   = data_dir_ / config_.get<std::string>( search_engine_id_ + ".hammFn" );
     assign_fn_   = data_dir_ / config_.get<std::string>( search_engine_id_ + ".assignFn" );
     imlist_fn_   = data_dir_ / config_.get<std::string>( search_engine_id_ + ".imagelistFn" );
+    file_metadata_fn_ = data_dir_ / config_.get<std::string>( search_engine_id_ + ".file_metadata_fn" );
+    file_metadata_prefix_ = config_.get<std::string>( search_engine_id_ + ".file_metadata_prefix" );
 
     image_dir_     = asset_dir_ / "image";
     thumbnail_dir_ = asset_dir_ / "thumbnail";

@@ -18,6 +18,7 @@
 // for thread management
 #include <thread>
 #include <mutex>
+#include <unordered_map>
 
 // for filesystem i/o
 #include <boost/filesystem.hpp>
@@ -94,6 +95,10 @@ namespace vise {
     boost::filesystem::path config_fn_;
     boost::filesystem::path imlist_fn_;
 
+    std::unordered_map<unsigned int, unsigned int> file_metadata_;
+    boost::filesystem::path file_metadata_fn_;
+    std::string file_metadata_prefix_;
+
     // search engine data structures
     datasetV2 *dataset_;
     sequentialConstructions *cons_queue_;
@@ -148,6 +153,7 @@ namespace vise {
     void get_filelist(std::vector<unsigned int> &file_id_list);
     void get_filelist(const std::string filename_regex,
                       std::vector<unsigned int> &file_id_list);
+    std::string get_file_metadata(unsigned int file_id);
     uint32_t get_filelist_size();
 
     std::string get_filename(unsigned int file_id);

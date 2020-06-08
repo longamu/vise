@@ -405,6 +405,10 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
       return;
     }
 
+    unsigned int metadata_id;
+    std::string metadata;
+    metadata = search_engine_list_[ search_engine_id ]->get_file_metadata(file_id);
+
     // prepare json
     std::ostringstream json;
     json << "{\"search_engine_id\":\"" << search_engine_id << "\","
@@ -416,7 +420,8 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
          << "\"query_file_namespace\":\"_file\","
          << "\"query_filelist_namespace\":\"_filelist\","
          << "\"filename\":\"" << filename << "\","
-         << "\"file_id\":" << file_id
+         << "\"file_id\":" << file_id << ","
+         << "\"file_metadata\":\"" << metadata << "\""
          << "}";
 
     if ( uri_param.count("format") == 0 ) {

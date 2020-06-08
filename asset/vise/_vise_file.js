@@ -17,7 +17,8 @@ GET http://localhost:9973/vise/query/ox5k/1/_file?file_id=10&format=json
   "image_uri_namespace": "image/",
   "query_uri_prefix": "/vise/query/ox5k/1/",
   "filename": "all_souls_000012.jpg",
-  "file_id": 10
+  "file_id": 10,
+  "file_metadata": "(optional) file metadata"
 }
 */
 
@@ -90,7 +91,7 @@ function _vise_file_init_via_hooks() {
     }
     var rid = _vise_file_via.v.now.all_rid_list[0];
     var region = _vise_file_via.m.regions[param.fileid][rid].dimg.slice(0);
-    
+
     if ( _vise_file_via.v.now.all_rid_list.length ) {
       document.getElementById('search_button').removeAttribute('disabled');
       _vise_file_set_image_region(region);
@@ -131,6 +132,9 @@ function _vise_file_init_metadata_panel(d, panel) {
   var html = [];
   var img_url = d.image_uri_prefix + d.image_uri_namespace + d.file_id;
   html.push('<div>Filename: <a href="' + img_url + '">' + d.filename + '</a></div>');
+  if(d.hasOwnProperty('file_metadata')) {
+    html.push('<p>This ornament was extracted from <a href="' + d['file_metadata'] + '">this book</a></p>');
+  }
   html.push('<div class="info" id="search_region_info">To define a search region in the image shown above, drag mouse cursor by keeping the right mouse button pressed on the image.</div>');
   panel.innerHTML = html.join('');
 }

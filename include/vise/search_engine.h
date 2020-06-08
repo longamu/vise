@@ -42,6 +42,7 @@ namespace vise {
     virtual void get_filelist(std::vector<unsigned int> &file_id_list) = 0;
     virtual void get_filelist(const std::string filename_regex,
                               std::vector<unsigned int> &file_id_list ) = 0;
+    virtual std::string get_file_metadata(unsigned int file_id) = 0;
 
     virtual uint32_t get_filelist_size() = 0;
 
