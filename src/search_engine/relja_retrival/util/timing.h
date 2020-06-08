@@ -51,11 +51,21 @@ namespace timing {
 
 
     static inline std::string getTimeString(){
+      /*
       auto now = std::chrono::system_clock::now();
       auto itt = std::chrono::system_clock::to_time_t(now);
       std::ostringstream ss;
       ss << std::put_time(gmtime(&itt), "%FT%T");
       return ss.str();
+      */
+      time_t rawtime;
+      struct tm * timeinfo;
+      char buffer [80];
+
+      time (&rawtime);
+      timeinfo = localtime (&rawtime);
+      strftime (buffer,80,"Now it's %I:%M%p.",timeinfo);
+      return std::string(buffer);
     }
 
 

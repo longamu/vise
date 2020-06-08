@@ -76,12 +76,11 @@ function _vise_filelist_update_page_nav(d, navbar) {
   navinfohtml.push( d.from + d.show_from );
   navinfohtml.push( '&nbsp;to&nbsp;' );
   navinfohtml.push( d.from + d.show_to );
-/*
+
   navinfohtml.push( '&nbsp;<label for="show_from">from</label>&nbsp;' );
   navinfohtml.push( '<input type="text" size="3" id="show_from" value="' + (d.from + d.show_from) + '">' );
   navinfohtml.push( '&nbsp;<label for="show_to">to</label>&nbsp;' );
   navinfohtml.push( '<input type="text" size="3" id="show_to" value="' + (d.from + d.show_to) + '">' );
-*/
 
   navinfo.innerHTML = navinfohtml.join('');
 
@@ -101,14 +100,14 @@ function _vise_filelist_update_page_nav(d, navbar) {
   navtoolhtml.push( '&nbsp;<button type="submit">Filter</button>' );
   navtoolhtml.push( '</form>' );
 
-  navtool.innerHTML = navtoolhtml.join('');
+  //navtool.innerHTML = navtoolhtml.join('');
 
   var navbuttons = document.createElement('div');
   navbuttons.classList.add('navbuttons');
   navbar.appendChild(navbuttons);
   var links = [];
 
-  console.log('_vise_filelist_update_page_nav(): from=' + d.from + ', count=' + d.count + ', show_from=' + d.show_from + ', show_count=' + d.show_count);
+  //console.log('_vise_filelist_update_page_nav(): from=' + d.from + ', count=' + d.count + ', show_from=' + d.show_from + ', show_count=' + d.show_count);
   // check if this page is the first page
   if ( (d.from + d.show_from) !== 0) {
     links.push( '<a href="' + _vise_filelist_now_get_first_uri(d) + '" title="Jump to first page">First</a>' );

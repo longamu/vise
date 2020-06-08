@@ -750,36 +750,36 @@ void vise::search_engine_manager::query(const std::string search_engine_id,
     Eigen::MatrixXd Hopt;
     std::size_t fp_match_count;
     bool success = false;
-    Magick::Image im2_crop_tx( Magick::Geometry(width1, height1, 0, 0), "white");
 
     try {
+      Magick::Image im2_crop_tx( Magick::Geometry(width1, height1, 0, 0), "white");
       // @todo: use H_initial as the initial guess for homography
       imreg_sift::ransac_dlt(im1_fn.c_str(), im2_fn.c_str(),
                              x1, y1, width1, height1,
                              Hopt, fp_match_count, im2_crop_tx, success);
+
+      if ( ! success ) {
+        //std::cout << "\nsuccess=" << success << std::flush;;
+        response.set_status(400);
+        return;
+      }
+
+      // extract image data
+      Magick::Blob blob;
+      im2_crop_tx.magick("JPEG");
+      im2_crop_tx.colorSpace(Magick::sRGBColorspace);
+      im2_crop_tx.write( &blob );
+
+      std::string img_data( (char *) blob.data(), blob.length() );
+      response.set_field("Content-Type", "image/jpeg");
+      response.set_payload( img_data );
+      std::cout << "responded with registered jpeg image of size " << blob.length() << std::endl;
+      return;
     } catch( std::exception& e ) {
       //std::cout << "\nexception: " << e.what() << std::flush;;
       response.set_status(400);
       return;
     }
-
-    if ( ! success ) {
-      //std::cout << "\nsuccess=" << success << std::flush;;
-      response.set_status(400);
-      return;
-    }
-
-    // extract image data
-    Magick::Blob blob;
-    im2_crop_tx.magick("JPEG");
-    im2_crop_tx.colorSpace(Magick::sRGBColorspace);
-    im2_crop_tx.write( &blob );
-
-    std::string img_data( (char *) blob.data(), blob.length() );
-    response.set_field("Content-Type", "image/jpeg");
-    response.set_payload( img_data );
-    std::cout << "responded with registered jpeg image of size " << blob.length() << std::endl;
-    return;
   }
 }
 

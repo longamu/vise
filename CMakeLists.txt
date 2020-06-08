@@ -23,14 +23,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set (VISE_SERVER_NAME "vise_server")
 set (VISE_SERVER_VERSION_MAJOR "2")
 set (VISE_SERVER_VERSION_MINOR "0")
-set (VISE_SERVER_VERSION_PATCH "0-beta1")
+set (VISE_SERVER_VERSION_PATCH "0-beta2")
 set (VISE_SERVER_URL "http://www.robots.ox.ac.uk/~vgg/software/vise/")
 set (VISE_SERVER_AUTHOR_NAME "Abhishek Dutta")
 set (VISE_SERVER_AUTHOR_EMAIL "adutta@robots.ox.ac.uk")
 set (VISE_SERVER_FIRST_RELEASE_DATE "25 Sep. 2017")
 set (VISE_SERVER_CURRENT_RELEASE_DATE "18 Jun. 2018")
 configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_SOURCE_DIR}/vise_server_config.h.in" 
+  "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_SOURCE_DIR}/vise_server_config.h.in"
   "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_INCLUDE_DIR}/vise_server_config.h"
   )
 
@@ -115,4 +115,3 @@ message("VLFEAT_INCLUDE_DIR: " ${VLFEAT_INCLUDE_DIR} )
 include_directories("${PROJECT_INCLUDE_DIR}")
 add_subdirectory("${PROJECT_SOURCE_DIR}" )
 #add_subdirectory("${PROJECT_TEST_DIR}" )
-
