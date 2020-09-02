@@ -1,3 +1,5 @@
+> **This version is no longer maintained. Most recent version if available at https://gitlab.com/vgg/vise/**
+
 # VGG Image Search Engine (VISE)
 
 [VGG Image Search Engine](http://www.robots.ox.ac.uk/~vgg/software/vise) (VISE) is an 
