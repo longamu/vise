@@ -1,4 +1,4 @@
-> **This version is no longer maintained. Most recent version if available at https://gitlab.com/vgg/vise/**
+> **This version is no longer maintained. Most recent version is available at https://gitlab.com/vgg/vise/**
 
 # VGG Image Search Engine (VISE)
 
